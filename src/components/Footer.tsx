@@ -31,7 +31,7 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <Phone className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">(12) 99999-9999</p>
+                  <p className="text-background/80">(12) 3833-2434</p>
                   <p className="text-background/60 text-sm">WhatsApp</p>
                 </div>
               </div>
