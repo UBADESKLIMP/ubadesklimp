@@ -1,4 +1,4 @@
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -9,7 +9,6 @@ const Products = () => {
       name: 'Detergente Multiuso Premium',
       description: 'Limpeza profunda para todas as superfícies',
       price: 'R$ 15,90',
-      rating: 4.8,
       image: '🧴',
       category: 'Detergentes'
     },
@@ -18,7 +17,6 @@ const Products = () => {
       name: 'Kit Limpeza Banheiro',
       description: 'Conjunto completo para higienização',
       price: 'R$ 45,90',
-      rating: 4.9,
       image: '🧽',
       category: 'Kits'
     },
@@ -27,7 +25,7 @@ const Products = () => {
       name: 'Desinfetante Lavanda',
       description: 'Elimina 99,9% dos germes e bactérias',
       price: 'R$ 12,50',
-      rating: 4.7,
+      
       image: '🧴',
       category: 'Desinfetantes'
     },
@@ -36,7 +34,7 @@ const Products = () => {
       name: 'Sabão em Pó Concentrado',
       description: 'Máxima eficiência na lavagem',
       price: 'R$ 28,90',
-      rating: 4.8,
+      
       image: '📦',
       category: 'Sabões'
     },
@@ -45,7 +43,7 @@ const Products = () => {
       name: 'Limpador de Vidros',
       description: 'Transparência perfeita sem riscos',
       price: 'R$ 18,90',
-      rating: 4.6,
+      
       image: '✨',
       category: 'Especiais'
     },
@@ -54,7 +52,7 @@ const Products = () => {
       name: 'Álcool em Gel 70%',
       description: 'Higienização rápida das mãos',
       price: 'R$ 8,90',
-      rating: 4.9,
+      
       image: '🧴',
       category: 'Higiene'
     }
@@ -100,24 +98,6 @@ const Products = () => {
                   {product.description}
                 </p>
 
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < Math.floor(product.rating)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground ml-2">
-                    ({product.rating})
-                  </span>
-                </div>
 
                 {/* Price and CTA */}
                 <div className="flex items-center justify-between">
