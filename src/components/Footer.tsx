@@ -1,8 +1,6 @@
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
-
 const Footer = () => {
-  return (
-    <footer id="contact" className="bg-foreground text-background">
+  return <footer id="contact" className="bg-foreground text-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
@@ -10,10 +8,7 @@ const Footer = () => {
             <h3 className="text-3xl font-heading text-gradient mb-4">
               Ubadesklimp
             </h3>
-            <p className="text-background/80 mb-6 max-w-md">
-              Sua loja de confiança para produtos de limpeza profissionais. 
-              Qualidade, eficiência e atendimento excepcional há mais de 15 anos.
-            </p>
+            <p className="text-background/80 mb-6 max-w-md">Sua loja de confiança para produtos de limpeza profissionais. Qualidade, eficiência e atendimento excepcional há mais de 25 anos.</p>
             
             {/* Social Media */}
             <div className="flex space-x-4">
@@ -44,7 +39,7 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">contato@ubadesklimp.com</p>
+                  <p className="text-background/80">Ubadesk.pedidos@gmail.com</p>
                   <p className="text-background/60 text-sm">Email</p>
                 </div>
               </div>
@@ -52,7 +47,7 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">São Paulo, SP</p>
+                  <p className="text-background/80">Av Rio Grande do Sul, 259 Ubatuba, São Paulo</p>
                   <p className="text-background/60 text-sm">Endereço</p>
                 </div>
               </div>
@@ -75,7 +70,7 @@ const Footer = () => {
                 <Clock className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-background/80 text-sm">Sábado</p>
-                  <p className="text-background/60 text-sm">8h às 12h</p>
+                  <p className="text-background/60 text-sm">8h às 13h</p>
                 </div>
               </div>
               
@@ -107,8 +102,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
