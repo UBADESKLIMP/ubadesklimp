@@ -32,7 +32,7 @@ const Footer = () => {
                 <Phone className="h-5 w-5 text-primary mt-1" />
                 <div>
                   <a 
-                    href="https://wa.me/5512938332434" 
+                    href="https://wa.me/551238332434"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-background/80 hover:text-primary transition-colors"
