@@ -37,10 +37,13 @@ const Cart = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className="relative">
+        <Button 
+          variant="outline" 
+          className="relative bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+        >
           <ShoppingCart className="h-4 w-4" />
           {state.items.length > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-green-500 hover:bg-green-500 text-white">
               {state.items.reduce((sum, item) => sum + item.quantity, 0)}
             </Badge>
           )}
@@ -117,10 +120,10 @@ const Cart = () => {
                 <div className="space-y-2">
                   <Button 
                     onClick={handleWhatsAppOrder}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Finalizar pelo WhatsApp
+                    <span className="text-lg">💬</span>
+                    <span>Finalizar pelo WhatsApp</span>
                   </Button>
                   
                   <Button 
