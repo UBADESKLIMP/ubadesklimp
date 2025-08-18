@@ -10,7 +10,7 @@ const About = () => {
     label: 'Anos de Experiência'
   }, {
     icon: Truck,
-    number: '500+',
+    number: '100+',
     label: 'Entregas por Mês'
   }, {
     icon: HeartHandshake,
