@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
+import img from "c:\Users\joaov\Documents\GitHub\Ubadesk-oficial\img";
 
 const Products = () => {
   const { addToCart } = useCart();
@@ -13,7 +14,7 @@ const Products = () => {
       name: 'Detergente Multiuso Premium',
       description: 'Limpeza profunda para todas as superfícies',
       price: 'R$ 15,90',
-      image: 'https://vscode.dev/github/UBADESKLIMP/Ubadesk-oficial/blob/main/img/cloro-vmax-10-12int-ex.png',
+      image: 'img/cloro-vmax-10-12int-ex.png',
       category: 'Detergentes'
     },
     {
