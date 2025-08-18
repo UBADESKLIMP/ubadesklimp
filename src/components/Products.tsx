@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
-import {img} from img
 
 const Products = () => {
   const { addToCart } = useCart();
