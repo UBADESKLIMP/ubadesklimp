@@ -120,7 +120,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     message += `📞 Gostaria de finalizar este pedido!`;
     
     const encodedMessage = encodeURIComponent(message);
-    return `https://wa.me/5512938332434?text=${encodedMessage}`;
+    return `https://wa.me/551238332434?text=${encodedMessage}`;
   };
 
   return (
