@@ -6,7 +6,7 @@ const About = () => {
     label: 'Clientes Satisfeitos'
   }, {
     icon: Award,
-    number: '15+',
+    number: '25+',
     label: 'Anos de Experiência'
   }, {
     icon: Truck,
