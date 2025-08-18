@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, X, ShoppingCart, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -42,10 +43,7 @@ const Header = () => {
               <Phone className="h-4 w-4 mr-2" />
               Contato
             </Button>
-            <Button className="btn-hero">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Comprar
-            </Button>
+            <Cart />
           </div>
 
           {/* Mobile menu button */}
@@ -84,10 +82,9 @@ const Header = () => {
                 <Phone className="h-4 w-4 mr-2" />
                 Contato
               </Button>
-              <Button className="btn-hero w-full">
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Comprar
-              </Button>
+              <div className="flex justify-center">
+                <Cart />
+              </div>
             </div>
           </div>
         </div>

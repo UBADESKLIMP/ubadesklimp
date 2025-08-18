@@ -1,8 +1,12 @@
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from '@/hooks/use-toast';
 
 const Products = () => {
+  const { addToCart } = useCart();
+  
   const products = [
     {
       id: 1,
@@ -58,6 +62,20 @@ const Products = () => {
     }
   ];
 
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      category: product.category,
+    });
+    
+    toast({
+      title: "Produto adicionado!",
+      description: `${product.name} foi adicionado ao carrinho.`,
+    });
+  };
+
   return (
     <section id="products" className="py-20 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,9 +122,12 @@ const Products = () => {
                   <span className="text-2xl font-bold text-foreground">
                     {product.price}
                   </span>
-                  <Button className="btn-secondary">
+                  <Button 
+                    className="btn-secondary"
+                    onClick={() => handleAddToCart(product)}
+                  >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    Comprar
+                    Adicionar
                   </Button>
                 </div>
               </div>
