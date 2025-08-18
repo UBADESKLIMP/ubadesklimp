@@ -1,4 +1,4 @@
-import { ShoppingCart, Plus, Minus, Trash2, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import WhatsAppIcon from './WhatsAppIcon';
 
 const Cart = () => {
   const { state, updateQuantity, removeFromCart, clearCart, getWhatsAppLink } = useCart();
@@ -122,7 +123,7 @@ const Cart = () => {
                     onClick={handleWhatsAppOrder}
                     className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2"
                   >
-                    <span className="text-lg">💬</span>
+                    <WhatsAppIcon className="w-5 h-5" />
                     <span>Finalizar pelo WhatsApp</span>
                   </Button>
                   
