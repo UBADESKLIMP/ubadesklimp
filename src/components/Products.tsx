@@ -13,7 +13,7 @@ const Products = () => {
       name: 'Detergente Multiuso Premium',
       description: 'Limpeza profunda para todas as superfícies',
       price: 'R$ 15,90',
-      image: '/public/img/cloro-vmax-10-12int-ex.png',
+      image: '🈯',
       category: 'Detergentes'
     },
     {
