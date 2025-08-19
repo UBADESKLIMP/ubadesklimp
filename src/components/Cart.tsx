@@ -40,7 +40,7 @@ const Cart = () => {
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
-          className="relative bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+          className="relative bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white border-0"
         >
           <ShoppingCart className="h-4 w-4" />
           {state.items.length > 0 && (
