@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Phone } from 'lucide-react';
+import { Menu, X, ShoppingCart, Phone, User, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut, loading } = useAuth();
 
   const navigation = [
     { name: 'Início', href: '#home' },
@@ -44,6 +48,37 @@ const Header = () => {
               Contato
             </Button>
             <Cart />
+            
+            {/* Auth Section */}
+            {!loading && (
+              user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
+                      <User className="h-4 w-4 mr-2" />
+                      {user.email?.split('@')[0]}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button asChild variant="default" size="sm" className="bg-gradient-primary hover:shadow-glow">
+                  <Link to="/auth">Entrar</Link>
+                </Button>
+              )
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -85,6 +120,34 @@ const Header = () => {
               <div className="flex justify-center">
                 <Cart />
               </div>
+              
+              {/* Mobile Auth Section */}
+              {!loading && (
+                user ? (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/admin">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-destructive hover:text-destructive"
+                      onClick={signOut}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-border">
+                    <Button asChild variant="default" className="w-full bg-gradient-primary">
+                      <Link to="/auth">Entrar</Link>
+                    </Button>
+                  </div>
+                )
+              )}
             </div>
           </div>
         </div>
