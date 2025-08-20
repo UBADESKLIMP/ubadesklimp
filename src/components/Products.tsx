@@ -1,3 +1,4 @@
+
 import { ShoppingCart, Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -158,7 +159,7 @@ const Products = () => {
 
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product, index) => (
               <Card 
                 key={product.id} 
@@ -166,49 +167,50 @@ const Products = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="p-0">
-                  {/* Product Image - Much Larger */}
-                  <div className="relative h-64 w-full overflow-hidden bg-muted/50">
+                  {/* Product Image - Adjusted size like the reference */}
+                  <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4">
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-muted to-muted/50">
+                      <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-muted to-muted/50">
                         📦
                       </div>
                     )}
                     
-                    {/* Category Badge - Positioned over image */}
-                    <div className="absolute top-4 left-4">
-                      <div className="inline-block px-3 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium rounded-full shadow-medium">
+                    {/* Category Badge */}
+                    <div className="absolute top-2 right-2">
+                      <div className="inline-block px-2 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium rounded-full shadow-medium">
                         {product.category}
                       </div>
                     </div>
                   </div>
 
                   {/* Product Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-heading text-foreground mb-2">
+                  <div className="p-4">
+                    <h3 className="text-lg font-heading text-foreground mb-2 line-clamp-2">
                       {product.name}
                     </h3>
                     {product.description && (
-                      <p className="text-muted-foreground mb-4 line-clamp-2">
+                      <p className="text-muted-foreground mb-3 text-sm line-clamp-2">
                         {product.description}
                       </p>
                     )}
 
                     {/* Price and CTA */}
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-foreground">
+                      <span className="text-xl font-bold text-foreground">
                         {formatPrice(product.price)}
                       </span>
                       <Button 
+                        size="sm"
                         className="btn-secondary"
                         onClick={() => handleAddToCart(product)}
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        <ShoppingCart className="h-4 w-4 mr-1" />
                         Adicionar
                       </Button>
                     </div>

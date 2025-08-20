@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, Save, X, Loader2 } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/hooks/useProducts';
 
 interface ProductFormProps {
@@ -15,17 +16,9 @@ interface ProductFormProps {
   onCancel: () => void;
 }
 
-const categories = [
-  "Detergentes",
-  "Desinfetantes", 
-  "Kits",
-  "Sabões",
-  "Especiais",
-  "Higiene"
-];
-
 const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
   const { uploadImage, uploading } = useImageUpload();
+  const { categories } = useCategories();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -109,8 +102,10 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.name}>
+                {category.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -137,7 +132,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               <img 
                 src={formData.image_url} 
                 alt="Preview" 
-                className="w-20 h-20 object-cover rounded border"
+                className="w-20 h-20 object-contain rounded border bg-muted/50"
               />
             </div>
           )}
