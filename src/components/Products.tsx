@@ -1,4 +1,3 @@
-
 import { ShoppingCart, Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const Products = () => {
   const { addToCart } = useCart();
   const { products, loading } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Get unique categories from products
   const categories = Array.from(new Set(products.map(product => product.category))).sort();
@@ -22,7 +21,7 @@ const Products = () => {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -52,7 +51,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedCategory('');
+    setSelectedCategory('all');
   };
 
   if (loading) {
@@ -125,7 +124,7 @@ const Products = () => {
                       <SelectValue placeholder="Todas as categorias" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas as categorias</SelectItem>
+                      <SelectItem value="all">Todas as categorias</SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -136,7 +135,7 @@ const Products = () => {
                 </div>
 
                 {/* Clear Filters */}
-                {(searchTerm || selectedCategory) && (
+                {(searchTerm || selectedCategory !== 'all') && (
                   <Button
                     variant="outline"
                     onClick={clearFilters}
