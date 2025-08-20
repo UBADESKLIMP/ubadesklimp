@@ -18,7 +18,7 @@ export const useCategories = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('categories')
+        .from('categories' as any)
         .select('*')
         .order('name');
 
@@ -39,7 +39,7 @@ export const useCategories = () => {
   const createCategory = async (name: string) => {
     try {
       const { data, error } = await supabase
-        .from('categories')
+        .from('categories' as any)
         .insert([{ name }])
         .select()
         .single();
@@ -52,7 +52,7 @@ export const useCategories = () => {
         description: `Categoria "${name}" foi criada com sucesso.`,
       });
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating category:', error);
       if (error.code === '23505') {
         toast({
@@ -74,7 +74,7 @@ export const useCategories = () => {
   const updateCategory = async (id: string, name: string) => {
     try {
       const { data, error } = await supabase
-        .from('categories')
+        .from('categories' as any)
         .update({ name })
         .eq('id', id)
         .select()
@@ -88,7 +88,7 @@ export const useCategories = () => {
         description: `Categoria atualizada para "${name}".`,
       });
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating category:', error);
       if (error.code === '23505') {
         toast({
@@ -132,7 +132,7 @@ export const useCategories = () => {
       }
 
       const { error } = await supabase
-        .from('categories')
+        .from('categories' as any)
         .delete()
         .eq('id', id);
 
