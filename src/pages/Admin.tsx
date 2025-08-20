@@ -1,11 +1,13 @@
 
 import { useState } from 'react';
-import { Plus, Edit3, Trash2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProducts, Product } from '@/hooks/useProducts';
 import ProductForm from '@/components/ProductForm';
+import CategoryManager from '@/components/CategoryManager';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts();
@@ -60,104 +62,130 @@ const Admin = () => {
               Painel Administrativo
             </h1>
             <p className="text-muted-foreground mt-2">
-              Gerencie os produtos da Ubadesklimp
+              Gerencie os produtos e categorias da Ubadesklimp
             </p>
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingProduct(null)} className="bg-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-                </DialogTitle>
-              </DialogHeader>
-              <ProductForm
-                product={editingProduct}
-                onSave={handleSaveProduct}
-                onCancel={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
 
-        {/* Products Grid */}
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <Card key={product.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center space-x-3">
+        {/* Tabs for Products and Categories */}
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="products" className="flex items-center space-x-2">
+              <Package className="h-4 w-4" />
+              <span>Produtos</span>
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="flex items-center space-x-2">
+              <Tags className="h-4 w-4" />
+              <span>Categorias</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab */}
+          <TabsContent value="products">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-heading">Produtos</h2>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setEditingProduct(null)} className="bg-primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Produto
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <ProductForm
+                    product={editingProduct}
+                    onSave={handleSaveProduct}
+                    onCancel={() => setIsDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Products Grid */}
+            {products.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <Card key={product.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                    <div className="relative">
                       {product.image_url ? (
                         <img 
                           src={product.image_url} 
                           alt={product.name}
-                          className="w-12 h-12 object-cover rounded"
+                          className="w-full h-48 object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-2xl">
+                        <div className="w-full h-48 bg-muted flex items-center justify-center text-4xl">
                           📦
                         </div>
                       )}
-                      <div>
-                        <CardTitle className="text-lg">{product.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{product.category}</p>
+                      <div className="absolute top-2 right-2 flex space-x-1">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setIsDialogOpen(true);
+                          }}
+                          className="bg-background/80 backdrop-blur-sm"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="bg-background/80 backdrop-blur-sm text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {product.description && (
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {product.description}
-                    </p>
-                  )}
-                  <p className="text-lg font-bold text-primary">
-                    {formatPrice(product.price)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
-            <p className="text-muted-foreground mb-6">
-              Comece adicionando seu primeiro produto
-            </p>
-            <Button onClick={() => setIsDialogOpen(true)} className="bg-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Produto
-            </Button>
-          </div>
-        )}
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{product.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{product.category}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                      <p className="text-lg font-bold text-primary">
+                        {formatPrice(product.price)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
+                <p className="text-muted-foreground mb-6">
+                  Comece adicionando seu primeiro produto
+                </p>
+                <Button onClick={() => setIsDialogOpen(true)} className="bg-primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Produto
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Categories Tab */}
+          <TabsContent value="categories">
+            <CategoryManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
