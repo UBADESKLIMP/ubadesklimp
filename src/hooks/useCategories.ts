@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type CategoryRow = Database['public']['Tables']['categories']['Row'];
 
 export interface Category {
   id: string;
@@ -23,7 +26,7 @@ export const useCategories = () => {
         .order('name');
 
       if (error) throw error;
-      setCategories(data || []);
+      setCategories((data as CategoryRow[]) || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast({
@@ -46,12 +49,13 @@ export const useCategories = () => {
 
       if (error) throw error;
 
-      setCategories(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+      const categoryData = data as CategoryRow;
+      setCategories(prev => [...prev, categoryData].sort((a, b) => a.name.localeCompare(b.name)));
       toast({
         title: "Categoria criada",
         description: `Categoria "${name}" foi criada com sucesso.`,
       });
-      return data;
+      return categoryData;
     } catch (error: any) {
       console.error('Error creating category:', error);
       if (error.code === '23505') {
@@ -82,12 +86,13 @@ export const useCategories = () => {
 
       if (error) throw error;
 
-      setCategories(prev => prev.map(cat => cat.id === id ? data : cat).sort((a, b) => a.name.localeCompare(b.name)));
+      const categoryData = data as CategoryRow;
+      setCategories(prev => prev.map(cat => cat.id === id ? categoryData : cat).sort((a, b) => a.name.localeCompare(b.name)));
       toast({
         title: "Categoria atualizada",
         description: `Categoria atualizada para "${name}".`,
       });
-      return data;
+      return categoryData;
     } catch (error: any) {
       console.error('Error updating category:', error);
       if (error.code === '23505') {
