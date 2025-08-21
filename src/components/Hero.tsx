@@ -1,26 +1,22 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronDown, Phone } from 'lucide-react';
 import WhatsAppIcon from './WhatsAppIcon';
-
 const Hero = () => {
   const handleWhatsAppContact = () => {
     const message = encodeURIComponent('Olá! Gostaria de mais informações sobre os produtos da Ubadesklimp.');
     window.open(`https://wa.me/551238332434?text=${message}`, '_blank');
   };
-
   const handlePhoneContact = () => {
     window.open('tel:1238324474', '_self');
   };
-
   const scrollToProducts = () => {
     const productsSection = document.getElementById('products');
-    productsSection?.scrollIntoView({ behavior: 'smooth' });
+    productsSection?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
-  return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/20 to-background overflow-hidden">
+  return <section id="home" className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/20 to-background overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
@@ -41,21 +37,12 @@ const Hero = () => {
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              onClick={handleWhatsAppContact}
-              size="lg" 
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold shadow-glow hover:shadow-glow-intense transition-all duration-300 flex items-center space-x-3"
-            >
+            <Button onClick={handleWhatsAppContact} size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold shadow-glow hover:shadow-glow-intense transition-all duration-300 flex items-center space-x-3">
               <WhatsAppIcon className="w-6 h-6" />
               <span>Fale Conosco</span>
             </Button>
             
-            <Button 
-              onClick={handlePhoneContact}
-              variant="outline"
-              size="lg" 
-              className="px-8 py-4 text-lg font-semibold border-2 hover:bg-accent transition-all duration-300 flex items-center space-x-3"
-            >
+            <Button onClick={handlePhoneContact} variant="outline" size="lg" className="px-8 py-4 text-lg font-semibold border-2 hover:bg-accent transition-all duration-300 flex items-center space-x-3">
               <Phone className="w-5 h-5" />
               <span>(12) 3832-4474</span>
             </Button>
@@ -74,7 +61,7 @@ const Hero = () => {
             
             <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-soft transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-2xl font-bold text-primary">15+</CardTitle>
+                <CardTitle className="text-2xl font-bold text-primary">25+</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">Anos de Experiência</CardDescription>
@@ -93,19 +80,12 @@ const Hero = () => {
 
           {/* Scroll indicator */}
           <div className="flex justify-center mt-16">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={scrollToProducts}
-              className="animate-bounce hover:animate-none transition-all duration-300"
-            >
+            <Button variant="ghost" size="sm" onClick={scrollToProducts} className="animate-bounce hover:animate-none transition-all duration-300">
               <ChevronDown className="h-6 w-6" />
             </Button>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
