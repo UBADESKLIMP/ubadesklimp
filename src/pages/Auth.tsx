@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -214,10 +215,6 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-        
-        <div className="mt-6 text-center text-white/80 text-sm">
-          <p>Primeiro usuário cadastrado será automaticamente admin</p>
-        </div>
       </div>
     </div>
   );

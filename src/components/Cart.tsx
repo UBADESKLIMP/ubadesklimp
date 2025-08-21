@@ -1,3 +1,4 @@
+
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -30,9 +31,23 @@ const Cart = () => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      const price = parseFloat(item.price.replace('R$ ', '').replace(',', '.'));
-      return total + (price * item.quantity);
+      // Extract numeric value from price string
+      const priceString = item.price.toString();
+      const numericPrice = parseFloat(
+        priceString
+          .replace('R$', '')
+          .replace(/\s/g, '')
+          .replace(',', '.')
+      );
+      
+      // Return 0 if price is not valid number
+      const validPrice = isNaN(numericPrice) ? 0 : numericPrice;
+      return total + (validPrice * item.quantity);
     }, 0);
+  };
+
+  const formatPrice = (price: number) => {
+    return `R$ ${price.toFixed(2).replace('.', ',')}`;
   };
 
   return (
@@ -68,53 +83,57 @@ const Cart = () => {
             </div>
           ) : (
             <>
-              {state.items.map((item) => (
-                <Card key={item.id} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-sm">{item.name}</h4>
-                        <p className="text-xs text-muted-foreground">{item.category}</p>
-                        <p className="font-bold text-primary">{item.price}</p>
+              <div className="max-h-96 overflow-y-auto space-y-4">
+                {state.items.map((item) => (
+                  <Card key={item.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{item.name}</h4>
+                          <p className="text-xs text-muted-foreground">{item.category}</p>
+                          <p className="font-bold text-primary">{item.price}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFromCart(item.id)}
-                        className="h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="h-8 w-8"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="h-8 w-8"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="h-8 w-8"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="h-8 w-8"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </div>
 
-              <div className="border-t pt-4 mt-6">
+              <div className="border-t pt-4 mt-6 sticky bottom-0 bg-background">
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold text-lg text-primary">
-                    R$ {getTotalPrice().toFixed(2).replace('.', ',')}
+                    {formatPrice(getTotalPrice())}
                   </span>
                 </div>
 
@@ -122,6 +141,7 @@ const Cart = () => {
                   <Button 
                     onClick={handleWhatsAppOrder}
                     className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2"
+                    disabled={state.items.length === 0}
                   >
                     <WhatsAppIcon className="w-5 h-5" />
                     <span>Finalizar pelo WhatsApp</span>
@@ -131,6 +151,7 @@ const Cart = () => {
                     variant="outline" 
                     onClick={clearCart}
                     className="w-full"
+                    disabled={state.items.length === 0}
                   >
                     Limpar Carrinho
                   </Button>

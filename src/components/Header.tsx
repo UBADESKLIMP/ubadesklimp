@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Phone, User, LogOut, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,26 @@ import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, isAdmin } = useAuth();
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+  // Check if user is admin when component mounts and user changes
+  React.useEffect(() => {
+    const checkAdmin = async () => {
+      if (user && isAdmin) {
+        try {
+          const adminStatus = await isAdmin();
+          setIsUserAdmin(adminStatus);
+        } catch (error) {
+          setIsUserAdmin(false);
+        }
+      } else {
+        setIsUserAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [user, isAdmin]);
 
   const navigation = [
     { name: 'Início', href: '#home' },
@@ -17,15 +37,24 @@ const Header = () => {
     { name: 'Contato', href: '#contact' },
   ];
 
+  const handleWhatsAppContact = () => {
+    const message = encodeURIComponent('Olá! Gostaria de mais informações sobre os produtos da Ubadesklimp.');
+    window.open(`https://wa.me/551238332434?text=${message}`, '_blank');
+  };
+
+  const handlePhoneContact = () => {
+    window.open('tel:1238324474', '_self');
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-border z-50 shadow-soft">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo - Now clickable */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-heading text-gradient">
+            <Link to="/" className="text-2xl font-heading text-gradient hover:opacity-80 transition-opacity">
               Ubadesklimp
-            </h1>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -41,12 +70,8 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
-              <Phone className="h-4 w-4 mr-2" />
-              Contato
-            </Button>
+          {/* Desktop CTA - Right aligned */}
+          <div className="hidden md:flex items-center space-x-4 ml-auto">
             <Cart />
             
             {/* Auth Section */}
@@ -60,13 +85,17 @@ const Header = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Admin
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {isUserAdmin && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin" className="flex items-center">
+                            <Shield className="h-4 w-4 mr-2" />
+                            Admin
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" />
                       Sair
@@ -113,10 +142,6 @@ const Header = () => {
               </a>
             ))}
             <div className="pt-4 pb-2 px-3 space-y-2">
-              <Button variant="ghost" className="w-full justify-start">
-                <Phone className="h-4 w-4 mr-2" />
-                Contato
-              </Button>
               <div className="flex justify-center">
                 <Cart />
               </div>
@@ -125,12 +150,14 @@ const Header = () => {
               {!loading && (
                 user ? (
                   <div className="space-y-2 pt-2 border-t border-border">
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/admin">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Admin
-                      </Link>
-                    </Button>
+                    {isUserAdmin && (
+                      <Button variant="ghost" className="w-full justify-start" asChild>
+                        <Link to="/admin">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Admin
+                        </Link>
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start text-destructive hover:text-destructive"

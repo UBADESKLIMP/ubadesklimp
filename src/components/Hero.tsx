@@ -1,8 +1,18 @@
-import { ArrowRight, Sparkles, Shield, Truck } from 'lucide-react';
+
+import { ArrowRight, Sparkles, Shield, Truck, Phone, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import heroImage from '@/assets/hero-cleaning-supplies.jpg';
 
 const Hero = () => {
+  const handleWhatsAppContact = () => {
+    const message = encodeURIComponent('Olá! Gostaria de mais informações sobre os produtos da Ubadesklimp.');
+    window.open(`https://wa.me/551238332434?text=${message}`, '_blank');
+  };
+
+  const handlePhoneContact = () => {
+    window.open('tel:1238324474', '_self');
+  };
+
   return (
     <section id="home" className="pt-16 min-h-screen flex items-center bg-gradient-to-br from-background via-accent/20 to-muted/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -45,12 +55,13 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="btn-hero">
-                Ver Produtos
-                <ArrowRight className="h-5 w-5 ml-2" />
+              <Button onClick={handleWhatsAppContact} className="btn-hero">
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Fale Conosco (WhatsApp)
               </Button>
-              <Button variant="outline" className="btn-outline">
-                Fale Conosco
+              <Button onClick={handlePhoneContact} variant="outline" className="btn-outline">
+                <Phone className="h-5 w-5 mr-2" />
+                Ligar (12) 3832-4474
               </Button>
             </div>
           </div>
