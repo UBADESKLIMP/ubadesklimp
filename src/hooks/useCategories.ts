@@ -18,7 +18,7 @@ export const useCategories = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('categories' as any)
+        .from('categories')
         .select('*')
         .order('name');
 
@@ -39,7 +39,7 @@ export const useCategories = () => {
   const createCategory = async (name: string) => {
     try {
       const { data, error } = await supabase
-        .from('categories' as any)
+        .from('categories')
         .insert([{ name }])
         .select()
         .single();
@@ -74,7 +74,7 @@ export const useCategories = () => {
   const updateCategory = async (id: string, name: string) => {
     try {
       const { data, error } = await supabase
-        .from('categories' as any)
+        .from('categories')
         .update({ name })
         .eq('id', id)
         .select()
@@ -132,7 +132,7 @@ export const useCategories = () => {
       }
 
       const { error } = await supabase
-        .from('categories' as any)
+        .from('categories')
         .delete()
         .eq('id', id);
 
