@@ -52,7 +52,7 @@ const Hero = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16">
             <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-soft transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-2xl font-bold text-primary">+500</CardTitle>
+                <CardTitle className="text-2xl font-bold text-primary">+50.000</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">Clientes Satisfeitos</CardDescription>
