@@ -10,6 +10,7 @@ export interface Product {
   price: number;
   category: string;
   image_url: string | null;
+  priority: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export const useProducts = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -50,7 +52,8 @@ export const useProducts = () => {
 
       if (error) throw error;
 
-      setProducts(prev => [data, ...prev]);
+      // Refetch to maintain proper ordering
+      await fetchProducts();
       toast({
         title: "Produto criado",
         description: "Produto adicionado com sucesso.",
@@ -78,7 +81,8 @@ export const useProducts = () => {
 
       if (error) throw error;
 
-      setProducts(prev => prev.map(p => p.id === id ? data : p));
+      // Refetch to maintain proper ordering
+      await fetchProducts();
       toast({
         title: "Produto atualizado",
         description: "Produto atualizado com sucesso.",

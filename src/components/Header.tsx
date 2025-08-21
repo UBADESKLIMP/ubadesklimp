@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,7 +13,7 @@ const Header = () => {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   // Check if user is admin when component mounts and user changes
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAdmin = async () => {
       if (user && isAdmin) {
         try {
@@ -57,8 +57,8 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          {/* Desktop Navigation - Centered */}
+          <nav className="hidden md:flex space-x-8 flex-1 justify-center">
             {navigation.map((item) => (
               <a
                 key={item.name}
@@ -70,8 +70,8 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop CTA - Right aligned */}
-          <div className="hidden md:flex items-center space-x-4 ml-auto">
+          {/* Desktop Auth & Cart - Far right */}
+          <div className="hidden md:flex items-center space-x-3">
             <Cart />
             
             {/* Auth Section */}

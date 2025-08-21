@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Save, X, Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Upload, Save, X, Loader2, Star } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/hooks/useProducts';
@@ -25,7 +26,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     description: product?.description || '',
     price: product?.price?.toString() || '',
     category: product?.category || '',
-    image_url: product?.image_url || ''
+    image_url: product?.image_url || '',
+    priority: product?.priority || false
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +54,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         description: formData.description || null,
         price: parseFloat(formData.price),
         category: formData.category,
-        image_url: formData.image_url || null
+        image_url: formData.image_url || null,
+        priority: formData.priority
       });
     } finally {
       setSaving(false);
@@ -109,6 +112,19 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/30">
+        <Star className="h-5 w-5 text-yellow-500" />
+        <Label htmlFor="priority" className="font-medium">Item Prioritário</Label>
+        <Switch
+          id="priority"
+          checked={formData.priority}
+          onCheckedChange={(checked) => setFormData({...formData, priority: checked})}
+        />
+        <span className="text-sm text-muted-foreground ml-2">
+          {formData.priority ? 'Aparecerá no topo da lista' : 'Posição normal na lista'}
+        </span>
       </div>
       
       <div>
