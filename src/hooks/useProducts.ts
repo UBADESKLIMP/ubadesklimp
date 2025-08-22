@@ -38,10 +38,23 @@ export const useProducts = () => {
 
       if (productsError) throw productsError;
 
-      // Por enquanto, vamos trabalhar sem variações até os tipos serem atualizados
+      // Mapear produtos com todas as propriedades necessárias
       const productsWithVariations: ProductWithVariations[] = (productsData || []).map(product => ({
-        ...product,
-        variations: [] // Será implementado quando os tipos estiverem corretos
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        category: product.category,
+        image_url: product.image_url,
+        priority: product.priority,
+        priority_order: product.priority_order || 0,
+        has_variations: false, // Temporariamente false até implementarmos variações
+        material: product.material || undefined,
+        validity: product.validity || undefined,
+        specifications: product.specifications || undefined,
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        variations: [], // Array vazio temporariamente
+        price: product.price || undefined // Preço opcional para produtos com variações
       }));
 
       setProducts(productsWithVariations);

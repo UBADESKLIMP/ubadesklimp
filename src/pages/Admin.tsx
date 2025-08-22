@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProducts, Product } from '@/hooks/useProducts';
+import { useProducts } from '@/hooks/useProducts';
+import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts();
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSaveProduct = async (productData: any) => {
@@ -34,7 +35,8 @@ const Admin = () => {
     }
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined) => {
+    if (!price) return 'Preço não definido';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
