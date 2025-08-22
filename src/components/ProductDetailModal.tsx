@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, X } from 'lucide-react';
 import { useState } from 'react';
 import { ProductWithVariations, ProductVariation } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
@@ -83,19 +83,27 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 pb-0">
+        <DialogHeader className="p-6 pb-0 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-4 top-4 h-8 w-8 p-0"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           <DialogTitle className="text-2xl font-heading pr-8">{product.name}</DialogTitle>
         </DialogHeader>
 
         <div className="grid md:grid-cols-2 gap-8 p-6">
           {/* Imagem do produto */}
           <div className="space-y-4">
-            <div className="aspect-square bg-background rounded-lg flex items-center justify-center overflow-hidden border border-border">
+            <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden border border-border p-8">
               {getCurrentImage() ? (
                 <img 
                   src={getCurrentImage()!} 
                   alt={product.name}
-                  className="w-full h-full object-contain p-4"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <div className="text-6xl text-muted-foreground">📦</div>

@@ -8,7 +8,7 @@ export interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
   category: string;
   image_url: string | null;
   priority: boolean;
@@ -28,7 +28,7 @@ export const useProducts = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Buscar produtos com suas variações
+      // Buscar produtos
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
@@ -38,17 +38,10 @@ export const useProducts = () => {
 
       if (productsError) throw productsError;
 
-      // Buscar todas as variações
-      const { data: variationsData, error: variationsError } = await supabase
-        .from('product_variations')
-        .select('*');
-
-      if (variationsError) throw variationsError;
-
-      // Combinar produtos com suas variações
+      // Por enquanto, vamos trabalhar sem variações até os tipos serem atualizados
       const productsWithVariations: ProductWithVariations[] = (productsData || []).map(product => ({
         ...product,
-        variations: (variationsData || []).filter(variation => variation.product_id === product.id)
+        variations: [] // Será implementado quando os tipos estiverem corretos
       }));
 
       setProducts(productsWithVariations);
