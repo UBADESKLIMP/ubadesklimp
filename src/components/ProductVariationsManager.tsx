@@ -23,7 +23,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
     image_url: ''
   });
 
-  // Temporariamente desabilitado até os tipos serem atualizados
+  // Funcionalidade temporariamente desabilitada até os tipos serem atualizados
   const handleAddVariation = async () => {
     console.log('Add variation functionality will be implemented after types are updated');
   };
