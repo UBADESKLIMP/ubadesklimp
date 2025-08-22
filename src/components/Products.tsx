@@ -1,58 +1,60 @@
 
-import { ShoppingCart, Search, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCart } from '@/contexts/CartContext';
-import { toast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
+import { ProductWithVariations } from '@/types/product';
+import ProductCard from './ProductCard';
+import ProductDetailModal from './ProductDetailModal';
 
 const Products = () => {
-  const { addToCart } = useCart();
   const { products, loading } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Converter produtos simples para produtos com variações
+  // Na implementação real, isso virá diretamente do banco de dados
+  const productsWithVariations: ProductWithVariations[] = products.map(product => ({
+    ...product,
+    variations: [
+      { id: '1', literage: '500ml', price: product.price },
+      { id: '2', literage: '1L', price: product.price * 1.5 },
+      { id: '3', literage: '2L', price: product.price * 2.5 }
+    ],
+    // Dados mock para especificações - na implementação real virão do banco
+    material: 'Plástico PET',
+    validity: '12 meses',
+    specifications: product.description || 'Produto de alta qualidade para limpeza doméstica e comercial.'
+  }));
 
   // Get unique categories from products
   const categories = Array.from(new Set(products.map(product => product.category))).sort();
 
   // Filter products based on search and category
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = productsWithVariations.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const handleAddToCart = (product: any) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(product.price),
-      category: product.category,
-    });
-    
-    toast({
-      title: "Produto adicionado!",
-      description: `${product.name} foi adicionado ao carrinho.`,
-    });
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price);
-  };
-
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('all');
+  };
+
+  const handleShowDetails = (product: ProductWithVariations) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
   };
 
   if (loading) {
@@ -69,7 +71,7 @@ const Products = () => {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="bg-gradient-card border-border animate-pulse">
+              <div key={i} className="bg-gradient-card border-border animate-pulse rounded-lg">
                 <div className="p-6">
                   <div className="w-full h-48 bg-muted rounded mb-4"></div>
                   <div className="h-4 bg-muted rounded mb-2"></div>
@@ -80,7 +82,7 @@ const Products = () => {
                     <div className="h-10 w-24 bg-muted rounded"></div>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -161,62 +163,11 @@ const Products = () => {
         {filteredProducts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product, index) => (
-              <Card 
-                key={product.id} 
-                className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="p-0">
-                  {/* Product Image - Adjusted size like the reference */}
-                  <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4">
-                    {product.image_url ? (
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name}
-                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-muted to-muted/50">
-                        📦
-                      </div>
-                    )}
-                    
-                    {/* Category Badge */}
-                    <div className="absolute top-2 right-2">
-                      <div className="inline-block px-2 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium rounded-full shadow-medium">
-                        {product.category}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-heading text-foreground mb-2 line-clamp-2">
-                      {product.name}
-                    </h3>
-                    {product.description && (
-                      <p className="text-muted-foreground mb-3 text-sm line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-
-                    {/* Price and CTA */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-foreground">
-                        {formatPrice(product.price)}
-                      </span>
-                      <Button 
-                        size="sm"
-                        className="btn-secondary"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        Adicionar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              <ProductCard
+                key={product.id}
+                product={product}
+                onShowDetails={handleShowDetails}
+              />
             ))}
           </div>
         ) : products.length > 0 ? (
@@ -240,6 +191,13 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de detalhes */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </section>
   );
 };

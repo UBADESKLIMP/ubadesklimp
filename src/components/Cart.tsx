@@ -1,7 +1,7 @@
-
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCart } from '@/contexts/CartContext';
 import {
   Sheet,
@@ -14,9 +14,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import WhatsAppIcon from './WhatsAppIcon';
+import { ProductVariation } from '@/types/product';
 
 const Cart = () => {
-  const { state, updateQuantity, removeFromCart, clearCart, getWhatsAppLink } = useCart();
+  const { state, updateQuantity, updateVariation, removeFromCart, clearCart, getWhatsAppLink } = useCart();
 
   const handleWhatsAppOrder = () => {
     const link = getWhatsAppLink();
@@ -31,23 +32,50 @@ const Cart = () => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      // Extract numeric value from price string
       const priceString = item.price.toString();
       const numericPrice = parseFloat(
         priceString
           .replace('R$', '')
           .replace(/\s/g, '')
+          .replace(/\./g, '')
           .replace(',', '.')
       );
       
-      // Return 0 if price is not valid number
       const validPrice = isNaN(numericPrice) ? 0 : numericPrice;
       return total + (validPrice * item.quantity);
     }, 0);
   };
 
   const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
+  // Mock data para demonstrar variações (em produção, isso viria do produto)
+  const getVariationsForProduct = (productName: string): ProductVariation[] => {
+    // Simulação - na implementação real, isso viria do banco de dados
+    return [
+      { id: '1', literage: '500ml', price: 6.00 },
+      { id: '2', literage: '1L', price: 10.00 },
+      { id: '3', literage: '2L', price: 18.00 }
+    ];
+  };
+
+  const handleVariationChange = (itemId: string, variationId: string, productName: string) => {
+    const variations = getVariationsForProduct(productName);
+    const newVariation = variations.find(v => v.id === variationId);
+    
+    if (newVariation) {
+      const newPrice = formatPrice(newVariation.price);
+      updateVariation(itemId, newVariation, newPrice);
+      
+      toast({
+        title: "Variação atualizada",
+        description: `Produto alterado para ${newVariation.literage}`,
+      });
+    }
   };
 
   return (
@@ -89,7 +117,7 @@ const Cart = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-sm">{item.name}</h4>
+                          <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
                           <p className="text-xs text-muted-foreground">{item.category}</p>
                           <p className="font-bold text-primary">{item.price}</p>
                         </div>
@@ -102,6 +130,28 @@ const Cart = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+
+                      {/* Seleção de variação */}
+                      {item.variation && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium">Litragem:</label>
+                          <Select 
+                            value={item.variation.id} 
+                            onValueChange={(value) => handleVariationChange(item.id, value, item.name)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getVariationsForProduct(item.name).map((variation) => (
+                                <SelectItem key={variation.id} value={variation.id}>
+                                  {variation.literage} - {formatPrice(variation.price)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
