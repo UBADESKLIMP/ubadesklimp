@@ -3,12 +3,13 @@ import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ProductVariation } from '@/types/product';
 
 export interface CartItem {
-  id: string; // Agora será product.id + variation.id
+  id: string;
   name: string;
   price: string;
   quantity: number;
   category: string;
   variation?: ProductVariation;
+  productId?: string; // Para poder buscar outras variações
 }
 
 interface CartState {
@@ -20,7 +21,7 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'UPDATE_VARIATION'; payload: { id: string; variation: ProductVariation; newPrice: string } }
+  | { type: 'UPDATE_VARIATION'; payload: { id: string; variation: ProductVariation; newPrice: string; productId: string } }
   | { type: 'CLEAR_CART' };
 
 const CartContext = createContext<{
@@ -29,7 +30,7 @@ const CartContext = createContext<{
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateVariation: (id: string, variation: ProductVariation, newPrice: string) => void;
+  updateVariation: (id: string, variation: ProductVariation, newPrice: string, productId: string) => void;
   clearCart: () => void;
   getWhatsAppLink: () => string;
 } | undefined>(undefined);
@@ -87,9 +88,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           item.id === action.payload.id
             ? { 
                 ...item, 
+                id: `${action.payload.productId}-${action.payload.variation.id}`,
                 variation: action.payload.variation,
                 price: action.payload.newPrice,
-                name: item.name.split(' - ')[0] + ' - ' + action.payload.variation.literage
+                name: item.name.split(' - ')[0] + ' - ' + action.payload.variation.literage,
+                productId: action.payload.productId
               }
             : item
         ),
@@ -121,8 +124,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
   };
 
-  const updateVariation = (id: string, variation: ProductVariation, newPrice: string) => {
-    dispatch({ type: 'UPDATE_VARIATION', payload: { id, variation, newPrice } });
+  const updateVariation = (id: string, variation: ProductVariation, newPrice: string, productId: string) => {
+    dispatch({ type: 'UPDATE_VARIATION', payload: { id, variation, newPrice, productId } });
   };
 
   const clearCart = () => {

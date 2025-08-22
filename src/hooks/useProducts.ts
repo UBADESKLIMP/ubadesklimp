@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { ProductWithVariations } from '@/types/product';
 
 export interface Product {
   id: string;
@@ -11,25 +12,46 @@ export interface Product {
   category: string;
   image_url: string | null;
   priority: boolean;
+  priority_order: number;
+  has_variations: boolean;
+  material?: string;
+  validity?: string;
+  specifications?: string;
   created_at: string;
   updated_at: string;
 }
 
 export const useProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithVariations[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar produtos com suas variações
+      const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
         .order('priority', { ascending: false })
+        .order('priority_order', { ascending: true })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (productsError) throw productsError;
+
+      // Buscar todas as variações
+      const { data: variationsData, error: variationsError } = await supabase
+        .from('product_variations')
+        .select('*');
+
+      if (variationsError) throw variationsError;
+
+      // Combinar produtos com suas variações
+      const productsWithVariations: ProductWithVariations[] = (productsData || []).map(product => ({
+        ...product,
+        variations: (variationsData || []).filter(variation => variation.product_id === product.id)
+      }));
+
+      setProducts(productsWithVariations);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -52,7 +74,6 @@ export const useProducts = () => {
 
       if (error) throw error;
 
-      // Refetch to maintain proper ordering
       await fetchProducts();
       toast({
         title: "Produto criado",
@@ -81,7 +102,6 @@ export const useProducts = () => {
 
       if (error) throw error;
 
-      // Refetch to maintain proper ordering
       await fetchProducts();
       toast({
         title: "Produto atualizado",

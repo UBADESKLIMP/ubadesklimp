@@ -1,8 +1,12 @@
 
 export interface ProductVariation {
   id: string;
+  product_id: string;
   literage: string;
   price: number;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductWithVariations {
@@ -12,11 +16,14 @@ export interface ProductWithVariations {
   category: string;
   image_url: string | null;
   priority: boolean;
-  created_at: string;
-  updated_at: string;
-  variations: ProductVariation[];
-  // Campos para especificações
+  priority_order: number;
+  has_variations: boolean;
   material?: string;
   validity?: string;
   specifications?: string;
+  created_at: string;
+  updated_at: string;
+  variations: ProductVariation[];
+  // Para produtos sem variações, usamos o preço base
+  price?: number;
 }

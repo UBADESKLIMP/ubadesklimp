@@ -1,3 +1,4 @@
+
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,9 +16,11 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import WhatsAppIcon from './WhatsAppIcon';
 import { ProductVariation } from '@/types/product';
+import { useProducts } from '@/hooks/useProducts';
 
 const Cart = () => {
   const { state, updateQuantity, updateVariation, removeFromCart, clearCart, getWhatsAppLink } = useCart();
+  const { products } = useProducts();
 
   const handleWhatsAppOrder = () => {
     const link = getWhatsAppLink();
@@ -53,23 +56,20 @@ const Cart = () => {
     }).format(price);
   };
 
-  // Mock data para demonstrar variações (em produção, isso viria do produto)
-  const getVariationsForProduct = (productName: string): ProductVariation[] => {
-    // Simulação - na implementação real, isso viria do banco de dados
-    return [
-      { id: '1', literage: '500ml', price: 6.00 },
-      { id: '2', literage: '1L', price: 10.00 },
-      { id: '3', literage: '2L', price: 18.00 }
-    ];
+  const getVariationsForItem = (item: any) => {
+    if (!item.productId) return [];
+    
+    const product = products.find(p => p.id === item.productId);
+    return product?.variations || [];
   };
 
-  const handleVariationChange = (itemId: string, variationId: string, productName: string) => {
-    const variations = getVariationsForProduct(productName);
+  const handleVariationChange = (itemId: string, variationId: string, productId: string) => {
+    const variations = getVariationsForItem({ productId });
     const newVariation = variations.find(v => v.id === variationId);
     
     if (newVariation) {
       const newPrice = formatPrice(newVariation.price);
-      updateVariation(itemId, newVariation, newPrice);
+      updateVariation(itemId, newVariation, newPrice, productId);
       
       toast({
         title: "Variação atualizada",
@@ -112,71 +112,76 @@ const Cart = () => {
           ) : (
             <>
               <div className="max-h-96 overflow-y-auto space-y-4">
-                {state.items.map((item) => (
-                  <Card key={item.id} className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
-                          <p className="text-xs text-muted-foreground">{item.category}</p>
-                          <p className="font-bold text-primary">{item.price}</p>
+                {state.items.map((item) => {
+                  const availableVariations = getVariationsForItem(item);
+                  const hasVariations = availableVariations.length > 1;
+                  
+                  return (
+                    <Card key={item.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
+                            <p className="text-xs text-muted-foreground">{item.category}</p>
+                            <p className="font-bold text-primary">{item.price}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeFromCart(item.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFromCart(item.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
 
-                      {/* Seleção de variação */}
-                      {item.variation && (
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium">Litragem:</label>
-                          <Select 
-                            value={item.variation.id} 
-                            onValueChange={(value) => handleVariationChange(item.id, value, item.name)}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getVariationsForProduct(item.name).map((variation) => (
-                                <SelectItem key={variation.id} value={variation.id}>
-                                  {variation.literage} - {formatPrice(variation.price)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="h-8 w-8"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="h-8 w-8"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
+                        {/* Seleção de variação - apenas se houver variações disponíveis */}
+                        {hasVariations && item.variation && item.productId && (
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium">Alterar litragem:</label>
+                            <Select 
+                              value={item.variation.id} 
+                              onValueChange={(value) => handleVariationChange(item.id, value, item.productId!)}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableVariations.map((variation) => (
+                                  <SelectItem key={variation.id} value={variation.id}>
+                                    {variation.literage} - {formatPrice(variation.price)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="h-8 w-8"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="h-8 w-8"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
 
               <div className="border-t pt-4 mt-6 sticky bottom-0 bg-background">

@@ -16,26 +16,11 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Converter produtos simples para produtos com variações
-  // Na implementação real, isso virá diretamente do banco de dados
-  const productsWithVariations: ProductWithVariations[] = products.map(product => ({
-    ...product,
-    variations: [
-      { id: '1', literage: '500ml', price: product.price },
-      { id: '2', literage: '1L', price: product.price * 1.5 },
-      { id: '3', literage: '2L', price: product.price * 2.5 }
-    ],
-    // Dados mock para especificações - na implementação real virão do banco
-    material: 'Plástico PET',
-    validity: '12 meses',
-    specifications: product.description || 'Produto de alta qualidade para limpeza doméstica e comercial.'
-  }));
-
   // Get unique categories from products
   const categories = Array.from(new Set(products.map(product => product.category))).sort();
 
   // Filter products based on search and category
-  const filteredProducts = productsWithVariations.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -162,7 +147,7 @@ const Products = () => {
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => (
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}

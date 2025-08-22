@@ -15,25 +15,31 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const [selectedVariation, setSelectedVariation] = useState<ProductVariation>(
-    product.variations[0]
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(
+    product.has_variations ? product.variations[0] || null : null
   );
 
   const handleAddToCart = () => {
-    addToCart({
-      id: `${product.id}-${selectedVariation.id}`,
-      name: `${product.name} - ${selectedVariation.literage}`,
-      price: new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(selectedVariation.price),
-      category: product.category,
-      variation: selectedVariation
-    });
+    if (product.has_variations && selectedVariation) {
+      addToCart({
+        id: `${product.id}-${selectedVariation.id}`,
+        name: `${product.name} - ${selectedVariation.literage}`,
+        price: formatPrice(selectedVariation.price),
+        category: product.category,
+        variation: selectedVariation
+      });
+    } else if (!product.has_variations && product.price) {
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: formatPrice(product.price),
+        category: product.category
+      });
+    }
     
     toast({
       title: "Produto adicionado!",
-      description: `${product.name} (${selectedVariation.literage}) foi adicionado ao carrinho.`,
+      description: `${product.name} foi adicionado ao carrinho.`,
     });
   };
 
@@ -44,14 +50,31 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
     }).format(price);
   };
 
+  const getCurrentPrice = () => {
+    if (product.has_variations && selectedVariation) {
+      return selectedVariation.price;
+    }
+    if (!product.has_variations && product.price) {
+      return product.price;
+    }
+    return 0;
+  };
+
+  const getCurrentImage = () => {
+    if (product.has_variations && selectedVariation?.image_url) {
+      return selectedVariation.image_url;
+    }
+    return product.image_url;
+  };
+
   return (
     <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
       <div className="flex flex-col h-full">
         {/* Product Image */}
         <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4">
-          {product.image_url ? (
+          {getCurrentImage() ? (
             <img 
-              src={product.image_url} 
+              src={getCurrentImage()!} 
               alt={product.name}
               className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500"
             />
@@ -80,7 +103,7 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
           </Button>
         </div>
 
-        {/* Product Info - flex-1 para ocupar espaço disponível */}
+        {/* Product Info */}
         <div className="p-4 flex-1 flex flex-col">
           {/* Nome do produto - altura fixa */}
           <div className="h-14 mb-3">
@@ -89,10 +112,10 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
             </h3>
           </div>
 
-          {/* Descrição - altura fixa */}
+          {/* Descrição expandida - altura fixa maior */}
           {product.description && (
-            <div className="h-16 mb-4">
-              <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+            <div className="h-20 mb-4">
+              <p className="text-muted-foreground text-sm line-clamp-4 leading-relaxed">
                 {product.description}
               </p>
             </div>
@@ -101,18 +124,18 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
           {/* Espaçador flexível */}
           <div className="flex-1"></div>
 
-          {/* Seleção de litragem - se houver múltiplas opções */}
-          {product.variations.length > 1 && (
+          {/* Seleção de litragem - se houver variações */}
+          {product.has_variations && product.variations.length > 1 && (
             <div className="mb-4">
               <Select 
-                value={selectedVariation.id} 
+                value={selectedVariation?.id || ''} 
                 onValueChange={(value) => {
                   const variation = product.variations.find(v => v.id === value);
                   if (variation) setSelectedVariation(variation);
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione a litragem" />
                 </SelectTrigger>
                 <SelectContent>
                   {product.variations.map((variation) => (
@@ -128,12 +151,13 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
           {/* Price and CTA - sempre na parte inferior */}
           <div className="flex items-center justify-between mt-auto">
             <span className="text-xl font-bold text-foreground">
-              {formatPrice(selectedVariation.price)}
+              {getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível'}
             </span>
             <Button 
               size="sm"
               className="btn-secondary"
               onClick={handleAddToCart}
+              disabled={getCurrentPrice() === 0}
             >
               <ShoppingCart className="h-4 w-4 mr-1" />
               Adicionar
