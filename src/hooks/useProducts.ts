@@ -8,15 +8,10 @@ export interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number | null;
+  price: number;
   category: string;
   image_url: string | null;
   priority: boolean;
-  priority_order: number;
-  has_variations: boolean;
-  material?: string;
-  validity?: string;
-  specifications?: string;
   created_at: string;
   updated_at: string;
 }
@@ -33,7 +28,6 @@ export const useProducts = () => {
         .from('products')
         .select('*')
         .order('priority', { ascending: false })
-        .order('priority_order', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (productsError) throw productsError;
@@ -46,15 +40,15 @@ export const useProducts = () => {
         category: product.category,
         image_url: product.image_url,
         priority: product.priority,
-        priority_order: product.priority_order || 0,
+        priority_order: 0, // Valor padrão já que não existe na tabela ainda
         has_variations: false, // Temporariamente false até implementarmos variações
-        material: product.material || undefined,
-        validity: product.validity || undefined,
-        specifications: product.specifications || undefined,
+        material: undefined, // Não existe na tabela ainda
+        validity: undefined, // Não existe na tabela ainda
+        specifications: undefined, // Não existe na tabela ainda
         created_at: product.created_at,
         updated_at: product.updated_at,
         variations: [], // Array vazio temporariamente
-        price: product.price || undefined // Preço opcional para produtos com variações
+        price: product.price // Preço obrigatório por enquanto
       }));
 
       setProducts(productsWithVariations);
