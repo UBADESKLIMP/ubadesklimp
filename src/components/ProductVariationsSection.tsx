@@ -1,39 +1,61 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, ImageIcon } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useProductVariations } from '@/hooks/useProductVariations';
 import { ProductVariation } from '@/types/product';
 
-interface ProductVariationsManagerProps {
+interface ProductVariationsSectionProps {
   productId: string;
-  onVariationsChange?: () => void;
+  onVariationImageChange?: (imageUrl: string) => void;
 }
 
-const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVariationsManagerProps) => {
+const ProductVariationsSection = ({ productId, onVariationImageChange }: ProductVariationsSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
-  const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { variations, loading, createVariation, updateVariation, deleteVariation } = useProductVariations(productId);
   const [newVariation, setNewVariation] = useState({
     literage: '',
     price: '',
     image_url: ''
   });
 
-  // Funcionalidade temporariamente desabilitada até os tipos serem atualizados
   const handleAddVariation = async () => {
-    console.log('Add variation functionality will be implemented after types are updated');
+    if (!newVariation.literage || !newVariation.price) return;
+
+    try {
+      await createVariation({
+        product_id: productId,
+        literage: newVariation.literage,
+        price: parseFloat(newVariation.price),
+        image_url: newVariation.image_url || null
+      });
+
+      // Se tem imagem na nova variação, atualizar a foto principal
+      if (newVariation.image_url && onVariationImageChange) {
+        onVariationImageChange(newVariation.image_url);
+      }
+
+      setNewVariation({ literage: '', price: '', image_url: '' });
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
-  const handleUpdateVariation = async (id: string, field: string, value: string | number) => {
-    console.log('Update variation functionality will be implemented after types are updated');
-  };
+  const handleUpdateVariation = async (id: string, field: keyof ProductVariation, value: string | number) => {
+    try {
+      const updates = { [field]: value };
+      await updateVariation(id, updates);
 
-  const handleDeleteVariation = async (id: string) => {
-    console.log('Delete variation functionality will be implemented after types are updated');
+      // Se atualizou imagem e é a primeira variação, atualizar foto principal
+      if (field === 'image_url' && variations[0]?.id === id && onVariationImageChange && value) {
+        onVariationImageChange(value as string);
+      }
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
   const handleImageUpload = async (file: File, variationId?: string) => {
@@ -50,31 +72,30 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Carregando variações...</span>
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span>Carregando variações...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Variações do Produto</h3>
-      
       {/* Variações existentes */}
       <div className="space-y-3">
-        {variations.map((variation) => (
-          <Card key={variation.id}>
+        {variations.map((variation, index) => (
+          <Card key={variation.id} className="border-l-4 border-l-primary/20">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
-                  <Label>Litragem</Label>
+                  <Label className="text-sm font-medium">Tamanho/Volume</Label>
                   <Input
                     value={variation.literage}
                     onChange={(e) => handleUpdateVariation(variation.id, 'literage', e.target.value)}
+                    placeholder="Ex: 500ml, 1L"
                   />
                 </div>
                 <div>
-                  <Label>Preço (R$)</Label>
+                  <Label className="text-sm font-medium">Preço (R$)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -83,7 +104,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
                   />
                 </div>
                 <div>
-                  <Label>Imagem</Label>
+                  <Label className="text-sm font-medium">Imagem específica</Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       type="file"
@@ -97,11 +118,18 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
                       className="text-xs"
                     />
                     {variation.image_url && (
-                      <img 
-                        src={variation.image_url} 
-                        alt="Preview" 
-                        className="w-10 h-10 object-cover rounded border"
-                      />
+                      <div className="relative">
+                        <img 
+                          src={variation.image_url} 
+                          alt="Preview" 
+                          className="w-12 h-12 object-cover rounded border"
+                        />
+                        {index === 0 && (
+                          <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs px-1 rounded">
+                            Principal
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -109,7 +137,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDeleteVariation(variation.id)}
+                    onClick={() => deleteVariation(variation.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -121,14 +149,17 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
       </div>
 
       {/* Nova variação */}
-      <Card>
+      <Card className="border-dashed border-2">
         <CardHeader>
-          <CardTitle className="text-base">Adicionar Nova Variação</CardTitle>
+          <CardTitle className="text-base flex items-center">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Nova Variação
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Litragem</Label>
+              <Label className="text-sm font-medium">Tamanho/Volume</Label>
               <Input
                 placeholder="Ex: 500ml, 1L, 2L"
                 value={newVariation.literage}
@@ -136,7 +167,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
               />
             </div>
             <div>
-              <Label>Preço (R$)</Label>
+              <Label className="text-sm font-medium">Preço (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -146,7 +177,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
               />
             </div>
             <div>
-              <Label>Imagem</Label>
+              <Label className="text-sm font-medium">Imagem (opcional)</Label>
               <div className="flex items-center space-x-2">
                 <Input
                   type="file"
@@ -162,7 +193,7 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
                   <img 
                     src={newVariation.image_url} 
                     alt="Preview" 
-                    className="w-10 h-10 object-cover rounded border"
+                    className="w-12 h-12 object-cover rounded border"
                   />
                 )}
               </div>
@@ -176,9 +207,6 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Variação
           </Button>
-          <div className="text-center text-sm text-muted-foreground p-4 bg-muted/30 rounded">
-            Funcionalidade de variações será ativada após atualização dos tipos do banco de dados
-          </div>
         </CardContent>
       </Card>
       
@@ -188,8 +216,15 @@ const ProductVariationsManager = ({ productId, onVariationsChange }: ProductVari
           Fazendo upload da imagem...
         </div>
       )}
+
+      {variations.length > 0 && (
+        <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded">
+          💡 <strong>Dica:</strong> A primeira variação será usada como imagem principal do produto. 
+          Organize as variações por ordem de importância.
+        </div>
+      )}
     </div>
   );
 };
 
-export default ProductVariationsManager;
+export default ProductVariationsSection;
