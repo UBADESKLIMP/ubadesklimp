@@ -2,9 +2,7 @@
 import { ShoppingCart, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
-import { ProductWithVariations, ProductVariation } from '@/types/product';
+import { ProductWithVariations } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,32 +13,27 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(
-    product.has_variations ? product.variations[0] || null : null
-  );
 
   const handleAddToCart = () => {
-    if (product.has_variations && selectedVariation) {
-      addToCart({
-        id: `${product.id}-${selectedVariation.id}`,
-        name: `${product.name} - ${selectedVariation.literage}`,
-        price: formatPrice(selectedVariation.price),
-        category: product.category,
-        variation: selectedVariation
+    if (product.has_variations) {
+      // Para produtos com variações, redireciona para detalhes
+      onShowDetails(product);
+      toast({
+        title: "Ver detalhes",
+        description: "Clique em uma variação para adicionar ao carrinho.",
       });
-    } else if (!product.has_variations && product.price) {
+    } else if (product.price) {
       addToCart({
         id: product.id,
         name: product.name,
         price: formatPrice(product.price),
         category: product.category
       });
+      toast({
+        title: "Produto adicionado!",
+        description: `${product.name} foi adicionado ao carrinho.`,
+      });
     }
-    
-    toast({
-      title: "Produto adicionado!",
-      description: `${product.name} foi adicionado ao carrinho.`,
-    });
   };
 
   const formatPrice = (price: number) => {
@@ -51,19 +44,12 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
   };
 
   const getCurrentPrice = () => {
-    if (product.has_variations && selectedVariation) {
-      return selectedVariation.price;
-    }
-    if (!product.has_variations && product.price) {
-      return product.price;
-    }
-    return 0;
+    // Sempre mostra o preço base do produto
+    return product.price || 0;
   };
 
   const getCurrentImage = () => {
-    if (product.has_variations && selectedVariation?.image_url) {
-      return selectedVariation.image_url;
-    }
+    // Sempre mostra a imagem principal do produto
     return product.image_url;
   };
 
@@ -124,27 +110,14 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
           {/* Espaçador flexível */}
           <div className="flex-1"></div>
 
-          {/* Seleção de litragem - se houver variações */}
-          {product.has_variations && product.variations.length > 1 && (
+          {/* Indicador de variações disponíveis */}
+          {product.has_variations && (
             <div className="mb-4">
-              <Select 
-                value={selectedVariation?.id || ''} 
-                onValueChange={(value) => {
-                  const variation = product.variations.find(v => v.id === value);
-                  if (variation) setSelectedVariation(variation);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione a litragem" />
-                </SelectTrigger>
-                <SelectContent>
-                  {product.variations.map((variation) => (
-                    <SelectItem key={variation.id} value={variation.id}>
-                      {variation.literage} - {formatPrice(variation.price)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="bg-secondary/50 border border-border rounded-lg p-3 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Variações disponíveis - Clique em "Ver detalhes"
+                </p>
+              </div>
             </div>
           )}
 
@@ -160,7 +133,7 @@ const ProductCard = ({ product, onShowDetails }: ProductCardProps) => {
               disabled={getCurrentPrice() === 0}
             >
               <ShoppingCart className="h-4 w-4 mr-1" />
-              Adicionar
+              {product.has_variations ? 'Ver opções' : 'Adicionar'}
             </Button>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductWithVariations, ProductVariation } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
@@ -16,9 +16,16 @@ interface ProductDetailModalProps {
 
 const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProps) => {
   const { addToCart } = useCart();
-  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(
-    product?.variations?.[0] || null
-  );
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
+
+  // Atualiza a variação selecionada quando o produto muda
+  useEffect(() => {
+    if (product?.has_variations && product.variations?.length > 0) {
+      setSelectedVariation(product.variations[0]);
+    } else {
+      setSelectedVariation(null);
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -160,11 +167,11 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
             </div>
 
             {/* Seleção de variação */}
-            {product.has_variations && product.variations && product.variations.length > 1 && (
+            {product.has_variations && product.variations && product.variations.length > 0 && (
               <div className="space-y-3">
                 <label className="font-medium">Escolha a litragem:</label>
                 <Select 
-                  value={selectedVariation?.id} 
+                  value={selectedVariation?.id || ''} 
                   onValueChange={(value) => {
                     const variation = product.variations.find(v => v.id === value);
                     setSelectedVariation(variation || null);

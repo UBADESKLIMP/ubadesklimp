@@ -32,24 +32,42 @@ export const useProducts = () => {
 
       if (productsError) throw productsError;
 
-      // Mapear produtos com todas as propriedades necessárias
-      const productsWithVariations: ProductWithVariations[] = (productsData || []).map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        category: product.category,
-        image_url: product.image_url,
-        priority: product.priority,
-        priority_order: product.priority_order || 0,
-        has_variations: product.has_variations || false,
-        material: product.material,
-        validity: product.validity,
-        specifications: product.specifications,
-        created_at: product.created_at,
-        updated_at: product.updated_at,
-        variations: [], // Array vazio temporariamente
-        price: product.price // Preço obrigatório por enquanto
-      }));
+      // Para cada produto, buscar suas variações se houver
+      const productsWithVariations: ProductWithVariations[] = await Promise.all(
+        (productsData || []).map(async (product) => {
+          let variations: any[] = [];
+          
+          if (product.has_variations) {
+            const { data: variationsData, error: variationsError } = await supabase
+              .from('product_variations')
+              .select('*')
+              .eq('product_id', product.id)
+              .order('created_at', { ascending: true });
+            
+            if (!variationsError) {
+              variations = variationsData || [];
+            }
+          }
+
+          return {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            category: product.category,
+            image_url: product.image_url,
+            priority: product.priority,
+            priority_order: product.priority_order || 0,
+            has_variations: product.has_variations || false,
+            material: product.material,
+            validity: product.validity,
+            specifications: product.specifications,
+            created_at: product.created_at,
+            updated_at: product.updated_at,
+            variations: variations,
+            price: product.price
+          };
+        })
+      );
 
       setProducts(productsWithVariations);
     } catch (error) {
