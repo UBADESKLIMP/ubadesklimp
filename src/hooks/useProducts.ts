@@ -40,11 +40,11 @@ export const useProducts = () => {
         category: product.category,
         image_url: product.image_url,
         priority: product.priority,
-        priority_order: 0, // Valor padrão já que não existe na tabela ainda
-        has_variations: false, // Temporariamente false até implementarmos variações
-        material: undefined, // Não existe na tabela ainda
-        validity: undefined, // Não existe na tabela ainda
-        specifications: undefined, // Não existe na tabela ainda
+        priority_order: product.priority_order || 0,
+        has_variations: product.has_variations || false,
+        material: product.material,
+        validity: product.validity,
+        specifications: product.specifications,
         created_at: product.created_at,
         updated_at: product.updated_at,
         variations: [], // Array vazio temporariamente

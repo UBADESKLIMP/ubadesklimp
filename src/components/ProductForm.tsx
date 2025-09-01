@@ -29,6 +29,11 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     category: product?.category || '',
     image_url: product?.image_url || '',
     priority: product?.priority || false,
+    priority_order: product?.priority_order?.toString() || '0',
+    has_variations: product?.has_variations || false,
+    material: product?.material || '',
+    validity: product?.validity || '',
+    specifications: product?.specifications || '',
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +62,11 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         category: formData.category,
         image_url: formData.image_url || null,
         priority: formData.priority,
+        priority_order: parseInt(formData.priority_order || '0'),
+        has_variations: formData.has_variations,
+        material: formData.material || null,
+        validity: formData.validity || null,
+        specifications: formData.specifications || null,
       };
 
       await onSave(productData);
@@ -151,6 +161,37 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             </div>
           </div>
 
+          <div>
+            <Label htmlFor="material">Material</Label>
+            <Input
+              id="material"
+              value={formData.material}
+              onChange={(e) => setFormData({...formData, material: e.target.value})}
+              placeholder="Ex: Plástico, Metal, Vidro"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="validity">Validade</Label>
+            <Input
+              id="validity"
+              value={formData.validity}
+              onChange={(e) => setFormData({...formData, validity: e.target.value})}
+              placeholder="Ex: 2 anos, 6 meses"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="specifications">Especificações</Label>
+            <Textarea
+              id="specifications"
+              value={formData.specifications}
+              onChange={(e) => setFormData({...formData, specifications: e.target.value})}
+              rows={3}
+              placeholder="Especificações técnicas do produto"
+            />
+          </div>
+
           <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/30">
             <Star className="h-5 w-5 text-yellow-500" />
             <Label htmlFor="priority" className="font-medium">Item Prioritário</Label>
@@ -161,6 +202,35 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             />
             <span className="text-sm text-muted-foreground ml-2">
               {formData.priority ? 'Aparecerá no topo da lista' : 'Posição normal na lista'}
+            </span>
+          </div>
+
+          {formData.priority && (
+            <div>
+              <Label htmlFor="priority_order">Ordem de Prioridade</Label>
+              <Input
+                id="priority_order"
+                type="number"
+                min="0"
+                value={formData.priority_order}
+                onChange={(e) => setFormData({...formData, priority_order: e.target.value})}
+                placeholder="0"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Menor número = maior prioridade
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/30">
+            <Label htmlFor="has_variations" className="font-medium">Produto com Variações</Label>
+            <Switch
+              id="has_variations"
+              checked={formData.has_variations}
+              onCheckedChange={(checked) => setFormData({...formData, has_variations: checked})}
+            />
+            <span className="text-sm text-muted-foreground ml-2">
+              {formData.has_variations ? 'Possui diferentes tamanhos/preços' : 'Produto único'}
             </span>
           </div>
         </CardContent>

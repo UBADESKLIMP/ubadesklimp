@@ -35,39 +35,92 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variations: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          literage: string
+          price: number
+          product_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          literage: string
+          price: number
+          product_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          literage?: string
+          price?: number
+          product_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
           created_at: string
           description: string | null
+          has_variations: boolean | null
           id: string
           image_url: string | null
+          material: string | null
           name: string
           price: number
           priority: boolean
+          priority_order: number | null
+          specifications: string | null
           updated_at: string
+          validity: string | null
         }
         Insert: {
           category: string
           created_at?: string
           description?: string | null
+          has_variations?: boolean | null
           id?: string
           image_url?: string | null
+          material?: string | null
           name: string
           price: number
           priority?: boolean
+          priority_order?: number | null
+          specifications?: string | null
           updated_at?: string
+          validity?: string | null
         }
         Update: {
           category?: string
           created_at?: string
           description?: string | null
+          has_variations?: boolean | null
           id?: string
           image_url?: string | null
+          material?: string | null
           name?: string
           price?: number
           priority?: boolean
+          priority_order?: number | null
+          specifications?: string | null
           updated_at?: string
+          validity?: string | null
         }
         Relationships: []
       }
