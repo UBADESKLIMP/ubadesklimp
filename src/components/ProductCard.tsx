@@ -58,6 +58,15 @@ const ProductCard = ({
               📦
             </div>}
           
+          {/* Priority Badge */}
+          {product.priority && (
+            <div className="absolute top-2 left-2">
+              <div className="inline-block px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-md">
+                ⭐ DESTAQUE
+              </div>
+            </div>
+          )}
+          
           {/* Category Badge */}
           <div className="absolute top-2 right-2">
             <div className="inline-block px-2 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium rounded-full shadow-medium">
@@ -66,7 +75,12 @@ const ProductCard = ({
           </div>
 
           {/* Details Button */}
-          <Button variant="secondary" size="sm" className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onShowDetails(product)}>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            className={`absolute ${product.priority ? 'bottom-2' : 'top-2'} left-2 opacity-0 group-hover:opacity-100 transition-opacity`} 
+            onClick={() => onShowDetails(product)}
+          >
             <Info className="h-3 w-3 mr-1" />
             Detalhes
           </Button>

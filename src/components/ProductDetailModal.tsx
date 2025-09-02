@@ -39,7 +39,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
           currency: 'BRL'
         }).format(selectedVariation.price),
         category: product.category,
-        variation: selectedVariation
+        variation: selectedVariation,
+        productId: product.id
       });
     } else if (!product.has_variations && product.price) {
       addToCart({
@@ -90,18 +91,6 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 pb-0 relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-4 top-4 h-8 w-8 p-0"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <DialogTitle className="text-2xl font-heading pr-8">{product.name}</DialogTitle>
-        </DialogHeader>
-
         <div className="grid md:grid-cols-2 gap-8 p-6">
           {/* Imagem do produto */}
           <div className="space-y-4">
@@ -120,14 +109,6 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
 
           {/* Detalhes do produto */}
           <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-3">{product.name}</h3>
-              {product.description && (
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  {product.description}
-                </p>
-              )}
-            </div>
 
             {/* Especificações */}
             <div className="space-y-4">

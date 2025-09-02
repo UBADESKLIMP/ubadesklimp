@@ -28,6 +28,7 @@ export const useProducts = () => {
         .from('products')
         .select('*')
         .order('priority', { ascending: false })
+        .order('priority_order', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (productsError) throw productsError;
