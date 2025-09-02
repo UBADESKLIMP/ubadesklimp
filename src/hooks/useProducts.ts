@@ -12,6 +12,7 @@ export interface Product {
   category: string;
   image_url: string | null;
   priority: boolean;
+  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | null;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +60,7 @@ export const useProducts = () => {
             priority: product.priority,
             priority_order: product.priority_order || 0,
             has_variations: product.has_variations || false,
+            highlight_type: (product as any).highlight_type || null,
             material: product.material,
             validity: product.validity,
             specifications: product.specifications,

@@ -33,6 +33,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     priority: product?.priority || false,
     priority_order: product?.priority_order?.toString() || '0',
     has_variations: product?.has_variations || false,
+    highlight_type: product?.highlight_type || '',
     material: product?.material || '',
     validity: product?.validity || '',
     specifications: product?.specifications || '',
@@ -66,6 +67,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         priority: formData.priority,
         priority_order: parseInt(formData.priority_order || '0'),
         has_variations: formData.has_variations,
+        highlight_type: formData.highlight_type || null,
         material: formData.material || null,
         validity: formData.validity || null,
         specifications: formData.specifications || null,
@@ -262,6 +264,27 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     Menor número = maior prioridade
+                  </p>
+                </div>
+              )}
+
+              {formData.priority && (
+                <div>
+                  <Label htmlFor="highlight_type">Tipo de Destaque</Label>
+                  <Select value={formData.highlight_type} onValueChange={(value) => setFormData({...formData, highlight_type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de destaque" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sem destaque específico</SelectItem>
+                      <SelectItem value="bestseller">🏆 Mais Vendido</SelectItem>
+                      <SelectItem value="promotion">🎯 Promoção</SelectItem>
+                      <SelectItem value="new">✨ Novidade</SelectItem>
+                      <SelectItem value="featured">⭐ Destaque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Escolha o tipo de destaque que aparecerá no produto
                   </p>
                 </div>
               )}

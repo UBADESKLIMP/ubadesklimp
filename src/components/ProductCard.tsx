@@ -67,10 +67,16 @@ const ProductCard = ({
     }
   };
 
+  // Usar o tipo de destaque do produto ou fallback para categoria
+  const highlightType = product.highlight_type as HighlightType || getHighlightTypeByCategory(product.category);
+  const highlightConfig = HIGHLIGHT_CONFIGS[highlightType];
+  
+  // Só mostrar destaque se o produto for prioritário
+  const shouldShowHighlight = product.priority;
+
   const getCurrentHighlight = () => {
-    if (!product.priority) return null;
-    const highlightType = getHighlightTypeByCategory(product.category);
-    return HIGHLIGHT_CONFIGS[highlightType];
+    if (!shouldShowHighlight) return null;
+    return highlightConfig;
   };
 
   return <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
