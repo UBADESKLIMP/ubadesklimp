@@ -1,9 +1,10 @@
-import { ShoppingCart, Info } from 'lucide-react';
+import { ShoppingCart, Info, Star, Zap, Sparkles, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProductWithVariations } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
+import { getHighlightTypeByCategory, HIGHLIGHT_CONFIGS, HighlightType } from '@/types/highlight';
 interface ProductCardProps {
   product: ProductWithVariations;
   onShowDetails: (product: ProductWithVariations) => void;
@@ -50,6 +51,28 @@ const ProductCard = ({
     // Sempre mostra a imagem principal do produto
     return product.image_url;
   };
+  // Função para obter o ícone baseado no tipo de destaque
+  const getHighlightIcon = (type: HighlightType) => {
+    switch (type) {
+      case 'bestseller':
+        return <Crown className="h-3 w-3" />;
+      case 'promotion':
+        return <Zap className="h-3 w-3" />;
+      case 'new':
+        return <Sparkles className="h-3 w-3" />;
+      case 'featured':
+        return <Star className="h-3 w-3" />;
+      default:
+        return <Star className="h-3 w-3" />;
+    }
+  };
+
+  const getCurrentHighlight = () => {
+    if (!product.priority) return null;
+    const highlightType = getHighlightTypeByCategory(product.category);
+    return HIGHLIGHT_CONFIGS[highlightType];
+  };
+
   return <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
       <div className="flex flex-col h-full">
         {/* Product Image */}
@@ -58,22 +81,28 @@ const ProductCard = ({
               📦
             </div>}
           
-          {/* Priority Badge */}
-          {product.priority && (
-            <div className="absolute -top-1 -left-1 z-10">
-              <div className="relative">
-                <div className="bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white px-4 py-2 rounded-br-2xl rounded-tl-lg shadow-lg backdrop-blur-sm border border-white/20">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <span className="text-xs font-bold tracking-wider uppercase">
-                      Destaque
-                    </span>
+          {/* Dynamic Priority Badge */}
+          {(() => {
+            const highlight = getCurrentHighlight();
+            if (!highlight) return null;
+            
+            return (
+              <div className="absolute -top-1 -left-1 z-10">
+                <div className="relative">
+                  <div className={`bg-gradient-to-r ${highlight.gradient} text-white px-4 py-2 rounded-br-2xl rounded-tl-lg shadow-lg backdrop-blur-sm border border-white/20`}>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      {getHighlightIcon(highlight.type)}
+                      <span className="text-xs font-bold tracking-wider uppercase">
+                        {highlight.label}
+                      </span>
+                    </div>
                   </div>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${highlight.gradient} rounded-br-2xl rounded-tl-lg blur-sm opacity-40 -z-10`}></div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 rounded-br-2xl rounded-tl-lg blur-sm opacity-40 -z-10"></div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* Category Badge */}
           <div className="absolute top-2 right-2">
