@@ -95,12 +95,12 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
           {/* Imagem do produto */}
           <div className="space-y-4">
             <div className="relative w-full bg-white rounded-lg border border-border overflow-hidden">
-              <div className="min-h-[400px] flex items-center justify-center p-6">
+              <div className="h-[600px] flex items-center justify-center p-4">
                 {getCurrentImage() ? (
                   <img 
                     src={getCurrentImage()!} 
                     alt={product.name}
-                    className="w-full h-full max-h-[500px] object-contain hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
                   <div className="text-6xl text-muted-foreground">📦</div>
