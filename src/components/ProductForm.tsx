@@ -67,7 +67,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         priority: formData.priority,
         priority_order: parseInt(formData.priority_order || '0'),
         has_variations: formData.has_variations,
-        highlight_type: formData.highlight_type || null,
+        highlight_type: formData.highlight_type === 'none' ? null : formData.highlight_type || null,
         material: formData.material || null,
         validity: formData.validity || null,
         specifications: formData.specifications || null,
@@ -276,7 +276,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                       <SelectValue placeholder="Selecione o tipo de destaque" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sem destaque específico</SelectItem>
+                      <SelectItem value="none">Sem destaque específico</SelectItem>
                       <SelectItem value="bestseller">🏆 Mais Vendido</SelectItem>
                       <SelectItem value="promotion">🎯 Promoção</SelectItem>
                       <SelectItem value="new">✨ Novidade</SelectItem>

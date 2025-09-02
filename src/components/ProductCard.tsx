@@ -68,11 +68,12 @@ const ProductCard = ({
   };
 
   // Usar o tipo de destaque do produto ou fallback para categoria
-  const highlightType = product.highlight_type as HighlightType || getHighlightTypeByCategory(product.category);
+  const productHighlightType = product.highlight_type === 'none' ? null : product.highlight_type;
+  const highlightType = productHighlightType as HighlightType || getHighlightTypeByCategory(product.category);
   const highlightConfig = HIGHLIGHT_CONFIGS[highlightType];
   
-  // Só mostrar destaque se o produto for prioritário
-  const shouldShowHighlight = product.priority;
+  // Só mostrar destaque se o produto for prioritário e não for "none"
+  const shouldShowHighlight = product.priority && productHighlightType !== null;
 
   const getCurrentHighlight = () => {
     if (!shouldShowHighlight) return null;

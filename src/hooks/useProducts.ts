@@ -12,7 +12,7 @@ export interface Product {
   category: string;
   image_url: string | null;
   priority: boolean;
-  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | null;
+  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
   created_at: string;
   updated_at: string;
 }

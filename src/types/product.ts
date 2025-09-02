@@ -18,7 +18,7 @@ export interface ProductWithVariations {
   priority: boolean;
   priority_order: number;
   has_variations: boolean;
-  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | null;
+  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
   material?: string;
   validity?: string;
   specifications?: string;
