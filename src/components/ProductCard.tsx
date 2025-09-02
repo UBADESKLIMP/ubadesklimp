@@ -97,7 +97,7 @@ const ProductCard = ({
         {/* Product Info */}
         <div className="p-4 flex-1 flex flex-col">
           {/* Nome do produto - altura fixa */}
-          <div className="h-14 mb-2">
+          <div className="h-14 mb-1">
             <h3 className="text-lg font-heading text-foreground line-clamp-2 leading-tight">
               {product.name}
             </h3>
