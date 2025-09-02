@@ -94,7 +94,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         <div className="grid md:grid-cols-2 gap-8 p-6">
           {/* Imagem do produto */}
           <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden border border-border p-8">
+            <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden border border-border p-8 relative">
               {getCurrentImage() ? (
                 <img 
                   src={getCurrentImage()!} 
@@ -104,11 +104,29 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               ) : (
                 <div className="text-6xl text-muted-foreground">📦</div>
               )}
+              
+              {/* Priority Badge in Details */}
+              {product.priority && (
+                <div className="absolute top-4 left-4">
+                  <div className="bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white px-3 py-1.5 rounded-full shadow-lg">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                      <span className="text-xs font-bold tracking-wider uppercase">
+                        Produto Destaque
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Detalhes do produto */}
           <div className="space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
+              <p className="text-sm text-primary font-medium uppercase tracking-wide">{product.category}</p>
+            </div>
 
             {/* Especificações */}
             <div className="space-y-4">

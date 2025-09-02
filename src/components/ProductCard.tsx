@@ -60,9 +60,17 @@ const ProductCard = ({
           
           {/* Priority Badge */}
           {product.priority && (
-            <div className="absolute top-2 left-2">
-              <div className="inline-block px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-md">
-                ⭐ DESTAQUE
+            <div className="absolute -top-1 -left-1 z-10">
+              <div className="relative">
+                <div className="bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white px-4 py-2 rounded-br-2xl rounded-tl-lg shadow-lg backdrop-blur-sm border border-white/20">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-xs font-bold tracking-wider uppercase">
+                      Destaque
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 rounded-br-2xl rounded-tl-lg blur-sm opacity-40 -z-10"></div>
               </div>
             </div>
           )}
