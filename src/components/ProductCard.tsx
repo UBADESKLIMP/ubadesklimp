@@ -44,7 +44,12 @@ const ProductCard = ({
     }).format(price);
   };
   const getCurrentPrice = () => {
-    // Sempre mostra o preço base do produto
+    // Para produtos com variações, usar o menor preço das variações
+    if (product.has_variations && product.variations && product.variations.length > 0) {
+      const minPrice = Math.min(...product.variations.map(v => v.price));
+      return minPrice;
+    }
+    // Para produtos sem variações, usar o preço base
     return product.price || 0;
   };
   const getCurrentImage = () => {
@@ -157,7 +162,11 @@ const ProductCard = ({
           {/* Price and CTA - sempre na parte inferior */}
           <div className="flex items-center justify-between mt-auto">
             <span className="text-xl font-bold text-foreground">
-              {getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível'}
+              {getCurrentPrice() > 0 ? 
+                (product.has_variations && product.variations && product.variations.length > 0 ? 
+                  `A partir de ${formatPrice(getCurrentPrice())}` : 
+                  formatPrice(getCurrentPrice())
+                ) : 'Indisponível'}
             </span>
             <Button size="sm" className="btn-secondary" onClick={handleAddToCart} disabled={getCurrentPrice() === 0}>
               <ShoppingCart className="h-4 w-4 mr-1" />
