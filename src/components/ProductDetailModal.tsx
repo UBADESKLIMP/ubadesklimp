@@ -94,16 +94,18 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         <div className="grid md:grid-cols-2 gap-8 p-6">
           {/* Imagem do produto */}
           <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden border border-border p-8 relative">
-              {getCurrentImage() ? (
-                <img 
-                  src={getCurrentImage()!} 
-                  alt={product.name}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="text-6xl text-muted-foreground">📦</div>
-              )}
+            <div className="relative w-full bg-white rounded-lg border border-border overflow-hidden">
+              <div className="aspect-[4/3] flex items-center justify-center p-6">
+                {getCurrentImage() ? (
+                  <img 
+                    src={getCurrentImage()!} 
+                    alt={product.name}
+                    className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="text-6xl text-muted-foreground">📦</div>
+                )}
+              </div>
               
               {/* Priority Badge in Details */}
               {product.priority && (
