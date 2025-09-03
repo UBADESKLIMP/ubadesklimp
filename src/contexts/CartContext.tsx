@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { ProductVariation } from '@/types/product';
+import { ProductVariation, ProductFragrance } from '@/types/product';
 
 export interface CartItem {
   id: string;
@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   category: string;
   variation?: ProductVariation;
+  fragrance?: ProductFragrance;
   productId?: string; // Para poder buscar outras variações
 }
 
@@ -165,7 +166,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       message += `• ${item.name}\n`;
       message += `  Categoria: ${item.category}\n`;
       message += `  Preço: ${item.price}\n`;
-      message += `  Quantidade: ${item.quantity}\n\n`;
+      message += `  Quantidade: ${item.quantity}\n`;
+      if (item.fragrance) {
+        message += `  Fragrância: ${item.fragrance.name}\n`;
+      }
+      message += '\n';
     });
     
     message += `📞 Gostaria de finalizar este pedido!`;

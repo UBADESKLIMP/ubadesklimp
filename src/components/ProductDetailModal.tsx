@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { ProductWithVariations, ProductVariation } from '@/types/product';
+import { ProductWithVariations, ProductVariation, ProductFragrance } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -17,46 +17,70 @@ interface ProductDetailModalProps {
 const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProps) => {
   const { addToCart } = useCart();
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
+  const [selectedFragrance, setSelectedFragrance] = useState<ProductFragrance | null>(null);
 
-  // Atualiza a variação selecionada quando o produto muda
+  // Atualiza a variação e fragrância selecionadas quando o produto muda
   useEffect(() => {
     if (product?.has_variations && product.variations?.length > 0) {
       setSelectedVariation(product.variations[0]);
     } else {
       setSelectedVariation(null);
     }
+
+    if (product?.has_fragrances && product.fragrances?.length > 0) {
+      setSelectedFragrance(product.fragrances[0]);
+    } else {
+      setSelectedFragrance(null);
+    }
   }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
 
+    let productName = product.name;
+    let productId = product.id;
+
+    // Adicionar informações de variação ao nome
+    if (product.has_variations && selectedVariation) {
+      productName += ` - ${selectedVariation.literage}`;
+      productId += `-${selectedVariation.id}`;
+    }
+
+    // Adicionar informações de fragrância ao nome
+    if (product.has_fragrances && selectedFragrance) {
+      productName += ` - ${selectedFragrance.name}`;
+      productId += `-${selectedFragrance.id}`;
+    }
+
     if (product.has_variations && selectedVariation) {
       addToCart({
-        id: `${product.id}-${selectedVariation.id}`,
-        name: `${product.name} - ${selectedVariation.literage}`,
+        id: productId,
+        name: productName,
         price: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         }).format(selectedVariation.price),
         category: product.category,
         variation: selectedVariation,
+        fragrance: selectedFragrance,
         productId: product.id
       });
     } else if (!product.has_variations && product.price) {
       addToCart({
-        id: product.id,
-        name: product.name,
+        id: productId,
+        name: productName,
         price: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         }).format(product.price),
-        category: product.category
+        category: product.category,
+        fragrance: selectedFragrance
       });
     }
 
     toast({
       title: "Produto adicionado!",
-      description: `${product.name} foi adicionado ao carrinho.`,
+      description: `${productName} foi adicionado ao carrinho.`,
     });
 
     onClose();
@@ -80,9 +104,17 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   };
 
   const getCurrentImage = () => {
-    if (product?.has_variations && selectedVariation?.image_url) {
+    // Verificar qual tipo de variação controla a imagem
+    const imageControlledBy = product?.image_controlled_by || 'volume'; // padrão para volume
+    
+    if (imageControlledBy === 'fragrance' && selectedFragrance?.image_url) {
+      return selectedFragrance.image_url;
+    }
+    
+    if (imageControlledBy === 'volume' && selectedVariation?.image_url) {
       return selectedVariation.image_url;
     }
+    
     return product?.image_url;
   };
 
@@ -166,6 +198,32 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                 </div>
               )}
             </div>
+
+            {/* Seleção de fragrância */}
+            {product.has_fragrances && product.fragrances && product.fragrances.length > 0 && (
+              <div className="space-y-3">
+                <label className="font-medium">Escolha a fragrância:</label>
+                <Select 
+                  value={selectedFragrance?.id || ''} 
+                  onValueChange={(value) => {
+                    const fragrance = product.fragrances?.find(f => f.id === value);
+                    setSelectedFragrance(fragrance || null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a fragrância" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.fragrances.map((fragrance) => (
+                      <SelectItem key={fragrance.id} value={fragrance.id}>
+                        {fragrance.name}
+                        {fragrance.description && ` - ${fragrance.description}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Seleção de variação */}
             {product.has_variations && product.variations && product.variations.length > 0 && (

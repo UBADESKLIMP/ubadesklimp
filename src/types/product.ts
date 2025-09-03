@@ -13,6 +13,7 @@ export interface ProductFragrance {
   id: string;
   name: string;
   description?: string;
+  image_url?: string | null;
 }
 
 export interface ProductWithVariations {
@@ -25,6 +26,8 @@ export interface ProductWithVariations {
   priority_order: number;
   has_variations: boolean;
   has_fragrances?: boolean;
+  // Define qual variação controla a troca de imagem: 'fragrance', 'volume', ou 'none'
+  image_controlled_by?: 'fragrance' | 'volume' | 'none';
   highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
   material?: string;
   validity?: string;

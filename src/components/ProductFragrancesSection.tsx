@@ -15,7 +15,8 @@ interface ProductFragrancesSectionProps {
 const ProductFragrancesSection = ({ fragrances, onFragrancesChange }: ProductFragrancesSectionProps) => {
   const [newFragrance, setNewFragrance] = useState({
     name: '',
-    description: ''
+    description: '',
+    image_url: ''
   });
 
   const handleAddFragrance = () => {
@@ -32,7 +33,7 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange }: ProductFra
     ];
 
     onFragrancesChange(updatedFragrances);
-    setNewFragrance({ name: '', description: '' });
+    setNewFragrance({ name: '', description: '', image_url: '' });
   };
 
   const handleUpdateFragrance = (id: string, field: 'name' | 'description', value: string) => {
