@@ -69,12 +69,22 @@ const Cart = () => {
     
     if (newVariation) {
       const newPrice = formatPrice(newVariation.price);
+      const newId = `${productId}-${variationId}`;
+      const existingItem = state.items.find(item => item.id === newId && item.id !== itemId);
+      
       updateVariation(itemId, newVariation, newPrice, productId);
       
-      toast({
-        title: "Variação atualizada",
-        description: `Produto alterado para ${newVariation.literage}`,
-      });
+      if (existingItem) {
+        toast({
+          title: "Itens mesclados",
+          description: `Produtos iguais foram combinados em um único item`,
+        });
+      } else {
+        toast({
+          title: "Variação atualizada",
+          description: `Produto alterado para ${newVariation.literage}`,
+        });
+      }
     }
   };
 

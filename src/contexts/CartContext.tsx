@@ -81,14 +81,37 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ),
       };
 
-    case 'UPDATE_VARIATION':
+    case 'UPDATE_VARIATION': {
+      const newId = `${action.payload.productId}-${action.payload.variation.id}`;
+      const currentItem = state.items.find(item => item.id === action.payload.id);
+      const existingItemWithNewId = state.items.find(item => item.id === newId && item.id !== action.payload.id);
+      
+      if (!currentItem) return state;
+      
+      // Se já existe um item com o novo ID, mesclar as quantidades
+      if (existingItemWithNewId) {
+        const updatedItems = state.items
+          .filter(item => item.id !== action.payload.id) // Remove o item atual
+          .map(item => 
+            item.id === newId 
+              ? { ...item, quantity: item.quantity + currentItem.quantity } // Adiciona a quantidade ao item existente
+              : item
+          );
+        
+        return {
+          ...state,
+          items: updatedItems,
+        };
+      }
+      
+      // Se não existe conflito, apenas atualiza o item
       return {
         ...state,
         items: state.items.map(item =>
           item.id === action.payload.id
             ? { 
                 ...item, 
-                id: `${action.payload.productId}-${action.payload.variation.id}`,
+                id: newId,
                 variation: action.payload.variation,
                 price: action.payload.newPrice,
                 name: item.name.split(' - ')[0] + ' - ' + action.payload.variation.literage,
@@ -97,6 +120,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
             : item
         ),
       };
+    }
     
     case 'CLEAR_CART':
       return {
