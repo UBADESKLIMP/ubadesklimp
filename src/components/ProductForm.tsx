@@ -37,6 +37,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     material: product?.material || '',
     validity: product?.validity || '',
     specifications: product?.specifications || '',
+    fragrances: product?.fragrances || [],
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +72,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         material: formData.material || null,
         validity: formData.validity || null,
         specifications: formData.specifications || null,
+        fragrances: formData.fragrances || [],
       };
 
       await onSave(productData);
@@ -318,6 +320,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               {product?.id ? (
                 <ProductVariationsSection 
                   productId={product.id} 
+                  fragrances={formData.fragrances}
+                  onFragrancesChange={(fragrances) => setFormData(prev => ({ ...prev, fragrances }))}
                   onVariationImageChange={handleVariationImageChange}
                 />
               ) : (
