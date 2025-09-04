@@ -16,9 +16,10 @@ interface ProductVariationsSectionProps {
   fragrances: any[];
   onFragrancesChange: (fragrances: any[]) => void;
   onVariationImageChange?: (imageUrl: string) => void;
+  imageControlledBy?: 'fragrance' | 'volume' | 'none';
 }
 
-const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onVariationImageChange }: ProductVariationsSectionProps) => {
+const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onVariationImageChange, imageControlledBy = 'volume' }: ProductVariationsSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
   const { variations, loading, createVariation, updateVariation, deleteVariation } = useProductVariations(productId);
   const { saveFragrances } = useProductFragrances(productId);
@@ -45,8 +46,8 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         image_url: newVariation.image_url || null
       });
 
-      // Se tem imagem na nova variação, atualizar a foto principal
-      if (newVariation.image_url && onVariationImageChange) {
+      // Se tem imagem na nova variação e controle por volume, atualizar a foto principal
+      if (newVariation.image_url && onVariationImageChange && imageControlledBy === 'volume') {
         onVariationImageChange(newVariation.image_url);
       }
 
@@ -62,7 +63,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
       await updateVariation(id, updates);
 
       // Se atualizou imagem e é a primeira variação, atualizar foto principal
-      if (field === 'image_url' && variations[0]?.id === id && onVariationImageChange && value) {
+      if (field === 'image_url' && variations[0]?.id === id && onVariationImageChange && value && imageControlledBy === 'volume') {
         onVariationImageChange(value as string);
       }
     } catch (error) {
@@ -253,6 +254,11 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         <ProductFragrancesSection 
           fragrances={fragrances}
           onFragrancesChange={handleFragrancesChange}
+          onFragranceImageChange={(url) => {
+            if (imageControlledBy === 'fragrance' && onVariationImageChange) {
+              onVariationImageChange(url);
+            }
+          }}
         />
       </div>
     </div>

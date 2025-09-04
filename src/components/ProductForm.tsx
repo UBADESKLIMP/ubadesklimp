@@ -362,6 +362,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   fragrances={formData.fragrances}
                   onFragrancesChange={(fragrances) => setFormData(prev => ({ ...prev, fragrances }))}
                   onVariationImageChange={handleVariationImageChange}
+                  imageControlledBy={formData.image_controlled_by}
                 />
               ) : (
                 <div className="text-center p-8 text-muted-foreground">

@@ -11,9 +11,10 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 interface ProductFragrancesSectionProps {
   fragrances: ProductFragrance[];
   onFragrancesChange: (fragrances: ProductFragrance[]) => void;
+  onFragranceImageChange?: (url: string) => void;
 }
 
-const ProductFragrancesSection = ({ fragrances, onFragrancesChange }: ProductFragrancesSectionProps) => {
+const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceImageChange }: ProductFragrancesSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
   const [newFragrance, setNewFragrance] = useState({
     name: '',
@@ -53,8 +54,10 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange }: ProductFra
     if (imageUrl) {
       if (fragranceId) {
         handleUpdateFragrance(fragranceId, 'image_url', imageUrl);
+        onFragranceImageChange?.(imageUrl);
       } else {
         setNewFragrance(prev => ({ ...prev, image_url: imageUrl }));
+        onFragranceImageChange?.(imageUrl);
       }
     }
   };
