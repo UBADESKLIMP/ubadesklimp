@@ -33,7 +33,6 @@ export const useProducts = () => {
       'priority',
       'priority_order',
       'has_variations',
-      'image_controlled_by',
       'highlight_type',
       'material',
       'validity',
