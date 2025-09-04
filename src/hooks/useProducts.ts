@@ -21,6 +21,30 @@ export const useProducts = () => {
   const [products, setProducts] = useState<ProductWithVariations[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Sanitize payload to only include columns that exist in 'products' table
+  const sanitizeProductPayload = (data: any) => {
+    if (!data) return {};
+    const allowedKeys = [
+      'name',
+      'description',
+      'price',
+      'category',
+      'image_url',
+      'priority',
+      'priority_order',
+      'has_variations',
+      'highlight_type',
+      'material',
+      'validity',
+      'specifications'
+    ];
+    const payload: Record<string, any> = {};
+    for (const key of allowedKeys) {
+      if (key in data) payload[key] = (data as any)[key];
+    }
+    return payload;
+  };
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -87,9 +111,10 @@ export const useProducts = () => {
 
   const createProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      const payload = sanitizeProductPayload(productData) as any;
       const { data, error } = await supabase
         .from('products')
-        .insert([productData])
+        .insert([payload])
         .select()
         .single();
 
@@ -114,9 +139,10 @@ export const useProducts = () => {
 
   const updateProduct = async (id: string, productData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>) => {
     try {
+      const payload = sanitizeProductPayload(productData) as any;
       const { data, error } = await supabase
         .from('products')
-        .update(productData)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();
