@@ -104,14 +104,12 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   };
 
   const getCurrentImage = () => {
-    // Verificar qual tipo de variação controla a imagem
-    const imageControlledBy = product?.image_controlled_by || 'volume'; // padrão para volume
-    
-    if (imageControlledBy === 'fragrance' && selectedFragrance?.image_url) {
+    // Prioridade automática: fragrâncias primeiro, depois volumes, por último a imagem principal
+    if (selectedFragrance?.image_url) {
       return selectedFragrance.image_url;
     }
     
-    if (imageControlledBy === 'volume' && selectedVariation?.image_url) {
+    if (selectedVariation?.image_url) {
       return selectedVariation.image_url;
     }
     

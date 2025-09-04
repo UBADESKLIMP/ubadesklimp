@@ -11,10 +11,10 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 interface ProductFragrancesSectionProps {
   fragrances: ProductFragrance[];
   onFragrancesChange: (fragrances: ProductFragrance[]) => void;
-  onFragranceImageChange?: (url: string) => void;
+  onMainImageChange?: (url: string) => void;
 }
 
-const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceImageChange }: ProductFragrancesSectionProps) => {
+const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onMainImageChange }: ProductFragrancesSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
   const [newFragrance, setNewFragrance] = useState({
     name: '',
@@ -37,6 +37,12 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceI
     ];
 
     onFragrancesChange(updatedFragrances);
+    
+    // Atualizar imagem principal automaticamente se esta fragrância tem imagem
+    if (newFragrance.image_url && onMainImageChange) {
+      onMainImageChange(newFragrance.image_url);
+    }
+    
     setNewFragrance({ name: '', description: '', image_url: '' });
   };
 
@@ -47,6 +53,11 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceI
         : fragrance
     );
     onFragrancesChange(updatedFragrances);
+    
+    // Se atualizou a imagem, atualizar a imagem principal automaticamente
+    if (field === 'image_url' && value && onMainImageChange) {
+      onMainImageChange(value);
+    }
   };
 
   const handleImageUpload = async (file: File, fragranceId?: string) => {
@@ -54,10 +65,13 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceI
     if (imageUrl) {
       if (fragranceId) {
         handleUpdateFragrance(fragranceId, 'image_url', imageUrl);
-        onFragranceImageChange?.(imageUrl);
       } else {
         setNewFragrance(prev => ({ ...prev, image_url: imageUrl }));
-        onFragranceImageChange?.(imageUrl);
+      }
+      
+      // Atualizar imagem principal automaticamente
+      if (onMainImageChange) {
+        onMainImageChange(imageUrl);
       }
     }
   };
@@ -202,7 +216,8 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onFragranceI
 
       {fragrances.length > 0 && (
         <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded">
-          🌸 <strong>Dica:</strong> As fragrâncias aparecerão como opções para o cliente escolher junto com o volume do produto.
+          🌸 <strong>Sistema Automático:</strong> Quando você adiciona uma imagem a uma fragrância, 
+          ela automaticamente vira a imagem principal do produto! Fragrâncias têm prioridade sobre volumes.
         </div>
       )}
     </div>

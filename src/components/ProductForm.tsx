@@ -34,7 +34,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     priority_order: string;
     has_variations: boolean;
     has_fragrances: boolean;
-    image_controlled_by: 'fragrance' | 'volume' | 'none';
     highlight_type: string;
     material: string;
     validity: string;
@@ -50,7 +49,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     priority_order: product?.priority_order?.toString() || '0',
     has_variations: product?.has_variations || false,
     has_fragrances: !!product?.fragrances?.length,
-    image_controlled_by: product?.image_controlled_by || 'volume',
     highlight_type: product?.highlight_type || '',
     material: product?.material || '',
     validity: product?.validity || '',
@@ -87,7 +85,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         priority_order: parseInt(formData.priority_order || '0'),
         has_variations: formData.has_variations,
         has_fragrances: formData.fragrances.length > 0,
-        image_controlled_by: formData.image_controlled_by || 'volume',
         highlight_type: formData.highlight_type === 'none' ? null : formData.highlight_type || null,
         material: formData.material || null,
         validity: formData.validity || null,
@@ -100,7 +97,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     }
   };
 
-  const handleVariationImageChange = (imageUrl: string) => {
+  const updateMainImage = (imageUrl: string) => {
     setFormData(prev => ({ ...prev, image_url: imageUrl }));
   };
 
@@ -323,25 +320,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 </span>
               </div>
 
-              <div className="space-y-3">
-                <Label>Controle de imagem do produto</Label>
-                <Select 
-                  value={formData.image_controlled_by} 
-                  onValueChange={(value: 'fragrance' | 'volume' | 'none') => setFormData({...formData, image_controlled_by: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="volume">Imagem muda por variação de volume</SelectItem>
-                    <SelectItem value="fragrance">Imagem muda por fragrância</SelectItem>
-                    <SelectItem value="none">Imagem fixa (não muda)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  Define se a imagem do produto muda quando o cliente seleciona diferentes volumes ou fragrâncias.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -361,8 +339,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   productId={product.id} 
                   fragrances={formData.fragrances}
                   onFragrancesChange={(fragrances) => setFormData(prev => ({ ...prev, fragrances }))}
-                  onVariationImageChange={handleVariationImageChange}
-                  imageControlledBy={formData.image_controlled_by}
+                  onMainImageChange={updateMainImage}
                 />
               ) : (
                 <div className="text-center p-8 text-muted-foreground">

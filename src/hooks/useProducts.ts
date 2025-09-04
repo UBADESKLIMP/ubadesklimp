@@ -96,7 +96,6 @@ export const useProducts = () => {
             priority_order: product.priority_order || 0,
             has_variations: product.has_variations || false,
             has_fragrances: fragrances.length > 0,
-            image_controlled_by: (product as any).image_controlled_by || 'volume',
             highlight_type: (product as any).highlight_type || null,
             material: product.material,
             validity: product.validity,

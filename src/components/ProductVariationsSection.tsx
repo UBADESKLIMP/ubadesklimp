@@ -15,11 +15,10 @@ interface ProductVariationsSectionProps {
   productId: string;
   fragrances: any[];
   onFragrancesChange: (fragrances: any[]) => void;
-  onVariationImageChange?: (imageUrl: string) => void;
-  imageControlledBy?: 'fragrance' | 'volume' | 'none';
+  onMainImageChange?: (imageUrl: string) => void;
 }
 
-const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onVariationImageChange, imageControlledBy = 'volume' }: ProductVariationsSectionProps) => {
+const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onMainImageChange }: ProductVariationsSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
   const { variations, loading, createVariation, updateVariation, deleteVariation } = useProductVariations(productId);
   const { saveFragrances } = useProductFragrances(productId);
@@ -33,6 +32,12 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
     onFragrancesChange(newFragrances);
     // Salvar no localStorage também
     saveFragrances(newFragrances);
+    
+    // Atualizar imagem principal automaticamente se há fragrância com imagem
+    const firstFragranceWithImage = newFragrances.find(f => f.image_url);
+    if (firstFragranceWithImage?.image_url && onMainImageChange) {
+      onMainImageChange(firstFragranceWithImage.image_url);
+    }
   };
 
   const handleAddVariation = async () => {
@@ -46,9 +51,12 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         image_url: newVariation.image_url || null
       });
 
-      // Se tem imagem na nova variação e controle por volume, atualizar a foto principal
-      if (newVariation.image_url && onVariationImageChange && imageControlledBy === 'volume') {
-        onVariationImageChange(newVariation.image_url);
+      // Atualizar imagem principal automaticamente se não há fragrância com imagem
+      if (newVariation.image_url && onMainImageChange) {
+        const hasFragranceWithImage = fragrances.some(f => f.image_url);
+        if (!hasFragranceWithImage) {
+          onMainImageChange(newVariation.image_url);
+        }
       }
 
       setNewVariation({ literage: '', price: '', image_url: '' });
@@ -62,9 +70,12 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
       const updates = { [field]: value };
       await updateVariation(id, updates);
 
-      // Se atualizou imagem e é a primeira variação, atualizar foto principal
-      if (field === 'image_url' && variations[0]?.id === id && onVariationImageChange && value && imageControlledBy === 'volume') {
-        onVariationImageChange(value as string);
+      // Atualizar imagem principal automaticamente se não há fragrância com imagem
+      if (field === 'image_url' && onMainImageChange && value) {
+        const hasFragranceWithImage = fragrances.some(f => f.image_url);
+        if (!hasFragranceWithImage && variations[0]?.id === id) {
+          onMainImageChange(value as string);
+        }
       }
     } catch (error) {
       // Error handled in hook
@@ -238,8 +249,8 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
 
         {variations.length > 0 && (
           <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded">
-            💡 <strong>Dica:</strong> A primeira variação será usada como imagem principal do produto. 
-            Organize as variações por ordem de importância.
+            💡 <strong>Novo Sistema Automático:</strong> A imagem do produto se atualiza automaticamente! 
+            Fragrâncias têm prioridade sobre volumes para definir a imagem principal.
           </div>
         )}
       </div>
@@ -254,11 +265,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         <ProductFragrancesSection 
           fragrances={fragrances}
           onFragrancesChange={handleFragrancesChange}
-          onFragranceImageChange={(url) => {
-            if (imageControlledBy === 'fragrance' && onVariationImageChange) {
-              onVariationImageChange(url);
-            }
-          }}
+          onMainImageChange={onMainImageChange}
         />
       </div>
     </div>
