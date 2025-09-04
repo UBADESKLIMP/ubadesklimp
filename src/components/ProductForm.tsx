@@ -92,10 +92,9 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         material: formData.material || null,
         validity: formData.validity || null,
         specifications: formData.specifications || null,
-        fragrances: formData.fragrances || [],
       };
 
-      await onSave(productData);
+      await onSave({ ...productData, fragrances: formData.fragrances });
     } finally {
       setSaving(false);
     }

@@ -17,11 +17,24 @@ const Admin = () => {
 
   const handleSaveProduct = async (productData: any) => {
     try {
+      let savedProduct;
+      const { fragrances, ...productPayload } = productData;
+      
       if (editingProduct) {
-        await updateProduct(editingProduct.id, productData);
+        savedProduct = await updateProduct(editingProduct.id, productPayload);
       } else {
-        await createProduct(productData);
+        savedProduct = await createProduct(productPayload);
       }
+      
+      // Salvar fragrâncias se houver
+      if (fragrances && fragrances.length > 0) {
+        const productId = savedProduct?.id || editingProduct?.id;
+        if (productId) {
+          const fragrancesKey = `fragrances_${productId}`;
+          localStorage.setItem(fragrancesKey, JSON.stringify(fragrances));
+        }
+      }
+      
       setEditingProduct(null);
       setIsDialogOpen(false);
     } catch (error) {

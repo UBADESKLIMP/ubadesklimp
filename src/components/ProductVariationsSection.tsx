@@ -8,6 +8,7 @@ import { Plus, Trash2, Loader2, ImageIcon } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useProductVariations } from '@/hooks/useProductVariations';
 import { ProductVariation } from '@/types/product';
+import { useProductFragrances } from '@/hooks/useProductFragrances';
 import ProductFragrancesSection from '@/components/ProductFragrancesSection';
 
 interface ProductVariationsSectionProps {
@@ -20,11 +21,18 @@ interface ProductVariationsSectionProps {
 const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onVariationImageChange }: ProductVariationsSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
   const { variations, loading, createVariation, updateVariation, deleteVariation } = useProductVariations(productId);
+  const { saveFragrances } = useProductFragrances(productId);
   const [newVariation, setNewVariation] = useState({
     literage: '',
     price: '',
     image_url: ''
   });
+
+  const handleFragrancesChange = (newFragrances: any[]) => {
+    onFragrancesChange(newFragrances);
+    // Salvar no localStorage também
+    saveFragrances(newFragrances);
+  };
 
   const handleAddVariation = async () => {
     if (!newVariation.literage || !newVariation.price) return;
@@ -244,7 +252,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         </div>
         <ProductFragrancesSection 
           fragrances={fragrances}
-          onFragrancesChange={onFragrancesChange}
+          onFragrancesChange={handleFragrancesChange}
         />
       </div>
     </div>

@@ -33,6 +33,8 @@ export const useProducts = () => {
       'priority',
       'priority_order',
       'has_variations',
+      'has_fragrances',
+      'image_controlled_by',
       'highlight_type',
       'material',
       'validity',
@@ -75,6 +77,17 @@ export const useProducts = () => {
             }
           }
 
+          // Carregar fragrâncias do localStorage
+          let fragrances: any[] = [];
+          try {
+            const storedFragrances = localStorage.getItem(`fragrances_${product.id}`);
+            if (storedFragrances) {
+              fragrances = JSON.parse(storedFragrances);
+            }
+          } catch (error) {
+            console.error('Error loading fragrances from localStorage:', error);
+          }
+
           return {
             id: product.id,
             name: product.name,
@@ -84,6 +97,8 @@ export const useProducts = () => {
             priority: product.priority,
             priority_order: product.priority_order || 0,
             has_variations: product.has_variations || false,
+            has_fragrances: fragrances.length > 0,
+            image_controlled_by: (product as any).image_controlled_by || 'volume',
             highlight_type: (product as any).highlight_type || null,
             material: product.material,
             validity: product.validity,
@@ -91,6 +106,7 @@ export const useProducts = () => {
             created_at: product.created_at,
             updated_at: product.updated_at,
             variations: variations,
+            fragrances: fragrances,
             price: product.price
           };
         })
