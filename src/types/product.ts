@@ -14,6 +14,8 @@ export interface ProductFragrance {
   name: string;
   description?: string;
   image_url?: string | null;
+  available_literages?: string[]; // Quais litragens estão disponíveis para esta fragrância
+  order?: number; // Para ordenação das fragrâncias
 }
 
 export interface ProductWithVariations {

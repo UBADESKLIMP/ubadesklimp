@@ -266,6 +266,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
           fragrances={fragrances}
           onFragrancesChange={handleFragrancesChange}
           onMainImageChange={onMainImageChange}
+          availableLiterages={variations.map(v => v.literage)}
         />
       </div>
     </div>
