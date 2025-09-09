@@ -15,11 +15,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import WhatsAppIcon from './WhatsAppIcon';
-import { ProductVariation } from '@/types/product';
+import { ProductVariation, ProductFragrance } from '@/types/product';
 import { useProducts } from '@/hooks/useProducts';
 
 const Cart = () => {
-  const { state, updateQuantity, updateVariation, removeFromCart, clearCart, getWhatsAppLink } = useCart();
+  const { state, updateQuantity, updateVariation, updateFragrance, removeFromCart, clearCart, getWhatsAppLink } = useCart();
   const { products } = useProducts();
 
   const handleWhatsAppOrder = () => {
@@ -56,11 +56,40 @@ const Cart = () => {
     }).format(price);
   };
 
+  const getFragrancesForItem = (item: any) => {
+    if (!item.productId) return [];
+    
+    const product = products.find(p => p.id === item.productId);
+    return product?.fragrances || [];
+  };
+
   const getVariationsForItem = (item: any) => {
     if (!item.productId) return [];
     
     const product = products.find(p => p.id === item.productId);
-    return product?.variations || [];
+    const allVariations = product?.variations || [];
+    
+    // Se tem fragrância selecionada, filtrar variações por literage disponível
+    if (item.fragrance && item.fragrance.available_literages) {
+      return allVariations.filter(variation => 
+        item.fragrance.available_literages.includes(variation.literage)
+      );
+    }
+    
+    return allVariations;
+  };
+
+  const handleFragranceChange = (itemId: string, fragranceId: string, productId: string) => {
+    const fragrances = getFragrancesForItem({ productId });
+    const newFragrance = fragrances.find(f => f.id === fragranceId);
+    
+    if (newFragrance) {
+      updateFragrance(itemId, newFragrance, productId);
+      toast({
+        title: "Fragrância atualizada",
+        description: `Fragrância alterada para ${newFragrance.name}`,
+      });
+    }
   };
 
   const handleVariationChange = (itemId: string, variationId: string, productId: string) => {
@@ -123,7 +152,9 @@ const Cart = () => {
             <>
               <div className="max-h-96 overflow-y-auto space-y-4">
                 {state.items.map((item) => {
+                  const availableFragrances = getFragrancesForItem(item);
                   const availableVariations = getVariationsForItem(item);
+                  const hasFragrances = availableFragrances.length > 0;
                   const hasVariations = availableVariations.length > 1;
                   
                   return (
@@ -145,10 +176,32 @@ const Cart = () => {
                           </Button>
                         </div>
 
+                        {/* Seleção de fragrância - se houver fragrâncias disponíveis */}
+                        {hasFragrances && item.productId && (
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium">Fragrância:</label>
+                            <Select 
+                              value={item.fragrance?.id || ""} 
+                              onValueChange={(value) => handleFragranceChange(item.id, value, item.productId!)}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Selecione a fragrância" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableFragrances.map((fragrance) => (
+                                  <SelectItem key={fragrance.id} value={fragrance.id}>
+                                    {fragrance.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
                         {/* Seleção de variação - apenas se houver variações disponíveis */}
                         {hasVariations && item.variation && item.productId && (
                           <div className="space-y-2">
-                            <label className="text-xs font-medium">Alterar litragem:</label>
+                            <label className="text-xs font-medium">Litragem:</label>
                             <Select 
                               value={item.variation.id} 
                               onValueChange={(value) => handleVariationChange(item.id, value, item.productId!)}

@@ -23,6 +23,7 @@ type CartAction =
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'UPDATE_VARIATION'; payload: { id: string; variation: ProductVariation; newPrice: string; productId: string } }
+  | { type: 'UPDATE_FRAGRANCE'; payload: { id: string; fragrance: ProductFragrance; productId: string } }
   | { type: 'CLEAR_CART' };
 
 const CartContext = createContext<{
@@ -32,6 +33,7 @@ const CartContext = createContext<{
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   updateVariation: (id: string, variation: ProductVariation, newPrice: string, productId: string) => void;
+  updateFragrance: (id: string, fragrance: ProductFragrance, productId: string) => void;
   clearCart: () => void;
   getWhatsAppLink: () => string;
 } | undefined>(undefined);
@@ -123,6 +125,24 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       };
     }
     
+    case 'UPDATE_FRAGRANCE': {
+      const currentItem = state.items.find(item => item.id === action.payload.id);
+      if (!currentItem) return state;
+
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.id === action.payload.id
+            ? { 
+                ...item, 
+                fragrance: action.payload.fragrance,
+                productId: action.payload.productId
+              }
+            : item
+        ),
+      };
+    }
+    
     case 'CLEAR_CART':
       return {
         ...state,
@@ -151,6 +171,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const updateVariation = (id: string, variation: ProductVariation, newPrice: string, productId: string) => {
     dispatch({ type: 'UPDATE_VARIATION', payload: { id, variation, newPrice, productId } });
+  };
+
+  const updateFragrance = (id: string, fragrance: ProductFragrance, productId: string) => {
+    dispatch({ type: 'UPDATE_FRAGRANCE', payload: { id, fragrance, productId } });
   };
 
   const clearCart = () => {
@@ -187,6 +211,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeFromCart,
       updateQuantity,
       updateVariation,
+      updateFragrance,
       clearCart,
       getWhatsAppLink,
     }}>
