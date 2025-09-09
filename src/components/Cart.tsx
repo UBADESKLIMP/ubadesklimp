@@ -84,7 +84,20 @@ const Cart = () => {
     const newFragrance = fragrances.find(f => f.id === fragranceId);
     
     if (newFragrance) {
+      // Atualiza a fragrância do item
       updateFragrance(itemId, newFragrance, productId);
+
+      // Garantir que a litragem selecionada continue válida para a nova fragrância
+      const allowedVariations = getVariationsForItem({ productId, fragrance: newFragrance });
+      const currentItem = state.items.find(i => i.id === itemId);
+      const currentLiterage = currentItem?.variation?.literage;
+      const stillAllowed = allowedVariations.some(v => v.literage === currentLiterage);
+
+      if (!stillAllowed && allowedVariations.length > 0) {
+        const v = allowedVariations[0];
+        handleVariationChange(itemId, v.id, productId);
+      }
+
       toast({
         title: "Fragrância atualizada",
         description: `Fragrância alterada para ${newFragrance.name}`,

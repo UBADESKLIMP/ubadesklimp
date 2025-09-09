@@ -56,6 +56,16 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     fragrances: product?.fragrances || [],
   });
 
+  useEffect(() => {
+    if (product?.id) {
+      try {
+        localStorage.setItem(`fragrances_${product.id}`, JSON.stringify(formData.fragrances));
+      } catch (e) {
+        console.error('Erro ao persistir fragrâncias no localStorage:', e);
+      }
+    }
+  }, [formData.fragrances, product?.id]);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

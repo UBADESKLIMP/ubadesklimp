@@ -127,24 +127,18 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   };
 
   const getCurrentImage = () => {
-    // Se uma fragrância está selecionada e tem imagem, usar a imagem da fragrância
+    // Prioridade: fragrância selecionada > variação selecionada > imagem principal do produto
     if (selectedFragrance?.image_url) {
       return selectedFragrance.image_url;
     }
-    
-    // Caso contrário, usar a imagem principal do produto
-    if (product?.image_url) {
-      return product.image_url;
-    }
-    
-    // Por último, usar imagem de variação se não houver outras opções
     if (selectedVariation?.image_url) {
       return selectedVariation.image_url;
     }
-    
+    if (product?.image_url) {
+      return product.image_url;
+    }
     return null;
   };
-
   if (!product) return null;
 
   return (
