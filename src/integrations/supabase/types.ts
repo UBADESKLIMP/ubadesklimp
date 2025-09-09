@@ -79,6 +79,7 @@ export type Database = {
           created_at: string
           description: string | null
           has_variations: boolean | null
+          highlight_type: string | null
           id: string
           image_url: string | null
           material: string | null
@@ -95,6 +96,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           has_variations?: boolean | null
+          highlight_type?: string | null
           id?: string
           image_url?: string | null
           material?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           has_variations?: boolean | null
+          highlight_type?: string | null
           id?: string
           image_url?: string | null
           material?: string | null
