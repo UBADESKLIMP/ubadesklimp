@@ -34,6 +34,29 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     }
   }, [product]);
 
+  // Reset variação quando fragrância muda para garantir compatibilidade
+  useEffect(() => {
+    if (product?.has_variations && product.variations && selectedFragrance) {
+      // Filtrar variações disponíveis para a fragrância selecionada
+      const availableVariations = product.variations.filter((variation) => {
+        if (selectedFragrance.available_literages && selectedFragrance.available_literages.length > 0) {
+          return selectedFragrance.available_literages.includes(variation.literage);
+        }
+        return true;
+      });
+      
+      // Se a variação atual não está disponível, selecionar a primeira disponível
+      if (selectedVariation && availableVariations.length > 0) {
+        const isCurrentVariationAvailable = availableVariations.some(v => v.id === selectedVariation.id);
+        if (!isCurrentVariationAvailable) {
+          setSelectedVariation(availableVariations[0]);
+        }
+      } else if (availableVariations.length > 0) {
+        setSelectedVariation(availableVariations[0]);
+      }
+    }
+  }, [selectedFragrance, product]);
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -238,11 +261,20 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                     <SelectValue placeholder="Selecione a litragem" />
                   </SelectTrigger>
                   <SelectContent>
-                    {product.variations.map((variation) => (
-                      <SelectItem key={variation.id} value={variation.id}>
-                        {variation.literage} - {formatPrice(variation.price)}
-                      </SelectItem>
-                    ))}
+                    {product.variations
+                      .filter((variation) => {
+                        // Se há fragrância selecionada e ela tem litragens específicas, filtrar
+                        if (selectedFragrance?.available_literages && selectedFragrance.available_literages.length > 0) {
+                          return selectedFragrance.available_literages.includes(variation.literage);
+                        }
+                        // Se não há restrição de litragens, mostrar todas
+                        return true;
+                      })
+                      .map((variation) => (
+                        <SelectItem key={variation.id} value={variation.id}>
+                          {variation.literage} - {formatPrice(variation.price)}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
