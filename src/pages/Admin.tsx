@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -11,7 +11,7 @@ import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
 
 const Admin = () => {
-  const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -22,23 +22,72 @@ const Admin = () => {
       
       if (editingProduct) {
         savedProduct = await updateProduct(editingProduct.id, productPayload);
+        
+        // Salvar fragrâncias se houver usando fetch direto ao Supabase
+        if (fragrances && fragrances.length > 0) {
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          // Primeiro, deletar todas as fragrâncias existentes para este produto
+          await supabase
+            .from('product_fragrances')
+            .delete()
+            .eq('product_id', editingProduct.id);
+
+          // Depois, inserir as novas fragrâncias
+          const fragrancesToInsert = fragrances.map((fragrance: any) => ({
+            product_id: editingProduct.id,
+            name: fragrance.name,
+            description: fragrance.description || null,
+            image_url: fragrance.image_url || null,
+            available_literages: fragrance.available_literages || [],
+            order_index: fragrance.order || 0
+          }));
+
+          await supabase
+            .from('product_fragrances')
+            .insert(fragrancesToInsert);
+
+          // Atualizar o campo has_fragrances do produto
+          await supabase
+            .from('products')
+            .update({ has_fragrances: fragrances.length > 0 })
+            .eq('id', editingProduct.id);
+        }
       } else {
         savedProduct = await createProduct(productPayload);
-      }
-      
-      // Salvar fragrâncias se houver
-      if (fragrances && fragrances.length > 0) {
-        const productId = savedProduct?.id || editingProduct?.id;
-        if (productId) {
-          const fragrancesKey = `fragrances_${productId}`;
-          localStorage.setItem(fragrancesKey, JSON.stringify(fragrances));
+        
+        // Salvar fragrâncias para produto novo
+        if (fragrances && fragrances.length > 0 && savedProduct?.id) {
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          const fragrancesToInsert = fragrances.map((fragrance: any) => ({
+            product_id: savedProduct.id,
+            name: fragrance.name,
+            description: fragrance.description || null,
+            image_url: fragrance.image_url || null,
+            available_literages: fragrance.available_literages || [],
+            order_index: fragrance.order || 0
+          }));
+
+          await supabase
+            .from('product_fragrances')
+            .insert(fragrancesToInsert);
+
+          // Atualizar o campo has_fragrances do produto
+          await supabase
+            .from('products')
+            .update({ has_fragrances: true })
+            .eq('id', savedProduct.id);
         }
       }
+      
+      // Refetch products para garantir que as mudanças aparecem
+      await refetch();
       
       setEditingProduct(null);
       setIsDialogOpen(false);
     } catch (error) {
-      // Error handling is done in the hook
+      console.error('Error saving product:', error);
     }
   };
 
@@ -80,6 +129,14 @@ const Admin = () => {
               Gerencie os produtos e categorias da Ubadesklimp
             </p>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/'}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Voltar para o Site</span>
+          </Button>
         </div>
 
         {/* Tabs for Products and Categories */}
