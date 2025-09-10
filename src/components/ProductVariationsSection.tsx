@@ -30,8 +30,6 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
 
   const handleFragrancesChange = (newFragrances: any[]) => {
     onFragrancesChange(newFragrances);
-    // Salvar no localStorage também
-    saveFragrances(newFragrances);
     
     // Atualizar imagem principal automaticamente se há fragrância com imagem
     const firstFragranceWithImage = newFragrances.find(f => f.image_url);
