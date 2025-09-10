@@ -33,6 +33,7 @@ export const useProducts = () => {
       'priority',
       'priority_order',
       'has_variations',
+      'has_fragrances',
       'highlight_type',
       'material',
       'validity',
@@ -75,15 +76,25 @@ export const useProducts = () => {
             }
           }
 
-          // Carregar fragrâncias do localStorage
+          // Carregar fragrâncias do banco de dados
           let fragrances: any[] = [];
-          try {
-            const storedFragrances = localStorage.getItem(`fragrances_${product.id}`);
-            if (storedFragrances) {
-              fragrances = JSON.parse(storedFragrances);
+          if (product.has_fragrances) {
+            const { data: fragrancesData, error: fragrancesError } = await supabase
+              .from('product_fragrances')
+              .select('*')
+              .eq('product_id', product.id)
+              .order('order_index', { ascending: true });
+            
+            if (!fragrancesError && fragrancesData) {
+              fragrances = fragrancesData.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description || undefined,
+                image_url: item.image_url || undefined,
+                available_literages: item.available_literages || [],
+                order: item.order_index
+              }));
             }
-          } catch (error) {
-            console.error('Error loading fragrances from localStorage:', error);
           }
 
           return {

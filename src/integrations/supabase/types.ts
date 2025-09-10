@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      product_fragrances: {
+        Row: {
+          available_literages: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          order_index: number | null
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          available_literages?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          order_index?: number | null
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          available_literages?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          order_index?: number | null
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_variations: {
         Row: {
           created_at: string | null
@@ -78,6 +114,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          has_fragrances: boolean | null
           has_variations: boolean | null
           highlight_type: string | null
           id: string
@@ -95,6 +132,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          has_fragrances?: boolean | null
           has_variations?: boolean | null
           highlight_type?: string | null
           id?: string
@@ -112,6 +150,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          has_fragrances?: boolean | null
           has_variations?: boolean | null
           highlight_type?: string | null
           id?: string
