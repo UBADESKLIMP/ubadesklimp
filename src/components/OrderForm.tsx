@@ -9,8 +9,6 @@ import WhatsAppIcon from './WhatsAppIcon';
 
 interface OrderFormData {
   name: string;
-  phone: string;
-  email?: string;
   notes?: string;
 }
 
@@ -25,8 +23,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
   const { user } = useAuth();
   const [formData, setFormData] = useState<OrderFormData>({
     name: '',
-    phone: '',
-    email: user?.email || '',
     notes: ''
   });
 
@@ -62,30 +58,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">WhatsApp *</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              placeholder="(11) 99999-9999"
-              required
-            />
-          </div>
-
-          {!user && (
-            <div className="space-y-2">
-              <Label htmlFor="email">Email (opcional)</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="seu@email.com"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
             <Label htmlFor="notes">Observações (opcional)</Label>
             <Textarea
               id="notes"
@@ -115,7 +87,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
             <Button
               type="submit"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              disabled={loading || !formData.name || !formData.phone}
+              disabled={loading || !formData.name}
             >
               {loading ? (
                 <span className="flex items-center space-x-2">

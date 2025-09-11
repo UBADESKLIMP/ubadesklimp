@@ -29,7 +29,7 @@ const Cart = () => {
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleOrderSubmit = async (orderData: { name: string; phone: string; email?: string; notes?: string }) => {
+  const handleOrderSubmit = async (orderData: { name: string; notes?: string }) => {
     setIsSubmitting(true);
     
     try {
@@ -37,8 +37,8 @@ const Cart = () => {
       const orderPayload = {
         user_id: user?.id || null,
         customer_name: orderData.name,
-        customer_phone: orderData.phone,
-        customer_email: orderData.email || user?.email || null,
+        customer_phone: null,
+        customer_email: user?.email || null,
         items: JSON.parse(JSON.stringify(state.items)) as any,
         total_amount: getTotalPrice(),
         notes: orderData.notes || null,
@@ -91,13 +91,9 @@ const Cart = () => {
     }
   };
 
-  const generateWhatsAppMessage = (orderData: { name: string; phone: string; email?: string; notes?: string }) => {
+  const generateWhatsAppMessage = (orderData: { name: string; notes?: string }) => {
     let message = '🛒 *Pedido Ubadesklimp*\n\n';
     message += `👤 *Cliente:* ${orderData.name}\n`;
-    message += `📱 *WhatsApp:* ${orderData.phone}\n`;
-    if (orderData.email) {
-      message += `📧 *Email:* ${orderData.email}\n`;
-    }
     message += '\n*Produtos:*\n';
     
     state.items.forEach(item => {
