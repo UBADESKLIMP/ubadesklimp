@@ -35,6 +35,51 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string
+          id: string
+          items: Json
+          notes: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+          whatsapp_sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone: string
+          id?: string
+          items: Json
+          notes?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp_sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp_sent_at?: string | null
+        }
+        Relationships: []
+      }
       product_fragrances: {
         Row: {
           available_literages: string[] | null

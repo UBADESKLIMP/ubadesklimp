@@ -15,22 +15,111 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import WhatsAppIcon from './WhatsAppIcon';
+import OrderForm from './OrderForm';
 import { ProductVariation, ProductFragrance } from '@/types/product';
 import { useProducts } from '@/hooks/useProducts';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 
 const Cart = () => {
   const { state, updateQuantity, updateVariation, updateFragrance, removeFromCart, clearCart, getWhatsAppLink } = useCart();
   const { products } = useProducts();
+  const { user } = useAuth();
+  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleWhatsAppOrder = () => {
-    const link = getWhatsAppLink();
-    if (link) {
-      window.open(link, '_blank');
+  const handleOrderSubmit = async (orderData: { name: string; phone: string; email?: string; notes?: string }) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Preparar dados do pedido
+      const orderPayload = {
+        user_id: user?.id || null,
+        customer_name: orderData.name,
+        customer_phone: orderData.phone,
+        customer_email: orderData.email || user?.email || null,
+        items: JSON.parse(JSON.stringify(state.items)) as any,
+        total_amount: getTotalPrice(),
+        notes: orderData.notes || null,
+        whatsapp_sent_at: new Date().toISOString()
+      };
+
+      // Salvar pedido no banco
+      const { data: order, error } = await supabase
+        .from('orders')
+        .insert(orderPayload)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao salvar pedido:', error);
+        toast({
+          title: "Erro ao salvar pedido",
+          description: "Não foi possível salvar o pedido, mas você pode continuar pelo WhatsApp.",
+          variant: "destructive"
+        });
+      }
+
+      // Enviar para WhatsApp
+      const whatsappMessage = generateWhatsAppMessage(orderData);
+      const encodedMessage = encodeURIComponent(whatsappMessage);
+      const whatsappLink = `https://wa.me/551238332434?text=${encodedMessage}`;
+      
+      window.open(whatsappLink, '_blank');
+      
+      // Limpar carrinho após envio
+      clearCart();
+      setIsOrderFormOpen(false);
+      
       toast({
-        title: "Redirecionando para WhatsApp",
-        description: "Finalize seu pedido pelo WhatsApp!",
+        title: "Pedido enviado!",
+        description: order 
+          ? "Pedido salvo e enviado para WhatsApp com sucesso!" 
+          : "Pedido enviado para WhatsApp!",
       });
+      
+    } catch (error) {
+      console.error('Erro no processo de pedido:', error);
+      toast({
+        title: "Erro no pedido",
+        description: "Ocorreu um erro. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const generateWhatsAppMessage = (orderData: { name: string; phone: string; email?: string; notes?: string }) => {
+    let message = '🛒 *Pedido Ubadesklimp*\n\n';
+    message += `👤 *Cliente:* ${orderData.name}\n`;
+    message += `📱 *WhatsApp:* ${orderData.phone}\n`;
+    if (orderData.email) {
+      message += `📧 *Email:* ${orderData.email}\n`;
+    }
+    message += '\n*Produtos:*\n';
+    
+    state.items.forEach(item => {
+      message += `• ${item.name}\n`;
+      message += `  Categoria: ${item.category}\n`;
+      message += `  Preço: ${item.price}\n`;
+      message += `  Quantidade: ${item.quantity}\n`;
+      if (item.fragrance) {
+        message += `  Fragrância: ${item.fragrance.name}\n`;
+      }
+      message += '\n';
+    });
+    
+    message += `💰 *Total:* ${formatPrice(getTotalPrice())}\n\n`;
+    
+    if (orderData.notes) {
+      message += `📝 *Observações:* ${orderData.notes}\n\n`;
+    }
+    
+    message += `🚀 Gostaria de finalizar este pedido!`;
+    
+    return message;
   };
 
   const getTotalPrice = () => {
@@ -270,7 +359,7 @@ const Cart = () => {
 
                 <div className="space-y-2">
                   <Button 
-                    onClick={handleWhatsAppOrder}
+                    onClick={() => setIsOrderFormOpen(true)}
                     className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-2"
                     disabled={state.items.length === 0}
                   >
@@ -291,6 +380,13 @@ const Cart = () => {
             </>
           )}
         </div>
+
+        <OrderForm
+          isOpen={isOrderFormOpen}
+          onClose={() => setIsOrderFormOpen(false)}
+          onSubmit={handleOrderSubmit}
+          loading={isSubmitting}
+        />
       </SheetContent>
     </Sheet>
   );
