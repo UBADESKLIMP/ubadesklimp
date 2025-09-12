@@ -19,6 +19,7 @@ import OrderForm from './OrderForm';
 import { ProductVariation, ProductFragrance } from '@/types/product';
 import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 
@@ -26,6 +27,7 @@ const Cart = () => {
   const { state, updateQuantity, updateVariation, updateFragrance, removeFromCart, clearCart, getWhatsAppLink } = useCart();
   const { products } = useProducts();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

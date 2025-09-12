@@ -211,6 +211,66 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          billing_email: string | null
+          cnpj: string | null
+          company_name: string | null
+          contact_phone: string | null
+          cpf: string | null
+          created_at: string
+          delivery_address: string | null
+          email: string | null
+          id: string
+          name: string | null
+          notes: string | null
+          person_type: string | null
+          phone: string | null
+          state_registration: string | null
+          trade_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_email?: string | null
+          cnpj?: string | null
+          company_name?: string | null
+          contact_phone?: string | null
+          cpf?: string | null
+          created_at?: string
+          delivery_address?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          person_type?: string | null
+          phone?: string | null
+          state_registration?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_email?: string | null
+          cnpj?: string | null
+          company_name?: string | null
+          contact_phone?: string | null
+          cpf?: string | null
+          created_at?: string
+          delivery_address?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          person_type?: string | null
+          phone?: string | null
+          state_registration?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

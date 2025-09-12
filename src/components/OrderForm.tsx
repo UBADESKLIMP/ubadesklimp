@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import WhatsAppIcon from './WhatsAppIcon';
 
 interface OrderFormData {
@@ -21,10 +22,28 @@ interface OrderFormProps {
 
 const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loading = false }) => {
   const { user } = useAuth();
+  const { profile } = useProfile();
+  
+  // Get initial name from profile or user
+  const getInitialName = () => {
+    if (profile?.name) return profile.name;
+    if (profile?.company_name) return profile.company_name;
+    if (profile?.trade_name) return profile.trade_name;
+    return '';
+  };
+  
   const [formData, setFormData] = useState<OrderFormData>({
-    name: '',
+    name: getInitialName(),
     notes: ''
   });
+
+  // Update form when profile loads
+  React.useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      name: getInitialName()
+    }));
+  }, [profile]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

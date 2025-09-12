@@ -1,16 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, Shield, History, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut, loading, isAdmin } = useAuth();
+  const { profile } = useProfile();
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+  // Get display name - priority: profile name, company name/trade name, email
+  const getDisplayName = () => {
+    if (profile?.name) return profile.name;
+    if (profile?.company_name) return profile.company_name;
+    if (profile?.trade_name) return profile.trade_name;
+    return user?.email?.split('@')[0] || 'Usuário';
+  };
 
   // Check if user is admin when component mounts and user changes
   useEffect(() => {
@@ -81,21 +91,34 @@ const Header = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
                       <User className="h-4 w-4 mr-2" />
-                      {user.email?.split('@')[0]}
+                      {getDisplayName()}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Meu Perfil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/orders" className="flex items-center">
+                        <History className="h-4 w-4 mr-2" />
+                        Histórico de Pedidos
+                      </Link>
+                    </DropdownMenuItem>
                     {isUserAdmin && (
                       <>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                           <Link to="/admin" className="flex items-center">
                             <Shield className="h-4 w-4 mr-2" />
                             Admin
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                       </>
                     )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" />
                       Sair
@@ -150,6 +173,18 @@ const Header = () => {
               {!loading && (
                 user ? (
                   <div className="space-y-2 pt-2 border-t border-border">
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/profile">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Meu Perfil
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/orders">
+                        <History className="h-4 w-4 mr-2" />
+                        Histórico de Pedidos
+                      </Link>
+                    </Button>
                     {isUserAdmin && (
                       <Button variant="ghost" className="w-full justify-start" asChild>
                         <Link to="/admin">
