@@ -193,7 +193,7 @@ const Profile = () => {
                       id="state_registration"
                       value={formData.state_registration}
                       onChange={(e) => handleChange('state_registration', e.target.value)}
-                      placeholder="IE (caso tenha)"
+                      placeholder="IE (Se Houver)"
                     />
                   </div>
                 </div>
