@@ -243,7 +243,7 @@ const Profile = () => {
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleChange('notes', e.target.value)}
-                  placeholder="Ex: fechado para horário de almoço: 12:00-14:00, Deixar entrega com caseiro Bruno."
+                  placeholder="Ex: fechado para horário de almoço: 12:00-14:00, Deixar entrega com EX:Caseiro Bruno."
                   rows={3}
                 />
               </div>
