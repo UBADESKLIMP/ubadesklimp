@@ -164,8 +164,10 @@ export type Database = {
           highlight_type: string | null
           id: string
           image_url: string | null
+          literage_single: string | null
           material: string | null
           name: string
+          out_of_stock: boolean | null
           price: number
           priority: boolean
           priority_order: number | null
@@ -182,8 +184,10 @@ export type Database = {
           highlight_type?: string | null
           id?: string
           image_url?: string | null
+          literage_single?: string | null
           material?: string | null
           name: string
+          out_of_stock?: boolean | null
           price: number
           priority?: boolean
           priority_order?: number | null
@@ -200,8 +204,10 @@ export type Database = {
           highlight_type?: string | null
           id?: string
           image_url?: string | null
+          literage_single?: string | null
           material?: string | null
           name?: string
+          out_of_stock?: boolean | null
           price?: number
           priority?: boolean
           priority_order?: number | null

@@ -39,6 +39,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     validity: string;
     specifications: string;
     fragrances: any[];
+    literage_single: string;
+    out_of_stock: boolean;
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -54,6 +56,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     validity: product?.validity || '',
     specifications: product?.specifications || '',
     fragrances: product?.fragrances || [],
+    literage_single: (product as any)?.literage_single || '',
+    out_of_stock: (product as any)?.out_of_stock || false,
   });
 
   useEffect(() => {
@@ -99,6 +103,8 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         material: formData.material || null,
         validity: formData.validity || null,
         specifications: formData.specifications || null,
+        literage_single: formData.literage_single || null,
+        out_of_stock: formData.out_of_stock,
       };
 
       await onSave({ ...productData, fragrances: formData.fragrances });
@@ -173,6 +179,21 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   {formData.has_variations ? 'Preço usado quando não há variações' : 'Preço final do produto'}
                 </p>
               </div>
+
+              {!formData.has_variations && (
+                <div>
+                  <Label htmlFor="literage_single">Litragem</Label>
+                  <Input
+                    id="literage_single"
+                    value={formData.literage_single}
+                    onChange={(e) => setFormData({...formData, literage_single: e.target.value})}
+                    placeholder="Ex: 5L, 500ml, 1kg"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Especifique a litragem/volume deste produto
+                  </p>
+                </div>
+              )}
               
               <div>
                 <Label htmlFor="category">Categoria *</Label>
@@ -327,6 +348,19 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 />
                 <span className="text-sm text-muted-foreground ml-2">
                   {formData.has_variations ? 'Possui diferentes tamanhos/preços' : 'Produto único'}
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/30">
+                <Package className="h-5 w-5 text-destructive" />
+                <Label htmlFor="out_of_stock" className="font-medium">Produto Esgotado</Label>
+                <Switch
+                  id="out_of_stock"
+                  checked={formData.out_of_stock}
+                  onCheckedChange={(checked) => setFormData({...formData, out_of_stock: checked})}
+                />
+                <span className="text-sm text-muted-foreground ml-2">
+                  {formData.out_of_stock ? 'Marcado como em falta/esgotado' : 'Disponível para compra'}
                 </span>
               </div>
 

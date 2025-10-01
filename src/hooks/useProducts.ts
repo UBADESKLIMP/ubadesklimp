@@ -37,7 +37,9 @@ export const useProducts = () => {
       'highlight_type',
       'material',
       'validity',
-      'specifications'
+      'specifications',
+      'literage_single',
+      'out_of_stock'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {

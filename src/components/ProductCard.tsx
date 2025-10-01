@@ -17,6 +17,16 @@ const ProductCard = ({
     addToCart
   } = useCart();
   const handleAddToCart = () => {
+    // Verificar se está esgotado
+    if ((product as any).out_of_stock) {
+      toast({
+        title: "Produto Esgotado",
+        description: "Este produto está temporariamente indisponível.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (product.has_variations) {
       // Para produtos com variações, redireciona para detalhes
       onShowDetails(product);
@@ -123,6 +133,13 @@ const ProductCard = ({
             </div>
           </div>
 
+          {/* Out of Stock Badge */}
+          {(product as any).out_of_stock && (
+            <div className="absolute bottom-2 right-2 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              ESGOTADO
+            </div>
+          )}
+
           {/* Details Button */}
           <Button 
             variant="secondary" 
@@ -162,15 +179,23 @@ const ProductCard = ({
           {/* Price and CTA - sempre na parte inferior */}
           <div className="flex items-center justify-between mt-auto">
             <span className="text-xl font-bold text-foreground">
-              {getCurrentPrice() > 0 ? 
-                (product.has_variations && product.variations && product.variations.length > 0 ? 
-                  `A partir de ${formatPrice(getCurrentPrice())}` : 
-                  formatPrice(getCurrentPrice())
-                ) : 'Indisponível'}
+              {(product as any).out_of_stock ? 'Em Falta' : 
+                (getCurrentPrice() > 0 ? 
+                  (product.has_variations && product.variations && product.variations.length > 0 ? 
+                    `A partir de ${formatPrice(getCurrentPrice())}` : 
+                    formatPrice(getCurrentPrice())
+                  ) : 'Indisponível'
+                )
+              }
             </span>
-            <Button size="sm" className="btn-secondary" onClick={handleAddToCart} disabled={getCurrentPrice() === 0}>
+            <Button 
+              size="sm" 
+              className="btn-secondary" 
+              onClick={handleAddToCart} 
+              disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
+            >
               <ShoppingCart className="h-4 w-4 mr-1" />
-              {product.has_variations ? 'Ver opções' : 'Adicionar'}
+              {(product as any).out_of_stock ? 'Esgotado' : (product.has_variations ? 'Ver opções' : 'Adicionar')}
             </Button>
           </div>
         </div>

@@ -154,7 +154,27 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
+  // Inicializar estado do localStorage
+  const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 }, (initial) => {
+    try {
+      const savedCart = localStorage.getItem('ubadesk_cart');
+      if (savedCart) {
+        return JSON.parse(savedCart);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+    }
+    return initial;
+  });
+
+  // Persistir carrinho no localStorage sempre que mudar
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('ubadesk_cart', JSON.stringify(state));
+    } catch (error) {
+      console.error('Erro ao salvar carrinho:', error);
+    }
+  }, [state]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     dispatch({ type: 'ADD_ITEM', payload: item });

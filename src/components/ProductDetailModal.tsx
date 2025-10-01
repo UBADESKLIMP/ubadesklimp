@@ -198,10 +198,10 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                     <span className="font-medium">Litragem:</span>
                     <span>{selectedVariation.literage}</span>
                   </div>
-                ) : !product.has_variations && (
+                ) : !product.has_variations && (product as any).literage_single && (
                   <div className="flex justify-between">
                     <span className="font-medium">Litragem:</span>
-                    <span>Tamanho único</span>
+                    <span>{(product as any).literage_single}</span>
                   </div>
                 )}
                 {product.validity && (
@@ -213,11 +213,24 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               </div>
               {product.specifications && (
                 <div>
-                  <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded">
+                  <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded whitespace-pre-wrap">
                     {product.specifications}
                   </p>
                 </div>
               )}
+            </div>
+
+            {product.description && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-lg">Descrição:</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {/* Especificações */}
+            <div className="space-y-4 border-t pt-4">
             </div>
 
             {/* Seleção de fragrância */}
@@ -282,19 +295,28 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
 
             {/* Preço e botão de compra */}
             <div className="border-t pt-6">
+              {(product as any).out_of_stock && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
+                  <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
+                  <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+                </div>
+              )}
+              
               <div className="flex items-center justify-between mb-6">
                 <span className="text-3xl font-bold text-primary">
-                  {getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível'}
+                  {(product as any).out_of_stock ? 'Em Falta' : 
+                    (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
+                  }
                 </span>
               </div>
               
               <Button 
                 onClick={handleAddToCart} 
                 className="w-full btn-secondary text-lg py-3"
-                disabled={getCurrentPrice() === 0}
+                disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Comprar Agora
+                {(product as any).out_of_stock ? 'Produto Esgotado' : 'Comprar Agora'}
               </Button>
             </div>
           </div>
