@@ -220,15 +220,6 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               )}
             </div>
 
-            {product.description && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-lg">Descrição:</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {product.description}
-                </p>
-              </div>
-            )}
-
             {/* Especificações */}
             <div className="space-y-4 border-t pt-4">
             </div>
