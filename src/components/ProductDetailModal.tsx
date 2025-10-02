@@ -191,17 +191,75 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               )}
             </div>
 
-            {/* Preço e botão de compra - visível quando conteúdo é grande */}
+            {/* Seleções e botão de compra - visível quando conteúdo é grande */}
             {showButtonBelowImage && (
-              <div className="border-t pt-6">
+              <div className="border-t pt-6 space-y-4">
+                {/* Seleção de fragrância */}
+                {product.has_fragrances && product.fragrances && product.fragrances.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="font-medium">Escolha a fragrância:</label>
+                    <Select 
+                      value={selectedFragrance?.id || ''} 
+                      onValueChange={(value) => {
+                        const fragrance = product.fragrances?.find(f => f.id === value);
+                        setSelectedFragrance(fragrance || null);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a fragrância" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {product.fragrances.map((fragrance) => (
+                          <SelectItem key={fragrance.id} value={fragrance.id}>
+                            {fragrance.name}
+                            {fragrance.description && ` - ${fragrance.description}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Seleção de variação */}
+                {product.has_variations && product.variations && product.variations.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="font-medium">Escolha a litragem:</label>
+                    <Select 
+                      value={selectedVariation?.id || ''} 
+                      onValueChange={(value) => {
+                        const variation = product.variations.find(v => v.id === value);
+                        setSelectedVariation(variation || null);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a litragem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {product.variations
+                          .filter((variation) => {
+                            if (selectedFragrance?.available_literages && selectedFragrance.available_literages.length > 0) {
+                              return selectedFragrance.available_literages.includes(variation.literage);
+                            }
+                            return true;
+                          })
+                          .map((variation) => (
+                            <SelectItem key={variation.id} value={variation.id}>
+                              {variation.literage} - {formatPrice(variation.price)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {(product as any).out_of_stock && (
-                  <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
+                  <div className="p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
                     <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
                     <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
                   </div>
                 )}
                 
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between">
                   <span className="text-3xl font-bold text-primary">
                     {(product as any).out_of_stock ? 'Em Falta' : 
                       (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
@@ -270,7 +328,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
             </div>
 
             {/* Seleção de fragrância */}
-            {product.has_fragrances && product.fragrances && product.fragrances.length > 0 && (
+            {!showButtonBelowImage && product.has_fragrances && product.fragrances && product.fragrances.length > 0 && (
               <div className="space-y-3">
                 <label className="font-medium">Escolha a fragrância:</label>
                 <Select 
@@ -296,7 +354,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
             )}
 
             {/* Seleção de variação */}
-            {product.has_variations && product.variations && product.variations.length > 0 && (
+            {!showButtonBelowImage && product.has_variations && product.variations && product.variations.length > 0 && (
               <div className="space-y-3">
                 <label className="font-medium">Escolha a litragem:</label>
                 <Select 
