@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ProductWithVariations, ProductVariation, ProductFragrance } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
@@ -18,6 +18,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   const { addToCart } = useCart();
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [selectedFragrance, setSelectedFragrance] = useState<ProductFragrance | null>(null);
+  const [showButtonBelowImage, setShowButtonBelowImage] = useState(false);
+  const detailsRef = useRef<HTMLDivElement>(null);
 
   // Atualiza a variação e fragrância selecionadas quando o produto muda
   useEffect(() => {
@@ -33,6 +35,20 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       setSelectedFragrance(null);
     }
   }, [product]);
+
+  // Verifica o tamanho do conteúdo para decidir onde colocar o botão
+  useEffect(() => {
+    if (detailsRef.current && isOpen) {
+      const checkContentHeight = () => {
+        const contentHeight = detailsRef.current?.scrollHeight || 0;
+        // Se o conteúdo for maior que 500px, colocar botão abaixo da imagem
+        setShowButtonBelowImage(contentHeight > 500);
+      };
+      
+      // Aguardar um pequeno delay para garantir que o DOM foi renderizado
+      setTimeout(checkContentHeight, 100);
+    }
+  }, [product, selectedVariation, selectedFragrance, isOpen]);
 
   // Reset variação quando fragrância muda para garantir compatibilidade
   useEffect(() => {
@@ -175,36 +191,38 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               )}
             </div>
 
-            {/* Preço e botão de compra - visível apenas em mobile */}
-            <div className="md:hidden border-t pt-6">
-              {(product as any).out_of_stock && (
-                <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
-                  <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
-                  <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+            {/* Preço e botão de compra - visível quando conteúdo é grande */}
+            {showButtonBelowImage && (
+              <div className="border-t pt-6">
+                {(product as any).out_of_stock && (
+                  <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
+                    <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
+                    <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-3xl font-bold text-primary">
+                    {(product as any).out_of_stock ? 'Em Falta' : 
+                      (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
+                    }
+                  </span>
                 </div>
-              )}
-              
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-3xl font-bold text-primary">
-                  {(product as any).out_of_stock ? 'Em Falta' : 
-                    (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
-                  }
-                </span>
+                
+                <Button 
+                  onClick={handleAddToCart} 
+                  className="w-full btn-secondary text-lg py-3"
+                  disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  {(product as any).out_of_stock ? 'Produto Esgotado' : 'Comprar Agora'}
+                </Button>
               </div>
-              
-              <Button 
-                onClick={handleAddToCart} 
-                className="w-full btn-secondary text-lg py-3"
-                disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {(product as any).out_of_stock ? 'Produto Esgotado' : 'Comprar Agora'}
-              </Button>
-            </div>
+            )}
           </div>
 
           {/* Detalhes do produto */}
-          <div className="space-y-6">
+          <div className="space-y-6" ref={detailsRef}>
             <div>
               <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
               <p className="text-sm text-primary font-medium uppercase tracking-wide">{product.category}</p>
@@ -311,32 +329,34 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               </div>
             )}
 
-            {/* Preço e botão de compra - visível apenas em desktop */}
-            <div className="hidden md:block border-t pt-6">
-              {(product as any).out_of_stock && (
-                <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
-                  <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
-                  <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+            {/* Preço e botão de compra - visível quando conteúdo é pequeno */}
+            {!showButtonBelowImage && (
+              <div className="border-t pt-6">
+                {(product as any).out_of_stock && (
+                  <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
+                    <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
+                    <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-3xl font-bold text-primary">
+                    {(product as any).out_of_stock ? 'Em Falta' : 
+                      (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
+                    }
+                  </span>
                 </div>
-              )}
-              
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-3xl font-bold text-primary">
-                  {(product as any).out_of_stock ? 'Em Falta' : 
-                    (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
-                  }
-                </span>
+                
+                <Button 
+                  onClick={handleAddToCart} 
+                  className="w-full btn-secondary text-lg py-3"
+                  disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  {(product as any).out_of_stop ? 'Produto Esgotado' : 'Comprar Agora'}
+                </Button>
               </div>
-              
-              <Button 
-                onClick={handleAddToCart} 
-                className="w-full btn-secondary text-lg py-3"
-                disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {(product as any).out_of_stop ? 'Produto Esgotado' : 'Comprar Agora'}
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       </DialogContent>
