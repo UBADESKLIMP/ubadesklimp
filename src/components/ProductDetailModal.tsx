@@ -145,7 +145,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
         <div className="grid md:grid-cols-2 gap-8 p-6">
-          {/* Imagem do produto e botão de compra */}
+          {/* Imagem do produto */}
           <div className="space-y-4">
             <div className="relative w-full bg-white rounded-lg border border-border overflow-hidden">
               <div className="h-[600px] flex items-center justify-center p-4">
@@ -175,8 +175,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               )}
             </div>
 
-            {/* Preço e botão de compra */}
-            <div className="border-t pt-6">
+            {/* Preço e botão de compra - visível apenas em mobile */}
+            <div className="md:hidden border-t pt-6">
               {(product as any).out_of_stock && (
                 <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
                   <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
@@ -310,6 +310,33 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                 </Select>
               </div>
             )}
+
+            {/* Preço e botão de compra - visível apenas em desktop */}
+            <div className="hidden md:block border-t pt-6">
+              {(product as any).out_of_stock && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-center">
+                  <span className="text-destructive font-semibold">⚠️ Produto Esgotado</span>
+                  <p className="text-sm text-muted-foreground mt-1">Este produto está temporariamente indisponível</p>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-3xl font-bold text-primary">
+                  {(product as any).out_of_stock ? 'Em Falta' : 
+                    (getCurrentPrice() > 0 ? formatPrice(getCurrentPrice()) : 'Indisponível')
+                  }
+                </span>
+              </div>
+              
+              <Button 
+                onClick={handleAddToCart} 
+                className="w-full btn-secondary text-lg py-3"
+                disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                {(product as any).out_of_stop ? 'Produto Esgotado' : 'Comprar Agora'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
