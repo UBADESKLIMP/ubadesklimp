@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, X } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductWithVariations, ProductVariation, ProductFragrance } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
@@ -19,7 +19,6 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [selectedFragrance, setSelectedFragrance] = useState<ProductFragrance | null>(null);
   const [showButtonBelowImage, setShowButtonBelowImage] = useState(false);
-  const detailsRef = useRef<HTMLDivElement>(null);
 
   // Atualiza a variação e fragrância selecionadas quando o produto muda
   useEffect(() => {
@@ -36,19 +35,31 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     }
   }, [product]);
 
-  // Verifica o tamanho do conteúdo para decidir onde colocar o botão
+  // Verifica a quantidade de texto para decidir onde colocar o botão
   useEffect(() => {
-    if (detailsRef.current && isOpen) {
-      const checkContentHeight = () => {
-        const contentHeight = detailsRef.current?.scrollHeight || 0;
-        // Se o conteúdo for maior que 500px, colocar botão abaixo da imagem
-        setShowButtonBelowImage(contentHeight > 500);
-      };
+    if (product && isOpen) {
+      // Contar caracteres do conteúdo de texto
+      let totalChars = 0;
       
-      // Aguardar um pequeno delay para garantir que o DOM foi renderizado
-      setTimeout(checkContentHeight, 100);
+      // Adicionar caracteres das especificações
+      if (product.specifications) {
+        totalChars += product.specifications.length;
+      }
+      
+      // Adicionar caracteres do material
+      if (product.material) {
+        totalChars += product.material.length;
+      }
+      
+      // Adicionar caracteres da validade
+      if (product.validity) {
+        totalChars += product.validity.length;
+      }
+      
+      // Se tiver mais de 300 caracteres, colocar botão abaixo da imagem
+      setShowButtonBelowImage(totalChars > 300);
     }
-  }, [product, selectedVariation, selectedFragrance, isOpen]);
+  }, [product, isOpen]);
 
   // Reset variação quando fragrância muda para garantir compatibilidade
   useEffect(() => {
@@ -280,7 +291,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
           </div>
 
           {/* Detalhes do produto */}
-          <div className="space-y-6" ref={detailsRef}>
+          <div className="space-y-6">
             <div>
               <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
               <p className="text-sm text-primary font-medium uppercase tracking-wide">{product.category}</p>
