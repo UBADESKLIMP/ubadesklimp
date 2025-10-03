@@ -422,7 +422,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                   disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  {(product as any).out_of_stop ? 'Produto Esgotado' : 'Comprar Agora'}
+                  {(product as any).out_of_stock ? 'Produto Esgotado' : 'Comprar Agora'}
                 </Button>
               </div>
             )}
