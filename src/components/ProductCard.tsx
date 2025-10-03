@@ -27,12 +27,13 @@ const ProductCard = ({
       return;
     }
 
-    if (product.has_variations) {
-      // Para produtos com variações, redireciona para detalhes
+    // Se tem variações de litragem ou fragrâncias, abre os detalhes
+    if ((product.has_variations && product.variations && product.variations.length > 0) || 
+        (product.has_fragrances && product.fragrances && product.fragrances.length > 0)) {
       onShowDetails(product);
       toast({
         title: "Ver detalhes",
-        description: "Clique em uma variação para adicionar ao carrinho."
+        description: "Selecione as opções desejadas."
       });
     } else if (product.price) {
       addToCart({
@@ -59,7 +60,7 @@ const ProductCard = ({
       const minPrice = Math.min(...product.variations.map(v => v.price));
       return minPrice;
     }
-    // Para produtos sem variações, usar o preço base
+    // Para produtos sem variações ou com fragrâncias apenas, usar o preço base
     return product.price || 0;
   };
   const getCurrentImage = () => {
@@ -195,7 +196,12 @@ const ProductCard = ({
               disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
             >
               <ShoppingCart className="h-4 w-4 mr-1" />
-              {(product as any).out_of_stock ? 'Esgotado' : (product.has_variations ? 'Ver opções' : 'Adicionar')}
+              {(product as any).out_of_stock ? 'Esgotado' : 
+                ((product.has_variations && product.variations && product.variations.length > 0) || 
+                 (product.has_fragrances && product.fragrances && product.fragrances.length > 0) ? 
+                  'Ver opções' : 'Adicionar'
+                )
+              }
             </Button>
           </div>
         </div>

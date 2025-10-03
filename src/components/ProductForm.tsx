@@ -344,7 +344,13 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 <Switch
                   id="has_variations"
                   checked={formData.has_variations}
-                  onCheckedChange={(checked) => setFormData({...formData, has_variations: checked})}
+                  onCheckedChange={(checked) => {
+                    setFormData({
+                      ...formData, 
+                      has_variations: checked,
+                      fragrances: checked ? formData.fragrances : []
+                    });
+                  }}
                 />
                 <span className="text-sm text-muted-foreground ml-2">
                   {formData.has_variations ? 'Possui diferentes tamanhos/preços' : 'Produto único'}
