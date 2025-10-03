@@ -56,8 +56,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         totalChars += product.validity.length;
       }
       
-      // Se tiver mais de 300 caracteres, colocar botão abaixo da imagem
-      setShowButtonBelowImage(totalChars > 300);
+      // Se tiver mais de 650 caracteres, colocar botão abaixo da imagem
+      setShowButtonBelowImage(totalChars > 650);
     }
   }, [product, isOpen]);
 
