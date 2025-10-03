@@ -113,6 +113,8 @@ export const useProducts = () => {
             material: product.material,
             validity: product.validity,
             specifications: product.specifications,
+            out_of_stock: product.out_of_stock || false,
+            literage_single: product.literage_single,
             created_at: product.created_at,
             updated_at: product.updated_at,
             variations: variations,
