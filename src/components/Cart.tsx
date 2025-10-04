@@ -144,14 +144,33 @@ const Cart = () => {
   };
 
   const getFragrancesForItem = (item: any) => {
-    if (!item.productId) return [];
+    if (!item.productId) {
+      // Tentar encontrar productId pelo nome do produto
+      const productName = item.name.split(' - ')[0];
+      const product = products.find(p => p.name === productName);
+      return product?.fragrances || [];
+    }
     
     const product = products.find(p => p.id === item.productId);
     return product?.fragrances || [];
   };
 
   const getVariationsForItem = (item: any) => {
-    if (!item.productId) return [];
+    if (!item.productId) {
+      // Tentar encontrar productId pelo nome do produto
+      const productName = item.name.split(' - ')[0];
+      const product = products.find(p => p.name === productName);
+      const allVariations = product?.variations || [];
+      
+      // Se tem fragrância selecionada, filtrar variações por literage disponível
+      if (item.fragrance && item.fragrance.available_literages) {
+        return allVariations.filter(variation => 
+          item.fragrance.available_literages.includes(variation.literage)
+        );
+      }
+      
+      return allVariations;
+    }
     
     const product = products.find(p => p.id === item.productId);
     const allVariations = product?.variations || [];
@@ -167,22 +186,33 @@ const Cart = () => {
   };
 
   const handleFragranceChange = (itemId: string, fragranceId: string, productId: string) => {
-    const fragrances = getFragrancesForItem({ productId });
+    // Se não tem productId, tentar encontrar pelo nome
+    let finalProductId = productId;
+    if (!finalProductId) {
+      const item = state.items.find(i => i.id === itemId);
+      if (item) {
+        const productName = item.name.split(' - ')[0];
+        const product = products.find(p => p.name === productName);
+        finalProductId = product?.id || '';
+      }
+    }
+    
+    const fragrances = getFragrancesForItem({ productId: finalProductId });
     const newFragrance = fragrances.find(f => f.id === fragranceId);
     
-    if (newFragrance) {
+    if (newFragrance && finalProductId) {
       // Atualiza a fragrância do item
-      updateFragrance(itemId, newFragrance, productId);
+      updateFragrance(itemId, newFragrance, finalProductId);
 
       // Garantir que a litragem selecionada continue válida para a nova fragrância
-      const allowedVariations = getVariationsForItem({ productId, fragrance: newFragrance });
+      const allowedVariations = getVariationsForItem({ productId: finalProductId, fragrance: newFragrance });
       const currentItem = state.items.find(i => i.id === itemId);
       const currentLiterage = currentItem?.variation?.literage;
       const stillAllowed = allowedVariations.some(v => v.literage === currentLiterage);
 
       if (!stillAllowed && allowedVariations.length > 0) {
         const v = allowedVariations[0];
-        handleVariationChange(itemId, v.id, productId);
+        handleVariationChange(itemId, v.id, finalProductId);
       }
 
       toast({
@@ -277,12 +307,17 @@ const Cart = () => {
                         </div>
 
                         {/* Seleção de fragrância - se houver fragrâncias disponíveis */}
-                        {hasFragrances && item.productId && (
+                        {hasFragrances && (
                           <div className="space-y-2">
                             <label className="text-xs font-medium">Fragrância:</label>
                             <Select 
                               value={item.fragrance?.id || ""} 
-                              onValueChange={(value) => handleFragranceChange(item.id, value, item.productId!)}
+                              onValueChange={(value) => {
+                                const finalProductId = item.productId || products.find(p => p.name === item.name.split(' - ')[0])?.id;
+                                if (finalProductId) {
+                                  handleFragranceChange(item.id, value, finalProductId);
+                                }
+                              }}
                             >
                               <SelectTrigger className="h-8 text-xs">
                                 <SelectValue placeholder="Selecione a fragrância" />
