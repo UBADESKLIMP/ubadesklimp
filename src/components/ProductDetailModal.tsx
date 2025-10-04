@@ -126,7 +126,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
           currency: 'BRL'
         }).format(product.price),
         category: product.category,
-        fragrance: selectedFragrance
+        fragrance: selectedFragrance,
+        productId: product.id
       });
     }
 

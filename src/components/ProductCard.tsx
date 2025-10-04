@@ -40,7 +40,8 @@ const ProductCard = ({
         id: product.id,
         name: product.name,
         price: formatPrice(product.price),
-        category: product.category
+        category: product.category,
+        productId: product.id
       });
       toast({
         title: "Produto adicionado!",
