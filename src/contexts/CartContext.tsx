@@ -128,12 +128,52 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const currentItem = state.items.find(item => item.id === action.payload.id);
       if (!currentItem) return state;
 
+      // Construir novo nome incluindo a fragrância
+      let newName = currentItem.name.split(' - ')[0];
+      
+      // Adicionar variação se existir
+      if (currentItem.variation) {
+        newName += ` - ${currentItem.variation.literage}`;
+      }
+      
+      // Adicionar a nova fragrância
+      newName += ` - ${action.payload.fragrance.name}`;
+
+      // Construir novo ID incluindo a fragrância
+      const baseId = action.payload.productId;
+      let newId = baseId;
+      if (currentItem.variation) {
+        newId += `-${currentItem.variation.id}`;
+      }
+      newId += `-${action.payload.fragrance.id}`;
+
+      // Verificar se já existe um item com o novo ID
+      const existingItemWithNewId = state.items.find(item => item.id === newId && item.id !== action.payload.id);
+      
+      // Se já existe, mesclar as quantidades
+      if (existingItemWithNewId) {
+        const updatedItems = state.items
+          .filter(item => item.id !== action.payload.id)
+          .map(item => 
+            item.id === newId 
+              ? { ...item, quantity: item.quantity + currentItem.quantity }
+              : item
+          );
+        
+        return {
+          ...state,
+          items: updatedItems,
+        };
+      }
+
       return {
         ...state,
         items: state.items.map(item =>
           item.id === action.payload.id
             ? { 
-                ...item, 
+                ...item,
+                id: newId,
+                name: newName,
                 fragrance: action.payload.fragrance,
                 productId: action.payload.productId
               }
