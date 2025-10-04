@@ -102,7 +102,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       productId += `-${selectedFragrance.id}`;
     }
 
-    if (product.has_variations && selectedVariation) {
+    // Se tem variações cadastradas e uma está selecionada
+    if (product.has_variations && product.variations?.length > 0 && selectedVariation) {
       addToCart({
         id: productId,
         name: productName,
@@ -115,7 +116,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         fragrance: selectedFragrance,
         productId: product.id
       });
-    } else if (!product.has_variations && product.price) {
+    } else if (product.price) {
+      // Usar preço base se não tem variações OU se tem has_variations mas sem variações cadastradas
       addToCart({
         id: productId,
         name: productName,
@@ -144,10 +146,12 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   };
 
   const getCurrentPrice = () => {
-    if (product?.has_variations && selectedVariation) {
+    // Se tem variações cadastradas e uma está selecionada
+    if (product?.has_variations && product?.variations?.length > 0 && selectedVariation) {
       return selectedVariation.price;
     }
-    if (!product?.has_variations && product?.price) {
+    // Se não tem variações OU tem has_variations mas sem variações cadastradas, usar preço base
+    if (product?.price) {
       return product.price;
     }
     return 0;
