@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+
+// Cache de status admin
+const adminStatusCache = new Map<string, { value: boolean; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,23 +16,52 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAdmin = false 
 }) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin: checkIsAdmin } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCheckLoading, setAdminCheckLoading] = useState(requireAdmin);
+  const isMounted = useRef(true);
 
-  const auth = useAuth();
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (requireAdmin && user) {
       const checkAdminStatus = async () => {
         try {
-          const adminStatus = await auth.isAdmin();
-          setIsAdmin(adminStatus);
+          // Verificar cache primeiro
+          const cached = adminStatusCache.get(user.id);
+          if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            if (isMounted.current) {
+              setIsAdmin(cached.value);
+              setAdminCheckLoading(false);
+            }
+            return;
+          }
+          
+          // Se não tem cache, fazer chamada
+          const adminStatus = await checkIsAdmin();
+          
+          // Salvar no cache
+          adminStatusCache.set(user.id, {
+            value: adminStatus,
+            timestamp: Date.now()
+          });
+          
+          if (isMounted.current) {
+            setIsAdmin(adminStatus);
+          }
         } catch (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
+          if (isMounted.current) {
+            setIsAdmin(false);
+          }
         } finally {
-          setAdminCheckLoading(false);
+          if (isMounted.current) {
+            setAdminCheckLoading(false);
+          }
         }
       };
 
@@ -36,7 +69,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     } else if (!requireAdmin) {
       setAdminCheckLoading(false);
     }
-  }, [user, requireAdmin, auth]);
+  }, [user, requireAdmin, checkIsAdmin]);
 
   // Still loading auth state
   if (authLoading || adminCheckLoading) {

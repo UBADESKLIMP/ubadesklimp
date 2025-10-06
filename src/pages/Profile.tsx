@@ -9,9 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { User, Building, Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { profileSchema } from '@/lib/validations';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
   const { profile, loading, updateProfile } = useProfile();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     phone: profile?.phone || '',
@@ -27,7 +33,6 @@ const Profile = () => {
     contact_phone: profile?.contact_phone || '',
     notes: profile?.notes || '',
   });
-  const [saving, setSaving] = useState(false);
 
   React.useEffect(() => {
     if (profile) {
@@ -54,6 +59,29 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    setValidationErrors({});
+    
+    // Validar inputs
+    try {
+      profileSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast({
+          title: "Erro de validação",
+          description: "Corrija os campos destacados",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     setSaving(true);
     try {
       await updateProfile(formData);
@@ -120,6 +148,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('name', e.target.value)}
                       placeholder="Seu nome completo"
                     />
+                    {validationErrors.name && (
+                      <p className="text-sm text-destructive">{validationErrors.name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
@@ -129,6 +160,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('cpf', e.target.value)}
                       placeholder="000.000.000-00"
                     />
+                    {validationErrors.cpf && (
+                      <p className="text-sm text-destructive">{validationErrors.cpf}</p>
+                    )}
                   </div>
                 </div>
 
@@ -141,6 +175,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('contact_phone', e.target.value)}
                       placeholder="(11) 99999-9999"
                     />
+                    {validationErrors.contact_phone && (
+                      <p className="text-sm text-destructive">{validationErrors.contact_phone}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="billing_email">Email para Cobrança</Label>
@@ -151,6 +188,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('billing_email', e.target.value)}
                       placeholder="cobranca@email.com"
                     />
+                    {validationErrors.billing_email && (
+                      <p className="text-sm text-destructive">{validationErrors.billing_email}</p>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -165,6 +205,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('company_name', e.target.value)}
                       placeholder="Nome da empresa"
                     />
+                    {validationErrors.company_name && (
+                      <p className="text-sm text-destructive">{validationErrors.company_name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="trade_name">Nome Fantasia</Label>
@@ -186,6 +229,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('cnpj', e.target.value)}
                       placeholder="00.000.000/0000-00"
                     />
+                    {validationErrors.cnpj && (
+                      <p className="text-sm text-destructive">{validationErrors.cnpj}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="state_registration">Inscrição Estadual</Label>
@@ -207,6 +253,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('contact_phone', e.target.value)}
                       placeholder="(11) 99999-9999"
                     />
+                    {validationErrors.contact_phone && (
+                      <p className="text-sm text-destructive">{validationErrors.contact_phone}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="billing_email_pj">Email para Cobrança</Label>
@@ -217,6 +266,9 @@ const Profile = () => {
                       onChange={(e) => handleChange('billing_email', e.target.value)}
                       placeholder="cobranca@empresa.com"
                     />
+                    {validationErrors.billing_email && (
+                      <p className="text-sm text-destructive">{validationErrors.billing_email}</p>
+                    )}
                   </div>
                 </div>
               </TabsContent>

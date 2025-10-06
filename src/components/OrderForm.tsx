@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import WhatsAppIcon from './WhatsAppIcon';
+import { orderSchema } from '@/lib/validations';
+import { z } from 'zod';
 
 interface OrderFormData {
   name: string;
@@ -23,6 +25,7 @@ interface OrderFormProps {
 const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loading = false }) => {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   // Get initial name from profile or user
   const getInitialName = () => {
@@ -47,6 +50,24 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
+    
+    // Validar inputs
+    try {
+      orderSchema.parse({ name: formData.name, notes: formData.notes });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        return;
+      }
+    }
+    
     onSubmit(formData);
   };
 
@@ -74,6 +95,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
               placeholder="Seu nome completo"
               required
             />
+            {validationErrors.name && (
+              <p className="text-sm text-destructive">{validationErrors.name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -85,6 +109,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
               placeholder="Alguma observação especial para seu pedido..."
               rows={3}
             />
+            {validationErrors.notes && (
+              <p className="text-sm text-destructive">{validationErrors.notes}</p>
+            )}
           </div>
 
           {!user && (

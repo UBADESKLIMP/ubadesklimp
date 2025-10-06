@@ -9,10 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { authSchema, signUpSchema } from '@/lib/validations';
+import { z } from 'zod';
 
 const Auth = () => {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,9 +29,26 @@ const Auth = () => {
 
   const handleSubmit = async (type: 'signin' | 'signup') => {
     if (isLoading) return;
+    setValidationErrors({});
 
-    if (type === 'signup' && formData.password !== formData.confirmPassword) {
-      return;
+    // Validar inputs
+    try {
+      if (type === 'signin') {
+        authSchema.parse({ email: formData.email, password: formData.password });
+      } else {
+        signUpSchema.parse(formData);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -111,6 +131,9 @@ const Auth = () => {
                       onChange={handleInputChange}
                       required
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -124,6 +147,9 @@ const Auth = () => {
                       onChange={handleInputChange}
                       required
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
                   </div>
                   
                   <Button 
@@ -162,6 +188,9 @@ const Auth = () => {
                       onChange={handleInputChange}
                       required
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -176,6 +205,9 @@ const Auth = () => {
                       required
                       minLength={6}
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -190,11 +222,10 @@ const Auth = () => {
                       required
                       minLength={6}
                     />
+                    {validationErrors.confirmPassword && (
+                      <p className="text-sm text-destructive">{validationErrors.confirmPassword}</p>
+                    )}
                   </div>
-                  
-                  {formData.password !== formData.confirmPassword && formData.confirmPassword && (
-                    <p className="text-sm text-destructive">As senhas não coincidem</p>
-                  )}
                   
                   <Button 
                     type="submit" 
