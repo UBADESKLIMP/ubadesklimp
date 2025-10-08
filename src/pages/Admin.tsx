@@ -84,8 +84,9 @@ const Admin = () => {
       // Refetch products para garantir que as mudanças aparecem
       await refetch();
       
-      setEditingProduct(null);
-      setIsDialogOpen(false);
+      // Não fechar o dialog automaticamente para permitir edições contínuas
+      // setEditingProduct(null);
+      // setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving product:', error);
     }
