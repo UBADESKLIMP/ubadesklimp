@@ -5,6 +5,8 @@ export interface ProductVariation {
   literage: string;
   price: number;
   image_url: string | null;
+  is_primary: boolean;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -38,4 +40,5 @@ export interface ProductWithVariations {
   variations: ProductVariation[];
   // Para produtos sem variações, usamos o preço base
   price?: number;
+  size_unit?: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
 }

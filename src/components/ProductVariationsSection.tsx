@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Loader2, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Loader2, ImageIcon, ArrowUp, ArrowDown, Star } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useProductVariations } from '@/hooks/useProductVariations';
 import { ProductVariation } from '@/types/product';
 import { useProductFragrances } from '@/hooks/useProductFragrances';
 import ProductFragrancesSection from '@/components/ProductFragrancesSection';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductVariationsSectionProps {
   productId: string;
@@ -20,7 +21,7 @@ interface ProductVariationsSectionProps {
 
 const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onMainImageChange }: ProductVariationsSectionProps) => {
   const { uploadImage, uploading } = useImageUpload();
-  const { variations, loading, createVariation, updateVariation, deleteVariation } = useProductVariations(productId);
+  const { variations, loading, createVariation, updateVariation, deleteVariation, reorderVariation, setPrimaryVariation } = useProductVariations(productId);
   const { saveFragrances } = useProductFragrances(productId);
   const [newVariation, setNewVariation] = useState({
     literage: '',
@@ -46,7 +47,9 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         product_id: productId,
         literage: newVariation.literage,
         price: parseFloat(newVariation.price),
-        image_url: newVariation.image_url || null
+        image_url: newVariation.image_url || null,
+        is_primary: variations.length === 0, // Primeira variação é principal
+        display_order: 0 // O hook vai calcular o order correto
       });
 
       // Atualizar imagem principal automaticamente se não há fragrância com imagem
@@ -111,65 +114,106 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         {/* Variações existentes */}
         <div className="space-y-3">
           {variations.map((variation, index) => (
-            <Card key={variation.id} className="border-l-4 border-l-primary/20">
+            <Card key={variation.id} className={`border-l-4 ${variation.is_primary ? 'border-l-yellow-500' : 'border-l-primary/20'}`}>
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                  <div>
-                    <Label className="text-sm font-medium">Tamanho/Volume</Label>
-                    <Input
-                      value={variation.literage}
-                      onChange={(e) => handleUpdateVariation(variation.id, 'literage', e.target.value)}
-                      placeholder="Ex: 500ml, 1L"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Preço (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={variation.price}
-                      onChange={(e) => handleUpdateVariation(variation.id, 'price', parseFloat(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Imagem específica</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            handleImageUpload(e.target.files[0], variation.id);
-                          }
-                        }}
-                        disabled={uploading}
-                        className="text-xs"
-                      />
-                      {variation.image_url && (
-                        <div className="relative">
-                          <img 
-                            src={variation.image_url} 
-                            alt="Preview" 
-                            className="w-12 h-12 object-cover rounded border"
-                          />
-                          {index === 0 && (
-                            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs px-1 rounded">
-                              Principal
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
+                <div className="flex items-start gap-4">
+                  {/* Controles de ordenação */}
+                  <div className="flex flex-col gap-1">
                     <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteVariation(variation.id)}
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => reorderVariation(variation.id, 'up')}
+                      disabled={index === 0}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => reorderVariation(variation.id, 'down')}
+                      disabled={index === variations.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {/* Conteúdo principal */}
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-2">
+                      {variation.is_primary && (
+                        <Badge variant="default" className="bg-yellow-500">
+                          <Star className="h-3 w-3 mr-1" />
+                          Principal
+                        </Badge>
+                      )}
+                      {!variation.is_primary && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPrimaryVariation(variation.id)}
+                          className="h-7 text-xs"
+                        >
+                          <Star className="h-3 w-3 mr-1" />
+                          Marcar como principal
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div>
+                        <Label className="text-sm font-medium">Tamanho/Volume</Label>
+                        <Input
+                          value={variation.literage}
+                          onChange={(e) => handleUpdateVariation(variation.id, 'literage', e.target.value)}
+                          placeholder="Ex: 500ml, 1L"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Preço (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={variation.price}
+                          onChange={(e) => handleUpdateVariation(variation.id, 'price', parseFloat(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Imagem específica</Label>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) {
+                                handleImageUpload(e.target.files[0], variation.id);
+                              }
+                            }}
+                            disabled={uploading}
+                            className="text-xs"
+                          />
+                          {variation.image_url && (
+                            <img 
+                              src={variation.image_url} 
+                              alt="Preview" 
+                              className="w-12 h-12 object-cover rounded border"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botão deletar */}
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => deleteVariation(variation.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

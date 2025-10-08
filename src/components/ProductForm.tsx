@@ -41,6 +41,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     fragrances: any[];
     literage_single: string;
     out_of_stock: boolean;
+    size_unit: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -58,6 +59,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     fragrances: product?.fragrances || [],
     literage_single: (product as any)?.literage_single || '',
     out_of_stock: (product as any)?.out_of_stock || false,
+    size_unit: (product as any)?.size_unit || 'litros',
   });
 
   useEffect(() => {
@@ -105,6 +107,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         specifications: formData.specifications || null,
         literage_single: formData.literage_single || null,
         out_of_stock: formData.out_of_stock,
+        size_unit: formData.size_unit,
       };
 
       await onSave({ ...productData, fragrances: formData.fragrances });
@@ -181,17 +184,49 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               </div>
 
               {!formData.has_variations && (
-                <div>
-                  <Label htmlFor="literage_single">Litragem</Label>
-                  <Input
-                    id="literage_single"
-                    value={formData.literage_single}
-                    onChange={(e) => setFormData({...formData, literage_single: e.target.value})}
-                    placeholder="Ex: 5L, 500ml, 1kg"
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Especifique a litragem/volume deste produto
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="size_unit">Unidade de Medida</Label>
+                    <Select value={formData.size_unit} onValueChange={(value: any) => setFormData({...formData, size_unit: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a unidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="litros">Litros (L)</SelectItem>
+                        <SelectItem value="ml">Mililitros (ml)</SelectItem>
+                        <SelectItem value="cm">Centímetros (cm)</SelectItem>
+                        <SelectItem value="kg">Quilogramas (kg)</SelectItem>
+                        <SelectItem value="g">Gramas (g)</SelectItem>
+                        <SelectItem value="unidades">Unidades</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="literage_single">
+                      {formData.size_unit === 'litros' ? 'Litragem' : 
+                       formData.size_unit === 'ml' ? 'Volume (ml)' :
+                       formData.size_unit === 'cm' ? 'Tamanho (cm)' :
+                       formData.size_unit === 'kg' ? 'Peso (kg)' :
+                       formData.size_unit === 'g' ? 'Peso (g)' :
+                       'Quantidade'}
+                    </Label>
+                    <Input
+                      id="literage_single"
+                      value={formData.literage_single}
+                      onChange={(e) => setFormData({...formData, literage_single: e.target.value})}
+                      placeholder={
+                        formData.size_unit === 'litros' ? 'Ex: 5L' :
+                        formData.size_unit === 'ml' ? 'Ex: 500ml' :
+                        formData.size_unit === 'cm' ? 'Ex: 30cm' :
+                        formData.size_unit === 'kg' ? 'Ex: 1kg' :
+                        formData.size_unit === 'g' ? 'Ex: 500g' :
+                        'Ex: 1 unidade'
+                      }
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Especifique o tamanho/volume/quantidade deste produto
+                    </p>
+                  </div>
                 </div>
               )}
               

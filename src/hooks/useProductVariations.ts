@@ -16,7 +16,7 @@ export const useProductVariations = (productId: string) => {
         .from('product_variations')
         .select('*')
         .eq('product_id', productId)
-        .order('created_at', { ascending: true });
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setVariations(data || []);
@@ -34,9 +34,14 @@ export const useProductVariations = (productId: string) => {
 
   const createVariation = async (variationData: Omit<ProductVariation, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Buscar maior display_order atual
+      const maxOrder = variations.length > 0 
+        ? Math.max(...variations.map(v => v.display_order)) 
+        : -1;
+
       const { data, error } = await supabase
         .from('product_variations')
-        .insert([variationData])
+        .insert([{ ...variationData, display_order: maxOrder + 1 }])
         .select()
         .single();
 
@@ -114,6 +119,77 @@ export const useProductVariations = (productId: string) => {
     }
   };
 
+  const reorderVariation = async (id: string, direction: 'up' | 'down') => {
+    try {
+      const currentIndex = variations.findIndex(v => v.id === id);
+      if (currentIndex === -1) return;
+      
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= variations.length) return;
+
+      const current = variations[currentIndex];
+      const target = variations[targetIndex];
+
+      // Trocar display_order
+      await Promise.all([
+        supabase
+          .from('product_variations')
+          .update({ display_order: target.display_order })
+          .eq('id', current.id),
+        supabase
+          .from('product_variations')
+          .update({ display_order: current.display_order })
+          .eq('id', target.id)
+      ]);
+
+      await fetchVariations();
+      
+      toast({
+        title: "Ordem atualizada",
+        description: "A variação foi reordenada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error reordering variation:', error);
+      toast({
+        title: "Erro ao reordenar",
+        description: "Não foi possível reordenar a variação.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const setPrimaryVariation = async (id: string) => {
+    try {
+      // Remover is_primary de todas as variações
+      await supabase
+        .from('product_variations')
+        .update({ is_primary: false })
+        .eq('product_id', productId);
+
+      // Definir a variação selecionada como principal
+      const { error } = await supabase
+        .from('product_variations')
+        .update({ is_primary: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchVariations();
+      
+      toast({
+        title: "Variação principal definida",
+        description: "A variação principal foi atualizada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error setting primary variation:', error);
+      toast({
+        title: "Erro ao definir principal",
+        description: "Não foi possível definir a variação principal.",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchVariations();
   }, [productId]);
@@ -124,6 +200,8 @@ export const useProductVariations = (productId: string) => {
     createVariation,
     updateVariation,
     deleteVariation,
+    reorderVariation,
+    setPrimaryVariation,
     refetch: fetchVariations
   };
 };
