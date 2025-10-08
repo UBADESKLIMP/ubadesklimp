@@ -11,6 +11,7 @@ import { ProductVariation } from '@/types/product';
 import { useProductFragrances } from '@/hooks/useProductFragrances';
 import ProductFragrancesSection from '@/components/ProductFragrancesSection';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductVariationsSectionProps {
   productId: string;
@@ -105,10 +106,11 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
 
   return (
     <div className="space-y-6">
-      {/* Seção de Variações de Volume */}
+      {/* Seção de Variações */}
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold">Variações de Volume</h3>
+          <h3 className="text-lg font-semibold">Variações do Produto</h3>
+          <p className="text-sm text-muted-foreground">(Tamanhos, Volumes, etc.)</p>
         </div>
         
         {/* Variações existentes */}
@@ -161,14 +163,17 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                       <div>
-                        <Label className="text-sm font-medium">Tamanho/Volume</Label>
+                        <Label className="text-sm font-medium">Tamanho/Volume/Quantidade</Label>
                         <Input
                           value={variation.literage}
                           onChange={(e) => handleUpdateVariation(variation.id, 'literage', e.target.value)}
-                          placeholder="Ex: 500ml, 1L"
+                          placeholder="Ex: 60cm, 5L, 500ml"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Digite com a unidade (ex: 60cm, 5L, 500ml)
+                        </p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Preço (R$)</Label>
@@ -179,7 +184,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
                           onChange={(e) => handleUpdateVariation(variation.id, 'price', parseFloat(e.target.value))}
                         />
                       </div>
-                      <div>
+                      <div className="col-span-2">
                         <Label className="text-sm font-medium">Imagem específica</Label>
                         <div className="flex items-center space-x-2">
                           <Input
@@ -225,21 +230,33 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
           <CardHeader>
             <CardTitle className="text-base flex items-center">
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Nova Variação de Volume
+              Adicionar Nova Variação
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="bg-muted/30 p-3 rounded-lg mb-4">
+              <p className="text-sm text-muted-foreground">
+                💡 <strong>Dica:</strong> Digite o tamanho/volume diretamente com a unidade de medida. 
+                Exemplos: <code className="bg-background px-1 py-0.5 rounded">60cm</code>, 
+                <code className="bg-background px-1 py-0.5 rounded ml-1">5L</code>, 
+                <code className="bg-background px-1 py-0.5 rounded ml-1">500ml</code>, 
+                <code className="bg-background px-1 py-0.5 rounded ml-1">2kg</code>
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label className="text-sm font-medium">Tamanho/Volume</Label>
+                <Label className="text-sm font-medium">Tamanho/Volume/Quantidade *</Label>
                 <Input
-                  placeholder="Ex: 500ml, 1L, 2L"
+                  placeholder="Ex: 60cm, 5L, 500ml, 2kg"
                   value={newVariation.literage}
                   onChange={(e) => setNewVariation(prev => ({ ...prev, literage: e.target.value }))}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Informe com a unidade (cm, L, ml, kg, g, etc)
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium">Preço (R$)</Label>
+                <Label className="text-sm font-medium">Preço (R$) *</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -277,7 +294,7 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Variação de Volume
+              Adicionar Variação
             </Button>
           </CardContent>
         </Card>
