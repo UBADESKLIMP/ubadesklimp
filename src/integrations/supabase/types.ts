@@ -119,8 +119,10 @@ export type Database = {
       product_variations: {
         Row: {
           created_at: string | null
+          display_order: number | null
           id: string
           image_url: string | null
+          is_primary: boolean | null
           literage: string
           price: number
           product_id: string
@@ -128,8 +130,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          display_order?: number | null
           id?: string
           image_url?: string | null
+          is_primary?: boolean | null
           literage: string
           price: number
           product_id: string
@@ -137,8 +141,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          display_order?: number | null
           id?: string
           image_url?: string | null
+          is_primary?: boolean | null
           literage?: string
           price?: number
           product_id?: string
@@ -171,6 +177,7 @@ export type Database = {
           price: number
           priority: boolean
           priority_order: number | null
+          size_unit: string | null
           specifications: string | null
           updated_at: string
           validity: string | null
@@ -191,6 +198,7 @@ export type Database = {
           price: number
           priority?: boolean
           priority_order?: number | null
+          size_unit?: string | null
           specifications?: string | null
           updated_at?: string
           validity?: string | null
@@ -211,6 +219,7 @@ export type Database = {
           price?: number
           priority?: boolean
           priority_order?: number | null
+          size_unit?: string | null
           specifications?: string | null
           updated_at?: string
           validity?: string | null
