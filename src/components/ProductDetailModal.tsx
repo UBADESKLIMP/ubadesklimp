@@ -239,7 +239,11 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                 {/* Seleção de variação */}
                 {product.has_variations && product.variations && product.variations.length > 0 && (
                   <div className="space-y-3">
-                    <label className="font-medium">Escolha a litragem:</label>
+                    <label className="font-medium">
+                      {product.variations[0]?.literage.match(/cm/i) ? 'Escolha o tamanho:' : 
+                       product.variations[0]?.literage.match(/kg|g/i) ? 'Escolha o peso:' : 
+                       product.variations[0]?.literage.match(/unidade/i) ? 'Escolha a quantidade:' : 'Escolha o volume:'}
+                    </label>
                     <Select 
                       value={selectedVariation?.id || ''} 
                       onValueChange={(value) => {
@@ -248,7 +252,11 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione a litragem" />
+                        <SelectValue placeholder={
+                          product.variations[0]?.literage.match(/cm/i) ? 'Selecione o tamanho' : 
+                          product.variations[0]?.literage.match(/kg|g/i) ? 'Selecione o peso' : 
+                          product.variations[0]?.literage.match(/unidade/i) ? 'Selecione a quantidade' : 'Selecione o volume'
+                        } />
                       </SelectTrigger>
                       <SelectContent>
                         {product.variations
@@ -307,19 +315,27 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               <h4 className="font-semibold text-lg">Especificações:</h4>
               <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
                 {product.material && (
-                  <div className="flex justify-between">
-                    <span className="font-medium">Material:</span>
-                    <span>{product.material}</span>
+                  <div className="space-y-1">
+                    <span className="font-medium block">Material:</span>
+                    <span className="text-muted-foreground block leading-relaxed">{product.material}</span>
                   </div>
                 )}
                 {product.has_variations && selectedVariation ? (
                   <div className="flex justify-between">
-                    <span className="font-medium">Litragem:</span>
+                    <span className="font-medium">
+                      {selectedVariation.literage.match(/cm/i) ? 'Tamanho:' : 
+                       selectedVariation.literage.match(/kg|g/i) ? 'Peso:' : 
+                       selectedVariation.literage.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
+                    </span>
                     <span>{selectedVariation.literage}</span>
                   </div>
                 ) : !product.has_variations && (product as any).literage_single && (
                   <div className="flex justify-between">
-                    <span className="font-medium">Litragem:</span>
+                    <span className="font-medium">
+                      {(product as any).literage_single.match(/cm/i) ? 'Tamanho:' : 
+                       (product as any).literage_single.match(/kg|g/i) ? 'Peso:' : 
+                       (product as any).literage_single.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
+                    </span>
                     <span>{(product as any).literage_single}</span>
                   </div>
                 )}
@@ -372,7 +388,11 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
             {/* Seleção de variação */}
             {!showButtonBelowImage && product.has_variations && product.variations && product.variations.length > 0 && (
               <div className="space-y-3">
-                <label className="font-medium">Escolha a litragem:</label>
+                <label className="font-medium">
+                  {product.variations[0]?.literage.match(/cm/i) ? 'Escolha o tamanho:' : 
+                   product.variations[0]?.literage.match(/kg|g/i) ? 'Escolha o peso:' : 
+                   product.variations[0]?.literage.match(/unidade/i) ? 'Escolha a quantidade:' : 'Escolha o volume:'}
+                </label>
                 <Select 
                   value={selectedVariation?.id || ''} 
                   onValueChange={(value) => {
@@ -381,7 +401,11 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a litragem" />
+                        <SelectValue placeholder={
+                          product.variations[0]?.literage.match(/cm/i) ? 'Selecione o tamanho' : 
+                          product.variations[0]?.literage.match(/kg|g/i) ? 'Selecione o peso' : 
+                          product.variations[0]?.literage.match(/unidade/i) ? 'Selecione a quantidade' : 'Selecione o volume'
+                        } />
                   </SelectTrigger>
                   <SelectContent>
                     {product.variations
