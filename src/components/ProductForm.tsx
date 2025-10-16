@@ -42,6 +42,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     literage_single: string;
     out_of_stock: boolean;
     size_unit: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
+    price_position: 'below_image' | 'below_text';
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -60,6 +61,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     literage_single: (product as any)?.literage_single || '',
     out_of_stock: (product as any)?.out_of_stock || false,
     size_unit: (product as any)?.size_unit || 'litros',
+    price_position: (product as any)?.price_position || 'below_text',
   });
 
   useEffect(() => {
@@ -108,6 +110,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         literage_single: formData.literage_single || null,
         out_of_stock: formData.out_of_stock,
         size_unit: formData.size_unit,
+        price_position: formData.price_position,
       };
 
       await onSave({ ...productData, fragrances: formData.fragrances });
@@ -403,6 +406,22 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 <span className="text-sm text-muted-foreground ml-2">
                   {formData.out_of_stock ? 'Marcado como em falta/esgotado' : 'Disponível para compra'}
                 </span>
+              </div>
+
+              <div>
+                <Label htmlFor="price_position">Posição do Preço no Card</Label>
+                <Select value={formData.price_position} onValueChange={(value: any) => setFormData({...formData, price_position: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a posição" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="below_image">Embaixo da Imagem</SelectItem>
+                    <SelectItem value="below_text">Embaixo do Texto</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Escolha onde o preço será exibido no card do produto
+                </p>
               </div>
 
             </CardContent>

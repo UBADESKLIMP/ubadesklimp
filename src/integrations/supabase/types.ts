@@ -175,6 +175,7 @@ export type Database = {
           name: string
           out_of_stock: boolean | null
           price: number
+          price_position: string | null
           priority: boolean
           priority_order: number | null
           size_unit: string | null
@@ -196,6 +197,7 @@ export type Database = {
           name: string
           out_of_stock?: boolean | null
           price: number
+          price_position?: string | null
           priority?: boolean
           priority_order?: number | null
           size_unit?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           name?: string
           out_of_stock?: boolean | null
           price?: number
+          price_position?: string | null
           priority?: boolean
           priority_order?: number | null
           size_unit?: string | null

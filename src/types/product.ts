@@ -41,4 +41,5 @@ export interface ProductWithVariations {
   // Para produtos sem variações, usamos o preço base
   price?: number;
   size_unit?: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
+  price_position?: 'below_image' | 'below_text';
 }
