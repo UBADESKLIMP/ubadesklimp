@@ -18,7 +18,9 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   const { addToCart } = useCart();
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [selectedFragrance, setSelectedFragrance] = useState<ProductFragrance | null>(null);
-  const [showButtonBelowImage, setShowButtonBelowImage] = useState(false);
+
+  // Determinar se o preço/botão deve aparecer abaixo da imagem
+  const showButtonBelowImage = product?.price_position === 'below_image';
 
   // Atualiza a variação e fragrância selecionadas quando o produto muda
   useEffect(() => {
@@ -34,32 +36,6 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       setSelectedFragrance(null);
     }
   }, [product]);
-
-  // Verifica a quantidade de texto para decidir onde colocar o botão
-  useEffect(() => {
-    if (product && isOpen) {
-      // Contar caracteres do conteúdo de texto
-      let totalChars = 0;
-      
-      // Adicionar caracteres das especificações
-      if (product.specifications) {
-        totalChars += product.specifications.length;
-      }
-      
-      // Adicionar caracteres do material
-      if (product.material) {
-        totalChars += product.material.length;
-      }
-      
-      // Adicionar caracteres da validade
-      if (product.validity) {
-        totalChars += product.validity.length;
-      }
-      
-      // Se tiver mais de 650 caracteres, colocar botão abaixo da imagem
-      setShowButtonBelowImage(totalChars > 650);
-    }
-  }, [product, isOpen]);
 
   // Reset variação quando fragrância muda para garantir compatibilidade
   useEffect(() => {
