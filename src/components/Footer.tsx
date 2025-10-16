@@ -55,7 +55,7 @@ const Footer = () => {
           </div>
 
         {/* Address Info */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-3">
             <h4 className="text-lg font-semibold mb-6">Endereço</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
@@ -79,7 +79,7 @@ const Footer = () => {
           </div>
 
         {/* Business Hours */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
             <h4 className="text-lg font-semibold mb-6">Horário de Funcionamento</h4>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
