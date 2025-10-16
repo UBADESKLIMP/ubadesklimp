@@ -3,9 +3,9 @@ import WhatsAppIcon from './WhatsAppIcon';
 const Footer = () => {
   return <footer id="contact" className="bg-foreground text-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Company Info */}
-          <div className="lg:col-span-1">
+      <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
+        {/* Company Info */}
+        <div className="lg:col-span-3">
             <h3 className="text-3xl font-heading text-gradient mb-4">
               Ubadesklimp
             </h3>
@@ -25,8 +25,8 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Contact Info */}
-          <div>
+        {/* Contact Info */}
+        <div className="lg:col-span-3">
             <h4 className="text-lg font-semibold mb-6">Contato</h4>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
@@ -54,8 +54,8 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Address Info */}
-          <div>
+        {/* Address Info */}
+        <div className="lg:col-span-4">
             <h4 className="text-lg font-semibold mb-6">Endereço</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
@@ -70,15 +70,16 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101 - Ubatuba, São Paulo</p>
+                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101</p>
+                  <p className="text-background/80">Ubatuba, São Paulo</p>
                   <p className="text-background/60 text-sm">Pereque-Açu</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Business Hours */}
-          <div>
+        {/* Business Hours */}
+        <div className="lg:col-span-2">
             <h4 className="text-lg font-semibold mb-6">Horário de Funcionamento</h4>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
