@@ -59,18 +59,18 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-6">Endereço</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-primary mt-1" />
+                <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-background/80 whitespace-nowrap">Av Rio Grande do Sul, 259</p>
+                  <p className="text-background/80">Av Rio Grande do Sul, 259</p>
                   <p className="text-background/80">Ubatuba, São Paulo</p>
                   <p className="text-background/60 text-sm">Centro</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-primary mt-1" />
+                <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-background/80 whitespace-nowrap">Av Padre Manoel da Nobrega, 2101</p>
+                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101</p>
                   <p className="text-background/80">Ubatuba, São Paulo</p>
                   <p className="text-background/60 text-sm">Pereque-Açu</p>
                 </div>
