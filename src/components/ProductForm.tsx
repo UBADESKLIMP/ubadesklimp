@@ -435,16 +435,19 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               </div>
 
               <div>
-                <Label htmlFor="price_position">Posição do Preço no Card</Label>
+                <Label htmlFor="price_position">Posição da Compra nos Detalhes</Label>
                 <Select value={formData.price_position} onValueChange={(value: any) => setFormData({...formData, price_position: value})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a posição" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="below_image">Embaixo da Imagem</SelectItem>
-                    <SelectItem value="below_text">Embaixo do Texto</SelectItem>
+                    <SelectItem value="below_image">Abaixo da Foto (botão comprar, preço e variações)</SelectItem>
+                    <SelectItem value="below_text">Abaixo do Texto (botão comprar, preço e variações)</SelectItem>
                   </SelectContent>
                 </Select>
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  Define onde aparece o botão "Comprar Agora", preço e seleção de variações no modal de detalhes do produto
+                </span>
                 <p className="text-sm text-muted-foreground mt-1">
                   Escolha onde o preço será exibido no card do produto
                 </p>
