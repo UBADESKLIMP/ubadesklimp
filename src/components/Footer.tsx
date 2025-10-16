@@ -1,4 +1,5 @@
-import { MessageCircle, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import WhatsAppIcon from './WhatsAppIcon';
 const Footer = () => {
   return <footer id="contact" className="bg-foreground text-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -29,7 +30,7 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-6">Contato</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <MessageCircle className="h-5 w-5 text-primary mt-1" />
+                <WhatsAppIcon className="h-5 w-5 text-primary mt-1" />
                 <div>
                   <a 
                     href="https://wa.me/551238332434"
