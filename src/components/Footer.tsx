@@ -26,7 +26,7 @@ const Footer = () => {
           </div>
 
         {/* Address Info */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
             <h4 className="text-lg font-semibold mb-6">Endereço</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
