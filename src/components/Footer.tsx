@@ -2,7 +2,7 @@ import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide
 const Footer = () => {
   return <footer id="contact" className="bg-foreground text-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-2">
             <h3 className="text-3xl font-heading text-gradient mb-4">
@@ -50,12 +50,28 @@ const Footer = () => {
                   <p className="text-background/60 text-sm">Email</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Address Info */}
+          <div>
+            <h4 className="text-lg font-semibold mb-6">Endereço</h4>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-5 w-5 text-primary mt-1" />
+                <div>
+                  <p className="text-background/80">Av Rio Grande do Sul, 259</p>
+                  <p className="text-background/80">Ubatuba, São Paulo</p>
+                  <p className="text-background/60 text-sm">Centro</p>
+                </div>
+              </div>
               
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">Av Rio Grande do Sul, 259 Ubatuba, São Paulo</p>
-                  <p className="text-background/60 text-sm">Endereço</p>
+                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101</p>
+                  <p className="text-background/80">Ubatuba, São Paulo</p>
+                  <p className="text-background/60 text-sm">Pereque-Açu</p>
                 </div>
               </div>
             </div>
