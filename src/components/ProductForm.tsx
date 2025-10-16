@@ -74,6 +74,32 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     }
   }, [formData.fragrances, product?.id]);
 
+  // Atualizar formData quando o produto mudar (após refetch)
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        description: product.description || '',
+        price: product.price?.toString() || '',
+        category: product.category || '',
+        image_url: product.image_url || '',
+        priority: product.priority || false,
+        priority_order: product.priority_order?.toString() || '0',
+        has_variations: product.has_variations || false,
+        has_fragrances: !!product.fragrances?.length,
+        highlight_type: product.highlight_type || '',
+        material: product.material || '',
+        validity: product.validity || '',
+        specifications: product.specifications || '',
+        fragrances: product.fragrances || [],
+        literage_single: (product as any)?.literage_single || '',
+        out_of_stock: (product as any)?.out_of_stock || false,
+        size_unit: (product as any)?.size_unit || 'litros',
+        price_position: (product as any)?.price_position || 'below_text',
+      });
+    }
+  }, [product]);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,16 @@ const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Atualizar editingProduct quando products mudar
+  useEffect(() => {
+    if (editingProduct) {
+      const updatedProduct = products.find(p => p.id === editingProduct.id);
+      if (updatedProduct) {
+        setEditingProduct(updatedProduct);
+      }
+    }
+  }, [products]);
 
   const handleSaveProduct = async (productData: any) => {
     try {
@@ -53,6 +63,9 @@ const Admin = () => {
             .update({ has_fragrances: fragrances.length > 0 })
             .eq('id', editingProduct.id);
         }
+        
+        // Refetch products para garantir que as mudanças aparecem
+        await refetch();
       } else {
         savedProduct = await createProduct(productPayload);
         
@@ -79,10 +92,9 @@ const Admin = () => {
             .update({ has_fragrances: true })
             .eq('id', savedProduct.id);
         }
+        
+        await refetch();
       }
-      
-      // Refetch products para garantir que as mudanças aparecem
-      await refetch();
       
       // Não fechar o dialog automaticamente para permitir edições contínuas
       // setEditingProduct(null);
