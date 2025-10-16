@@ -39,7 +39,9 @@ export const useProducts = () => {
       'validity',
       'specifications',
       'literage_single',
-      'out_of_stock'
+      'out_of_stock',
+      'size_unit',
+      'price_position'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -115,6 +117,8 @@ export const useProducts = () => {
             specifications: product.specifications,
             out_of_stock: product.out_of_stock || false,
             literage_single: product.literage_single,
+            size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
+            price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
             created_at: product.created_at,
             updated_at: product.updated_at,
             variations: variations,
