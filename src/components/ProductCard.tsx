@@ -97,8 +97,6 @@ const ProductCard = ({
     return highlightConfig;
   };
 
-  const pricePosition = (product as any).price_position || 'below_text';
-
   return <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
       <div className="flex flex-col h-full">
         {/* Product Image */}
@@ -154,22 +152,6 @@ const ProductCard = ({
             <Info className="h-3 w-3 mr-1" />
             Detalhes
           </Button>
-
-          {/* Price Below Image */}
-          {pricePosition === 'below_image' && (
-            <div className="absolute bottom-2 right-2 bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border">
-              <span className="text-sm font-bold text-foreground">
-                {(product as any).out_of_stock ? 'Em Falta' : 
-                  (getCurrentPrice() > 0 ? 
-                    (product.has_variations && product.variations && product.variations.length > 0 ? 
-                      `A partir de ${formatPrice(getCurrentPrice())}` : 
-                      formatPrice(getCurrentPrice())
-                    ) : 'Indisponível'
-                  )
-                }
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Product Info */}
@@ -198,21 +180,19 @@ const ProductCard = ({
 
           {/* Price and CTA - sempre na parte inferior */}
           <div className="flex items-center justify-between mt-auto">
-            {pricePosition === 'below_text' && (
-              <span className="text-xl font-bold text-foreground">
-                {(product as any).out_of_stock ? 'Em Falta' : 
-                  (getCurrentPrice() > 0 ? 
-                    (product.has_variations && product.variations && product.variations.length > 0 ? 
-                      `A partir de ${formatPrice(getCurrentPrice())}` : 
-                      formatPrice(getCurrentPrice())
-                    ) : 'Indisponível'
-                  )
-                }
-              </span>
-            )}
+            <span className="text-xl font-bold text-foreground">
+              {(product as any).out_of_stock ? 'Em Falta' : 
+                (getCurrentPrice() > 0 ? 
+                  (product.has_variations && product.variations && product.variations.length > 0 ? 
+                    `A partir de ${formatPrice(getCurrentPrice())}` : 
+                    formatPrice(getCurrentPrice())
+                  ) : 'Indisponível'
+                )
+              }
+            </span>
             <Button 
               size="sm" 
-              className={`btn-secondary ${pricePosition === 'below_image' ? 'ml-auto' : ''}`}
+              className="btn-secondary"
               onClick={handleAddToCart} 
               disabled={getCurrentPrice() === 0 || (product as any).out_of_stock}
             >
