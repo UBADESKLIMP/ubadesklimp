@@ -29,8 +29,8 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-6">Contato</h4>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <WhatsAppIcon className="h-5 w-5 text-primary mt-1" />
+              <div className="flex items-center space-x-3">
+                <WhatsAppIcon className="h-5 w-5 text-primary" />
                 <div>
                   <a 
                     href="https://wa.me/551238332434"
@@ -70,7 +70,8 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary mt-1" />
                 <div>
-                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101 - Pereque-Açu, Ubatuba, São Paulo</p>
+                  <p className="text-background/80">Av Padre Manoel da Nobrega, 2101 - Ubatuba, São Paulo</p>
+                  <p className="text-background/60 text-sm">Pereque-Açu</p>
                 </div>
               </div>
             </div>
