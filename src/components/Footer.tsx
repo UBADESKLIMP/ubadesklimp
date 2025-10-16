@@ -1,10 +1,10 @@
-import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MessageCircle, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
 const Footer = () => {
   return <footer id="contact" className="bg-foreground text-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Company Info */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <h3 className="text-3xl font-heading text-gradient mb-4">
               Ubadesklimp
             </h3>
@@ -29,7 +29,7 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-6">Contato</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Phone className="h-5 w-5 text-primary mt-1" />
+                <MessageCircle className="h-5 w-5 text-primary mt-1" />
                 <div>
                   <a 
                     href="https://wa.me/551238332434"
