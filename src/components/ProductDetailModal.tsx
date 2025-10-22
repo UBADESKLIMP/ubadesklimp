@@ -291,28 +291,64 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
               <h4 className="font-semibold text-lg">Especificações:</h4>
               <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
                 {product.material && (
-                  <div className="space-y-1">
-                    <span className="font-medium block">Material:</span>
-                    <span className="text-muted-foreground block leading-relaxed">{product.material}</span>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Material:</span>
+                    <span className="text-muted-foreground">{product.material}</span>
                   </div>
                 )}
                 {product.has_variations && selectedVariation ? (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="font-medium">
-                      {selectedVariation.literage.match(/cm/i) ? 'Tamanho:' : 
+                      {product.size_unit === 'litros' || product.size_unit === 'ml' ? 'Volume:' :
+                       product.size_unit === 'kg' || product.size_unit === 'g' ? 'Peso:' :
+                       product.size_unit === 'cm' ? 'Tamanho:' :
+                       product.size_unit === 'unidades' ? 'Quantidade:' :
+                       selectedVariation.literage.match(/cm/i) ? 'Tamanho:' : 
                        selectedVariation.literage.match(/kg|g/i) ? 'Peso:' : 
                        selectedVariation.literage.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
                     </span>
-                    <span>{selectedVariation.literage}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{selectedVariation.literage}</span>
+                      {(product.size_unit === 'litros' || product.size_unit === 'ml') && (
+                        <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>
+                      )}
+                      {(product.size_unit === 'kg' || product.size_unit === 'g') && (
+                        <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>
+                      )}
+                      {product.size_unit === 'cm' && (
+                        <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>
+                      )}
+                      {product.size_unit === 'unidades' && (
+                        <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>
+                      )}
+                    </div>
                   </div>
                 ) : !product.has_variations && (product as any).literage_single && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="font-medium">
-                      {(product as any).literage_single.match(/cm/i) ? 'Tamanho:' : 
+                      {product.size_unit === 'litros' || product.size_unit === 'ml' ? 'Volume:' :
+                       product.size_unit === 'kg' || product.size_unit === 'g' ? 'Peso:' :
+                       product.size_unit === 'cm' ? 'Tamanho:' :
+                       product.size_unit === 'unidades' ? 'Quantidade:' :
+                       (product as any).literage_single.match(/cm/i) ? 'Tamanho:' : 
                        (product as any).literage_single.match(/kg|g/i) ? 'Peso:' : 
                        (product as any).literage_single.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
                     </span>
-                    <span>{(product as any).literage_single}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{(product as any).literage_single}</span>
+                      {(product.size_unit === 'litros' || product.size_unit === 'ml') && (
+                        <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>
+                      )}
+                      {(product.size_unit === 'kg' || product.size_unit === 'g') && (
+                        <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>
+                      )}
+                      {product.size_unit === 'cm' && (
+                        <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>
+                      )}
+                      {product.size_unit === 'unidades' && (
+                        <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>
+                      )}
+                    </div>
                   </div>
                 )}
                 {product.validity && (

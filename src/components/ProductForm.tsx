@@ -221,14 +221,22 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                         <SelectValue placeholder="Selecione a unidade" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="litros">Litros (L)</SelectItem>
-                        <SelectItem value="ml">Mililitros (ml)</SelectItem>
-                        <SelectItem value="cm">Centímetros (cm)</SelectItem>
-                        <SelectItem value="kg">Quilogramas (kg)</SelectItem>
-                        <SelectItem value="g">Gramas (g)</SelectItem>
-                        <SelectItem value="unidades">Unidades</SelectItem>
+                        <SelectItem value="litros">💧 Litros (L) - Produtos líquidos</SelectItem>
+                        <SelectItem value="ml">💧 Mililitros (ml) - Volumes pequenos</SelectItem>
+                        <SelectItem value="cm">📏 Centímetros (cm) - Dimensões físicas</SelectItem>
+                        <SelectItem value="kg">⚖️ Quilogramas (kg) - Peso em kg</SelectItem>
+                        <SelectItem value="g">⚖️ Gramas (g) - Peso em gramas</SelectItem>
+                        <SelectItem value="unidades">📦 Unidades - Quantidade de itens</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formData.size_unit === 'unidades' && '📦 Use para: pacotes, rolos, peças, caixas'}
+                      {formData.size_unit === 'litros' && '💧 Use para: líquidos em litros (Ex: 5L)'}
+                      {formData.size_unit === 'ml' && '💧 Use para: líquidos em ml (Ex: 500ml)'}
+                      {formData.size_unit === 'kg' && '⚖️ Use para: produtos pesados (Ex: 1kg)'}
+                      {formData.size_unit === 'g' && '⚖️ Use para: produtos leves (Ex: 500g)'}
+                      {formData.size_unit === 'cm' && '📏 Use para: dimensões (Ex: 30cm)'}
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="literage_single">
@@ -249,11 +257,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                         formData.size_unit === 'cm' ? 'Ex: 30cm' :
                         formData.size_unit === 'kg' ? 'Ex: 1kg' :
                         formData.size_unit === 'g' ? 'Ex: 500g' :
-                        'Ex: 1 unidade'
+                        'Ex: 2 unidades'
                       }
                     />
                     <p className="text-sm text-muted-foreground mt-1">
-                      Especifique o tamanho/volume/quantidade deste produto
+                      {formData.size_unit === 'unidades' ? 
+                        '📦 Quantidade de itens no pacote (Ex: "2 unidades", "6 rolos")' :
+                        'Especifique o valor com a unidade (Ex: "5L", "500g", "30cm")'
+                      }
                     </p>
                   </div>
                 </div>
@@ -340,8 +351,11 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   value={formData.specifications}
                   onChange={(e) => setFormData({...formData, specifications: e.target.value})}
                   rows={3}
-                  placeholder="Especificações técnicas do produto"
+                  placeholder="Informações adicionais sobre o produto..."
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  ℹ️ Use este campo para descrição textual (Ex: "toalhas por rolo", "componentes incluídos"). Para dados estruturados como quantidade ou volume, use os campos específicos acima.
+                </p>
               </div>
             </CardContent>
           </Card>
