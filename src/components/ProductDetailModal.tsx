@@ -298,57 +298,67 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                 )}
                 {product.has_variations && selectedVariation ? (
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">
-                      {product.size_unit === 'litros' || product.size_unit === 'ml' ? 'Volume:' :
-                       product.size_unit === 'kg' || product.size_unit === 'g' ? 'Peso:' :
-                       product.size_unit === 'cm' ? 'Tamanho:' :
-                       product.size_unit === 'unidades' ? 'Quantidade:' :
-                       selectedVariation.literage.match(/cm/i) ? 'Tamanho:' : 
-                       selectedVariation.literage.match(/kg|g/i) ? 'Peso:' : 
-                       selectedVariation.literage.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span>{selectedVariation.literage}</span>
-                      {(product.size_unit === 'litros' || product.size_unit === 'ml') && (
-                        <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>
-                      )}
-                      {(product.size_unit === 'kg' || product.size_unit === 'g') && (
-                        <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>
-                      )}
-                      {product.size_unit === 'cm' && (
-                        <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>
-                      )}
-                      {product.size_unit === 'unidades' && (
-                        <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>
-                      )}
-                    </div>
+                    {(() => {
+                      // Detectar tipo de unidade baseado em size_unit ou regex no valor
+                      const literageValue = selectedVariation.literage.toLowerCase();
+                      let badge = null;
+                      
+                      if (product.size_unit === 'litros' || product.size_unit === 'ml' || 
+                          (!product.size_unit && literageValue.match(/l|litro|ml/))) {
+                        badge = <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
+                      } else if (product.size_unit === 'kg' || product.size_unit === 'g' || 
+                                 (!product.size_unit && literageValue.match(/kg|g(?!\w)/))) {
+                        badge = <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
+                      } else if (product.size_unit === 'cm' || 
+                                 (!product.size_unit && literageValue.match(/cm/))) {
+                        badge = <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
+                      } else if (product.size_unit === 'unidades' || 
+                                 (!product.size_unit && literageValue.match(/unidade/))) {
+                        badge = <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
+                      } else {
+                        // Default para Volume se não detectar nada
+                        badge = <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
+                      }
+                      
+                      return (
+                        <>
+                          {badge}
+                          <span className="text-muted-foreground">{selectedVariation.literage}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : !product.has_variations && (product as any).literage_single && (
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">
-                      {product.size_unit === 'litros' || product.size_unit === 'ml' ? 'Volume:' :
-                       product.size_unit === 'kg' || product.size_unit === 'g' ? 'Peso:' :
-                       product.size_unit === 'cm' ? 'Tamanho:' :
-                       product.size_unit === 'unidades' ? 'Quantidade:' :
-                       (product as any).literage_single.match(/cm/i) ? 'Tamanho:' : 
-                       (product as any).literage_single.match(/kg|g/i) ? 'Peso:' : 
-                       (product as any).literage_single.match(/unidade/i) ? 'Quantidade:' : 'Volume:'}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span>{(product as any).literage_single}</span>
-                      {(product.size_unit === 'litros' || product.size_unit === 'ml') && (
-                        <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>
-                      )}
-                      {(product.size_unit === 'kg' || product.size_unit === 'g') && (
-                        <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>
-                      )}
-                      {product.size_unit === 'cm' && (
-                        <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>
-                      )}
-                      {product.size_unit === 'unidades' && (
-                        <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>
-                      )}
-                    </div>
+                    {(() => {
+                      // Detectar tipo de unidade baseado em size_unit ou regex no valor
+                      const literageValue = ((product as any).literage_single || '').toLowerCase();
+                      let badge = null;
+                      
+                      if (product.size_unit === 'litros' || product.size_unit === 'ml' || 
+                          (!product.size_unit && literageValue.match(/l|litro|ml/))) {
+                        badge = <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
+                      } else if (product.size_unit === 'kg' || product.size_unit === 'g' || 
+                                 (!product.size_unit && literageValue.match(/kg|g(?!\w)/))) {
+                        badge = <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
+                      } else if (product.size_unit === 'cm' || 
+                                 (!product.size_unit && literageValue.match(/cm/))) {
+                        badge = <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
+                      } else if (product.size_unit === 'unidades' || 
+                                 (!product.size_unit && literageValue.match(/unidade/))) {
+                        badge = <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
+                      } else {
+                        // Default para Volume se não detectar nada
+                        badge = <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
+                      }
+                      
+                      return (
+                        <>
+                          {badge}
+                          <span className="text-muted-foreground">{(product as any).literage_single}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
                 {product.validity && (
