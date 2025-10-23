@@ -152,7 +152,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   const getUnitBadge = (value: string, sizeUnit?: string) => {
     const valueLower = value.toLowerCase();
     
-    // PRIORIDADE 1: Detectar pelo valor (regex)
+    // PRIORIDADE 1: Tentar detectar pelo valor (regex)
     if (valueLower.match(/cm/)) {
       return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
     }
@@ -166,7 +166,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
     }
     
-    // PRIORIDADE 2: Se regex não encontrou, usar size_unit
+    // PRIORIDADE 2: Se regex não encontrou nada E sizeUnit está definido, usar sizeUnit
     if (sizeUnit) {
       if (sizeUnit === 'cm') {
         return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
