@@ -25,7 +25,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   // Atualiza a variação e fragrância selecionadas quando o produto muda
   useEffect(() => {
     if (product?.has_variations && product.variations?.length > 0) {
-      setSelectedVariation(product.variations[0]);
+      const primaryVariation = product.variations.find(v => v.is_primary) || product.variations[0];
+      setSelectedVariation(primaryVariation);
     } else {
       setSelectedVariation(null);
     }
@@ -48,14 +49,16 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         return true;
       });
       
-      // Se a variação atual não está disponível, selecionar a primeira disponível
+      // Se a variação atual não está disponível, selecionar a primeira disponível (priorizar principal)
       if (selectedVariation && availableVariations.length > 0) {
         const isCurrentVariationAvailable = availableVariations.some(v => v.id === selectedVariation.id);
         if (!isCurrentVariationAvailable) {
-          setSelectedVariation(availableVariations[0]);
+          const primaryVariation = availableVariations.find(v => v.is_primary) || availableVariations[0];
+          setSelectedVariation(primaryVariation);
         }
       } else if (availableVariations.length > 0) {
-        setSelectedVariation(availableVariations[0]);
+        const primaryVariation = availableVariations.find(v => v.is_primary) || availableVariations[0];
+        setSelectedVariation(primaryVariation);
       }
     }
   }, [selectedFragrance, product]);

@@ -16,6 +16,7 @@ export const useProductVariations = (productId: string) => {
         .from('product_variations')
         .select('*')
         .eq('product_id', productId)
+        .order('is_primary', { ascending: false })
         .order('display_order', { ascending: true });
 
       if (error) throw error;
