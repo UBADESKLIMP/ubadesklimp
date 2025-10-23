@@ -60,6 +60,22 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     }
   }, [selectedFragrance, product]);
 
+  // 🔍 DEBUG: Log produto completo ao abrir modal
+  useEffect(() => {
+    if (product && isOpen) {
+      console.log('📦 PRODUTO NO MODAL:', {
+        name: product.name,
+        size_unit: product.size_unit,
+        has_variations: product.has_variations,
+        variations: product.variations?.map(v => ({
+          id: v.id,
+          literage: v.literage,
+          price: v.price
+        }))
+      });
+    }
+  }, [product, isOpen]);
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -150,39 +166,47 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
 
   // Helper para detectar unidade - PRIORIZA o valor antes do size_unit
   const getUnitBadge = (value: string, sizeUnit?: string) => {
+    console.log('🔍 getUnitBadge chamado:', { value, sizeUnit });
+    
     const valueLower = value.toLowerCase();
     
     // PRIORIDADE 1: Tentar detectar pelo valor (regex)
     if (valueLower.match(/cm/)) {
+      console.log('✅ Detectado "cm" no valor');
       return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
     }
     if (valueLower.match(/kg|g(?!\w)/)) {
+      console.log('✅ Detectado "kg/g" no valor');
       return <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
     }
     if (valueLower.match(/unidade/)) {
+      console.log('✅ Detectado "unidade" no valor');
       return <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
     }
     if (valueLower.match(/l|litro|ml/)) {
+      console.log('✅ Detectado "l/litro/ml" no valor');
       return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
     }
     
-    // PRIORIDADE 2: Se regex não encontrou nada E sizeUnit está definido, usar sizeUnit
+    // PRIORIDADE 2: Se regex não encontrou, usar sizeUnit
     if (sizeUnit) {
-      if (sizeUnit === 'cm') {
-        return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
-      }
-      if (sizeUnit === 'kg' || sizeUnit === 'g') {
-        return <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
-      }
-      if (sizeUnit === 'unidades') {
-        return <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
-      }
-      if (sizeUnit === 'litros' || sizeUnit === 'ml') {
-        return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
+      console.log('✅ Usando sizeUnit:', sizeUnit);
+      switch(sizeUnit) {
+        case 'cm':
+          return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
+        case 'kg':
+        case 'g':
+          return <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
+        case 'unidades':
+          return <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
+        case 'litros':
+        case 'ml':
+          return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
       }
     }
     
     // PRIORIDADE 3: Default para Volume
+    console.warn('⚠️ Usando default "Volume" para:', value);
     return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
   };
   if (!product) return null;
