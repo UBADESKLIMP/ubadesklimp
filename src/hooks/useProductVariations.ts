@@ -160,11 +160,21 @@ export const useProductVariations = (productId: string) => {
 
   const setPrimaryVariation = async (id: string) => {
     try {
+      console.log('🔧 setPrimaryVariation chamado para ID:', id);
+      
+      // ATUALIZAÇÃO OTIMISTA: Atualizar estado local primeiro
+      setVariations(prev => prev.map(v => ({
+        ...v,
+        is_primary: v.id === id
+      })));
+
       // Remover is_primary de todas as variações
-      await supabase
+      const { error: clearError } = await supabase
         .from('product_variations')
         .update({ is_primary: false })
         .eq('product_id', productId);
+
+      if (clearError) throw clearError;
 
       // Definir a variação selecionada como principal
       const { error } = await supabase
@@ -174,6 +184,9 @@ export const useProductVariations = (productId: string) => {
 
       if (error) throw error;
 
+      console.log('✅ Variação principal atualizada com sucesso no banco');
+      
+      // Refetch para garantir sincronização
       await fetchVariations();
       
       toast({
@@ -181,7 +194,11 @@ export const useProductVariations = (productId: string) => {
         description: "A variação principal foi atualizada com sucesso.",
       });
     } catch (error) {
-      console.error('Error setting primary variation:', error);
+      console.error('❌ Error setting primary variation:', error);
+      
+      // Reverter estado otimista em caso de erro
+      await fetchVariations();
+      
       toast({
         title: "Erro ao definir principal",
         description: "Não foi possível definir a variação principal.",

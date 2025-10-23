@@ -289,25 +289,36 @@ const Cart = () => {
                   
                   return (
                     <Card key={item.id} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
-                            <p className="text-xs text-muted-foreground">{item.category}</p>
-                            <p className="font-bold text-primary">{item.price}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeFromCart(item.id)}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                      <div className="flex gap-3">
+                        {/* Imagem do produto */}
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={item.variation?.image_url || item.fragrance?.image_url || item.image_url || '/placeholder.svg'} 
+                            alt={item.name}
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border"
+                          />
                         </div>
 
-                        {/* Seleção de fragrância - se houver fragrâncias disponíveis */}
-                        {hasFragrances && (
+                        {/* Conteúdo do item */}
+                        <div className="flex-1 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
+                              <p className="text-xs text-muted-foreground">{item.category}</p>
+                              <p className="font-bold text-primary">{item.price}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeFromCart(item.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Seleção de fragrância - se houver fragrâncias disponíveis */}
+                          {hasFragrances && (
                           <div className="space-y-2">
                             <label className="text-xs font-medium">Fragrância:</label>
                             <Select 
@@ -331,10 +342,10 @@ const Cart = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                        )}
+                          )}
 
-                        {/* Seleção de variação - apenas se houver variações disponíveis */}
-                        {hasVariations && item.variation && item.productId && (
+                          {/* Seleção de variação - apenas se houver variações disponíveis */}
+                          {hasVariations && item.variation && item.productId && (
                           <div className="space-y-2">
                             <label className="text-xs font-medium">Litragem:</label>
                             <Select 
@@ -353,9 +364,9 @@ const Cart = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between">
+                          )}
+                          
+                          <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Button
                               variant="outline"
@@ -374,6 +385,7 @@ const Cart = () => {
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
+                          </div>
                           </div>
                         </div>
                       </div>

@@ -10,6 +10,7 @@ export interface CartItem {
   variation?: ProductVariation;
   fragrance?: ProductFragrance;
   productId?: string; // Para poder buscar outras variações
+  image_url?: string; // Imagem principal do produto
 }
 
 interface CartState {
