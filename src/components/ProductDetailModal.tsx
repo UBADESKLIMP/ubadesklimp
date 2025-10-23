@@ -170,27 +170,27 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     
     const valueLower = value.toLowerCase();
     
-    // PRIORIDADE 1: Tentar detectar pelo valor (regex)
-    if (valueLower.match(/cm/)) {
-      console.log('✅ Detectado "cm" no valor');
+    // PRIORIDADE 1: Detectar unidades explícitas no valor (com número)
+    if (valueLower.match(/\d+\s*cm\b/)) {
+      console.log('✅ Detectado tamanho (cm) no valor');
       return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
     }
-    if (valueLower.match(/kg|g(?!\w)/)) {
-      console.log('✅ Detectado "kg/g" no valor');
+    if (valueLower.match(/\d+\s*(kg|g)\b/)) {
+      console.log('✅ Detectado peso (kg/g) no valor');
       return <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">⚖️ Peso</span>;
     }
-    if (valueLower.match(/unidade/)) {
-      console.log('✅ Detectado "unidade" no valor');
+    if (valueLower.match(/unidades?\b/)) {
+      console.log('✅ Detectado "unidades" no valor');
       return <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📦 Unidades</span>;
     }
-    if (valueLower.match(/l|litro|ml/)) {
-      console.log('✅ Detectado "l/litro/ml" no valor');
+    if (valueLower.match(/\d+\s*(l|ml)\b|litros?\b/)) {
+      console.log('✅ Detectado volume (L/ml) no valor');
       return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
     }
     
-    // PRIORIDADE 2: Se regex não encontrou, usar sizeUnit
+    // PRIORIDADE 2: Se não detectou nada E sizeUnit está definido → USAR sizeUnit
     if (sizeUnit) {
-      console.log('✅ Usando sizeUnit:', sizeUnit);
+      console.log('✅ Usando sizeUnit porque nenhum regex detectou:', sizeUnit);
       switch(sizeUnit) {
         case 'cm':
           return <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">📏 Tamanho</span>;
@@ -205,8 +205,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       }
     }
     
-    // PRIORIDADE 3: Default para Volume
-    console.warn('⚠️ Usando default "Volume" para:', value);
+    // PRIORIDADE 3: Default (só se não tem sizeUnit)
+    console.warn('⚠️ Usando default "Volume" para:', value, '(sem sizeUnit)');
     return <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">💧 Volume</span>;
   };
   if (!product) return null;
