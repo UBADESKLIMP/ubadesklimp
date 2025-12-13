@@ -244,20 +244,38 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const getWhatsAppLink = () => {
     if (state.items.length === 0) return '';
     
+    // Helper to sanitize and truncate text
+    const sanitize = (text: string | undefined, maxLength: number): string => {
+      if (!text) return '';
+      return text.substring(0, maxLength).replace(/[\r\n]+/g, ' ').trim();
+    };
+
     let message = '🛒 *Pedido Ubadesklimp*\n\n';
+    const MAX_MESSAGE_LENGTH = 4000; // Safe limit for WhatsApp URLs
     
     state.items.forEach(item => {
-      message += `• ${item.name}\n`;
-      message += `  Categoria: ${item.category}\n`;
-      message += `  Preço: ${item.price}\n`;
-      message += `  Quantidade: ${item.quantity}\n`;
-      if (item.fragrance) {
-        message += `  Fragrância: ${item.fragrance.name}\n`;
+      const safeName = sanitize(item.name, 100);
+      const safeCategory = sanitize(item.category, 50);
+      const safePrice = sanitize(item.price, 20);
+      const safeQuantity = Math.min(Math.max(1, item.quantity || 1), 9999);
+      
+      message += `• ${safeName}\n`;
+      message += `  Categoria: ${safeCategory}\n`;
+      message += `  Preço: ${safePrice}\n`;
+      message += `  Quantidade: ${safeQuantity}\n`;
+      if (item.fragrance?.name) {
+        const safeFragrance = sanitize(item.fragrance.name, 50);
+        message += `  Fragrância: ${safeFragrance}\n`;
       }
       message += '\n';
     });
     
     message += `📞 Gostaria de finalizar este pedido!`;
+    
+    // Truncate if message is too long
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      message = message.substring(0, MAX_MESSAGE_LENGTH - 30) + '\n\n... (mensagem truncada)';
+    }
     
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/551238332434?text=${encodedMessage}`;
