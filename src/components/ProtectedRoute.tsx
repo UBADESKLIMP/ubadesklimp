@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 
 // Cache de status admin
 const adminStatusCache = new Map<string, { value: boolean; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 60 * 1000; // 1 minuto (reduzido para revogação mais rápida de privilégios)
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
