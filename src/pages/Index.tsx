@@ -10,7 +10,7 @@ const Index = () => {
     <CartProvider>
       <div className="min-h-screen">
         <Header />
-        <main>
+        <main className="pt-14 md:pt-16">
           <Hero />
           <Products />
           <About />
