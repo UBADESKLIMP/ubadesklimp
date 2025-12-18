@@ -10,9 +10,20 @@ import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut, loading, isAdmin } = useAuth();
   const { profile } = useProfile();
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Get display name - priority: profile name, company name/trade name, email
   const getDisplayName = () => {
@@ -57,12 +68,20 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-border z-50 shadow-soft">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+      isScrolled 
+        ? 'bg-background/98 backdrop-blur-lg shadow-md border-b border-border/80' 
+        : 'bg-background/95 backdrop-blur-md shadow-soft border-b border-border/50'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className={`flex justify-between items-center transition-all duration-300 ${
+          isScrolled ? 'h-14' : 'h-16'
+        }`}>
           {/* Logo - Now clickable */}
           <div className="flex-shrink-0">
-            <Link to="/" className="text-2xl font-heading text-gradient hover:opacity-80 transition-opacity">
+            <Link to="/" className={`font-heading text-gradient hover:opacity-80 transition-all duration-300 ${
+              isScrolled ? 'text-xl' : 'text-2xl'
+            }`}>
               Ubadesklimp
             </Link>
           </div>
