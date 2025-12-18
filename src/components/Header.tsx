@@ -134,84 +134,87 @@ const Header = () => {
           </div>
 
           {/* Mobile - Cart + Menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="md:hidden flex items-center space-x-4">
             <Cart />
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="relative h-10 w-10 p-0"
             >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              <Menu className={`h-6 w-6 absolute transition-all duration-300 ease-in-out ${
+                isMenuOpen ? 'rotate-90 opacity-0 scale-75' : 'rotate-0 opacity-100 scale-100'
+              }`} />
+              <X className={`h-6 w-6 absolute transition-all duration-300 ease-in-out ${
+                isMenuOpen ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-75'
+              }`} />
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-border shadow-medium">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="block px-3 py-2 text-foreground hover:text-primary hover:bg-accent rounded-md transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </a>
-            ))}
-            <div className="pt-4 pb-2 px-3 space-y-2">
-              
-              {/* Mobile Auth Section */}
-              {!loading && (
-                user ? (
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/profile">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Meu Perfil
+      {/* Mobile Navigation - Animated */}
+      <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+        isMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="px-4 pt-3 pb-4 space-y-1 bg-background/98 backdrop-blur-sm border-t border-border/50 shadow-lg">
+          {navigation.map((item, index) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className="block px-4 py-3 text-foreground hover:text-primary hover:bg-accent/50 rounded-lg transition-all duration-200 transform hover:translate-x-1"
+              style={{ transitionDelay: `${index * 50}ms` }}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.name}
+            </a>
+          ))}
+          <div className="pt-4 pb-2 px-2 space-y-2">
+            
+            {/* Mobile Auth Section */}
+            {!loading && (
+              user ? (
+                <div className="space-y-1 pt-3 border-t border-border/50">
+                  <Button variant="ghost" className="w-full justify-start py-3 hover:translate-x-1 transition-all duration-200" asChild>
+                    <Link to="/profile">
+                      <Settings className="h-4 w-4 mr-3" />
+                      Meu Perfil
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start py-3 hover:translate-x-1 transition-all duration-200" asChild>
+                    <Link to="/orders">
+                      <History className="h-4 w-4 mr-3" />
+                      Histórico de Pedidos
+                    </Link>
+                  </Button>
+                  {isUserAdmin && (
+                    <Button variant="ghost" className="w-full justify-start py-3 hover:translate-x-1 transition-all duration-200" asChild>
+                      <Link to="/admin">
+                        <Shield className="h-4 w-4 mr-3" />
+                        Admin
                       </Link>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/orders">
-                        <History className="h-4 w-4 mr-2" />
-                        Histórico de Pedidos
-                      </Link>
-                    </Button>
-                    {isUserAdmin && (
-                      <Button variant="ghost" className="w-full justify-start" asChild>
-                        <Link to="/admin">
-                          <Shield className="h-4 w-4 mr-2" />
-                          Admin
-                        </Link>
-                      </Button>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-destructive hover:text-destructive"
-                      onClick={signOut}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sair
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="pt-2 border-t border-border">
-                    <Button asChild variant="default" className="w-full bg-gradient-primary">
-                      <Link to="/auth">Entrar</Link>
-                    </Button>
-                  </div>
-                )
-              )}
-            </div>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start py-3 text-destructive hover:text-destructive hover:translate-x-1 transition-all duration-200"
+                    onClick={signOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-3" />
+                    Sair
+                  </Button>
+                </div>
+              ) : (
+                <div className="pt-3 border-t border-border/50">
+                  <Button asChild variant="default" className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-200">
+                    <Link to="/auth">Entrar</Link>
+                  </Button>
+                </div>
+              )
+            )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
