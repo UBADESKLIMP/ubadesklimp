@@ -133,8 +133,9 @@ const Header = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Mobile - Cart + Menu button */}
+          <div className="md:hidden flex items-center space-x-2">
+            <Cart />
             <Button
               variant="ghost"
               size="sm"
@@ -165,9 +166,6 @@ const Header = () => {
               </a>
             ))}
             <div className="pt-4 pb-2 px-3 space-y-2">
-              <div className="flex justify-center">
-                <Cart />
-              </div>
               
               {/* Mobile Auth Section */}
               {!loading && (
