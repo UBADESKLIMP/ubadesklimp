@@ -79,6 +79,24 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
     }
   }, [product, isOpen]);
 
+  // Gerenciar botão voltar do navegador no mobile
+  useEffect(() => {
+    if (isOpen) {
+      // Adiciona estado ao histórico quando modal abre
+      window.history.pushState({ productModal: true }, '');
+      
+      const handlePopState = (event: PopStateEvent) => {
+        // Fecha o modal ao invés de voltar para página anterior
+        onClose();
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [isOpen, onClose]);
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -217,7 +235,20 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
-        <div className="grid md:grid-cols-2 gap-8 p-6">
+        {/* Botão fechar visível no mobile */}
+        <div className="md:hidden flex justify-end p-4 pb-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onClose}
+            className="flex items-center gap-2"
+          >
+            <X className="h-4 w-4" />
+            Fechar
+          </Button>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 p-6 pt-2 md:pt-6">
           {/* Imagem do produto */}
           <div className="space-y-4">
             <div className="relative w-full bg-white rounded-lg border border-border overflow-hidden">
