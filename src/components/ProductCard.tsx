@@ -100,7 +100,7 @@ const ProductCard = ({
   return <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
       <div className="flex flex-col h-full">
         {/* Product Image */}
-        <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4">
+        <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4 cursor-pointer" onClick={() => onShowDetails(product)}>
           {getCurrentImage() ? <img src={getCurrentImage()!} alt={product.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-muted to-muted/50">
               📦
             </div>}
