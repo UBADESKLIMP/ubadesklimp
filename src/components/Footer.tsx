@@ -1,4 +1,4 @@
-import { Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Mail, MapPin, Clock, Facebook, Instagram } from 'lucide-react';
 import WhatsAppIcon from './WhatsAppIcon';
 const Footer = () => {
   return <footer id="contact" className="bg-foreground text-background">
@@ -13,14 +13,21 @@ const Footer = () => {
             
             {/* Social Media */}
             <div className="flex space-x-4">
-              <a href="#" className="text-background/60 hover:text-primary transition-colors">
+              <a 
+                href="https://www.facebook.com/p/Ubadesklimp-100075960192895/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-background/60 hover:text-primary transition-colors"
+              >
                 <Facebook className="h-6 w-6" />
               </a>
-              <a href="#" className="text-background/60 hover:text-primary transition-colors">
+              <a 
+                href="https://www.instagram.com/ubadesklimp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-background/60 hover:text-primary transition-colors"
+              >
                 <Instagram className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-background/60 hover:text-primary transition-colors">
-                <Twitter className="h-6 w-6" />
               </a>
             </div>
           </div>
