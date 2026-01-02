@@ -6,10 +6,18 @@ const AutomotiveBanner = () => {
     <section className="py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <Link to="/automotivo" className="block group">
-          {/* Gradient Border Wrapper */}
-          <div className="p-[1.5px] rounded-xl bg-gradient-to-r from-blue-600 via-blue-400 to-violet-500 group-hover:from-blue-500 group-hover:via-blue-300 group-hover:to-violet-400 transition-all duration-500">
+          {/* Rotating Gradient Border Container */}
+          <div className="relative p-[2px] rounded-xl overflow-hidden">
+            {/* Rotating Conic Gradient */}
+            <div 
+              className="absolute inset-[-100%] animate-border-rotate group-hover:[animation-duration:2s]"
+              style={{
+                background: 'conic-gradient(from 0deg, #2563eb, #60a5fa, #8b5cf6, #2563eb)'
+              }}
+            />
+            
             {/* Inner Black Container */}
-            <div className="bg-black rounded-[10px] px-8 py-6 md:py-8">
+            <div className="relative bg-black rounded-[10px] px-8 py-6 md:py-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Text Content */}
                 <div className="text-center md:text-left">
