@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { Car, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AutomotiveBanner = () => {
@@ -27,23 +27,26 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 py-6 md:py-8">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Text Content */}
-                <div className="text-center md:text-left">
-                  <h2 className="text-lg md:text-xl font-medium text-white tracking-wide">
-                    Linha Automotiva
+            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-8 md:py-10">
+              <div className="flex items-center justify-between">
+                
+                {/* Logo Section */}
+                <div className="flex items-center gap-4">
+                  {/* Abstract automotive icon */}
+                  <Car className="h-6 w-6 text-[#1e90ff]/60" />
+                  
+                  {/* Bicolor logo */}
+                  <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+                    <span className="text-white">Ubadesk</span>
+                    <span className="text-[#1e90ff]">Car</span>
                   </h2>
-                  <p className="text-zinc-500 text-sm mt-1">
-                    Cuidado profissional para veículos
-                  </p>
                 </div>
-
-                {/* CTA */}
-                <div className="flex items-center gap-2 text-zinc-400 group-hover:text-white transition-colors duration-300">
-                  <span className="text-sm font-medium">Ver Catálogo</span>
-                  <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                
+                {/* Minimalist arrow button */}
+                <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center group-hover:border-[#1e90ff] group-hover:bg-[#1e90ff]/10 transition-all duration-300">
+                  <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#1e90ff] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
+                
               </div>
             </div>
           </div>
