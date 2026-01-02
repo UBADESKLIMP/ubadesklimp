@@ -1,5 +1,6 @@
-import { Car, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import carLogo from '@/assets/ubadesk-car-logo.png';
 
 const AutomotiveBanner = () => {
   return (
@@ -27,16 +28,20 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-8 md:py-10">
+            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-12 md:py-16">
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
-                <div className="flex items-center gap-4">
-                  {/* Abstract automotive icon */}
-                  <Car className="h-6 w-6 text-[#1e90ff]/60" />
+                <div className="flex items-center gap-5">
+                  {/* Car logo image */}
+                  <img 
+                    src={carLogo} 
+                    alt="UbadeskCar Logo" 
+                    className="h-16 md:h-20 w-auto object-contain"
+                  />
                   
                   {/* Bicolor logo */}
-                  <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+                  <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
                     <span className="text-white">Ubadesk</span>
                     <span className="text-[#1e90ff]">Car</span>
                   </h2>
