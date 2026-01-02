@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import OrderHistory from "./pages/OrderHistory";
+import Automotivo from "./pages/Automotivo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <CartProvider>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/automotivo" element={<Automotivo />} />
               <Route path="/auth" element={<Auth />} />
               <Route 
                 path="/profile" 
