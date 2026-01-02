@@ -100,7 +100,7 @@ export default {
 		animation: {
 			'accordion-down': 'accordion-down 0.2s ease-out',
 			'accordion-up': 'accordion-up 0.2s ease-out',
-			'border-move': 'borderMove 25s linear infinite'
+			'border-move': 'borderMove 40s linear infinite'
 		}
 		}
 	},
