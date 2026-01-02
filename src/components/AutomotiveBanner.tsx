@@ -6,10 +6,19 @@ const AutomotiveBanner = () => {
     <section className="py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <Link to="/automotivo" className="block group">
-          {/* Shimmer Gradient Border */}
-          <div className="p-[1.5px] rounded-xl bg-gradient-to-r from-blue-600 via-blue-300 to-blue-600 bg-[length:200%_100%] animate-shimmer">
-            {/* Inner Black Container */}
-            <div className="bg-black rounded-[10px] px-8 py-6 md:py-8">
+          {/* Animated Gradient Border Container */}
+          <div className="relative rounded-[20px] overflow-hidden">
+            {/* Animated Border (simulates ::before) */}
+            <div 
+              className="absolute inset-[-1px] rounded-[22px] animate-border-move -z-10"
+              style={{
+                background: 'linear-gradient(120deg, #1e90ff, #5a2dff, #1e90ff)',
+                backgroundSize: '300% 300%'
+              }}
+            />
+            
+            {/* Inner Dark Container */}
+            <div className="bg-[#0b0d10] rounded-[20px] px-8 py-6 md:py-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Text Content */}
                 <div className="text-center md:text-left">
