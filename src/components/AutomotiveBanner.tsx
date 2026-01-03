@@ -4,7 +4,7 @@ import carNeonLogo from '@/assets/ubadesk-car-neon.png';
 
 const AutomotiveBanner = () => {
   return (
-    <section className="py-8 px-4 md:px-8">
+    <section className="py-6 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <Link to="/automotivo" className="block group">
           {/* Animated Gradient Border Container */}
@@ -28,7 +28,7 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-10 md:px-16 py-16 md:py-20">
+            <div className="relative bg-[#0b0d10] rounded-[20px] px-10 md:px-16 py-8 md:py-10">
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
@@ -37,7 +37,7 @@ const AutomotiveBanner = () => {
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar Logo" 
-                    className="h-24 md:h-32 lg:h-40 w-auto object-contain mix-blend-screen"
+                    className="h-20 md:h-24 lg:h-28 w-auto object-contain mix-blend-screen"
                     style={{ filter: 'drop-shadow(0 0 12px #1e90ff)' }}
                   />
                   
