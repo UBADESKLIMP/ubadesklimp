@@ -137,6 +137,10 @@ export default {
 				'70%': { transform: 'translateX(-2px) translateY(2px)' },
 				'80%': { transform: 'translateX(2px) translateY(0)' },
 				'90%': { transform: 'translateX(-1px) translateY(-1px)' }
+			},
+			'headlight-ignite': {
+				'0%, 100%': { opacity: '0.6', transform: 'scale(0.8)' },
+				'50%': { opacity: '1', transform: 'scale(1.2)' }
 			}
 		},
 		animation: {
@@ -152,7 +156,8 @@ export default {
 			'tire-mark': 'tire-mark 0.5s ease-out forwards',
 			'tire-smoke': 'tire-smoke 0.7s ease-out forwards',
 			'headlight-trail': 'headlight-trail 0.6s ease-out forwards',
-			'power-shake': 'power-shake 0.3s ease-in-out'
+			'power-shake': 'power-shake 0.3s ease-in-out',
+			'headlight-ignite': 'headlight-ignite 0.1s ease-in-out infinite'
 		}
 		}
 	},

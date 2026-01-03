@@ -139,6 +139,29 @@ const AutomotiveBanner = () => {
                       </div>
                     )}
                     
+                    {/* Headlight Glow during shake */}
+                    {isShaking && (
+                      <div className="absolute top-[32%] right-[8%] pointer-events-none z-10">
+                        <div 
+                          className="absolute w-8 h-4 rounded-full animate-headlight-ignite"
+                          style={{
+                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.9), transparent 70%)',
+                            boxShadow: '0 0 20px rgba(30, 144, 255, 1), 0 0 40px rgba(30, 144, 255, 0.8), 0 0 60px rgba(30, 144, 255, 0.5)',
+                            top: '-2px'
+                          }}
+                        />
+                        <div 
+                          className="absolute w-6 h-3 rounded-full animate-headlight-ignite"
+                          style={{
+                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.8), transparent 70%)',
+                            boxShadow: '0 0 15px rgba(30, 144, 255, 0.9), 0 0 30px rgba(30, 144, 255, 0.6), 0 0 50px rgba(30, 144, 255, 0.4)',
+                            top: '14px',
+                            animationDelay: '0.05s'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     {/* Car Neon Image */}
                     <img 
                       src={carNeonLogo} 
@@ -147,8 +170,11 @@ const AutomotiveBanner = () => {
                         isExiting ? 'animate-car-exit' : 'animate-car-enter'
                       }`}
                       style={{ 
-                        filter: 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))',
-                        animationDelay: isExiting ? '0s' : '0.3s'
+                        filter: isShaking 
+                          ? 'drop-shadow(0 0 25px rgba(30, 144, 255, 1)) drop-shadow(0 0 50px rgba(30, 144, 255, 0.7))'
+                          : 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))',
+                        animationDelay: isExiting ? '0s' : '0.3s',
+                        transition: 'filter 0.1s ease-out'
                       }}
                     />
                     
