@@ -61,20 +61,22 @@ const AutomotiveBanner = () => {
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Container with Reflection */}
                   <div className="relative">
-                    {/* Tire Marks - marcas de derrapagem no chão */}
+                    {/* Tire Marks - marcas de derrapagem azul neon */}
                     {isExiting && (
                       <div className="absolute bottom-[15%] left-[5%] pointer-events-none">
                         <div 
                           className="absolute h-[3px] rounded-full animate-tire-mark"
                           style={{
-                            background: 'linear-gradient(90deg, rgba(40,40,40,0.7), rgba(60,60,60,0.3), transparent)',
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.8), rgba(30, 144, 255, 0.4), transparent)',
+                            boxShadow: '0 0 10px rgba(30, 144, 255, 0.6), 0 0 20px rgba(30, 144, 255, 0.3)',
                             top: '-6px'
                           }}
                         />
                         <div 
                           className="absolute h-[3px] rounded-full animate-tire-mark"
                           style={{
-                            background: 'linear-gradient(90deg, rgba(40,40,40,0.6), rgba(60,60,60,0.2), transparent)',
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.7), rgba(30, 144, 255, 0.3), transparent)',
+                            boxShadow: '0 0 8px rgba(30, 144, 255, 0.5), 0 0 16px rgba(30, 144, 255, 0.2)',
                             top: '6px',
                             animationDelay: '0.02s'
                           }}
@@ -104,24 +106,25 @@ const AutomotiveBanner = () => {
                       </div>
                     )}
                     
-                    {/* Friction Sparks - faíscas de atrito (laranja/amarelo) */}
+                    {/* Headlight Trails - rastro de faróis */}
                     {isExiting && (
-                      <div className="absolute bottom-[22%] left-[12%] pointer-events-none">
+                      <div className="absolute top-[42%] right-[-20px] pointer-events-none">
                         <div 
-                          className="absolute w-1.5 h-1.5 rounded-full bg-orange-400 animate-friction-spark"
-                          style={{ boxShadow: '0 0 6px 2px rgba(251, 146, 60, 0.9)' }}
+                          className="absolute h-[2px] rounded-full animate-headlight-trail"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.9))',
+                            boxShadow: '0 0 12px rgba(30, 144, 255, 0.8), 0 0 24px rgba(30, 144, 255, 0.4)',
+                            top: '-8px'
+                          }}
                         />
                         <div 
-                          className="absolute w-1 h-1 rounded-full bg-yellow-300 animate-friction-spark"
-                          style={{ boxShadow: '0 0 4px 1px rgba(253, 224, 71, 0.8)', animationDelay: '0.04s', top: '4px', left: '8px' }}
-                        />
-                        <div 
-                          className="absolute w-1 h-1 rounded-full bg-orange-500 animate-friction-spark"
-                          style={{ boxShadow: '0 0 5px 2px rgba(249, 115, 22, 0.8)', animationDelay: '0.08s', top: '-3px', left: '4px' }}
-                        />
-                        <div 
-                          className="absolute w-0.5 h-0.5 rounded-full bg-yellow-400 animate-friction-spark"
-                          style={{ boxShadow: '0 0 3px 1px rgba(250, 204, 21, 0.7)', animationDelay: '0.12s', top: '6px', left: '2px' }}
+                          className="absolute h-[2px] rounded-full animate-headlight-trail"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.8))',
+                            boxShadow: '0 0 10px rgba(30, 144, 255, 0.6), 0 0 20px rgba(30, 144, 255, 0.3)',
+                            top: '8px',
+                            animationDelay: '0.03s'
+                          }}
                         />
                       </div>
                     )}
