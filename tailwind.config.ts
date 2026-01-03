@@ -125,6 +125,18 @@ export default {
 			'headlight-trail': {
 				'0%': { width: '0px', opacity: '0.9' },
 				'100%': { width: '200px', opacity: '0' }
+			},
+			'power-shake': {
+				'0%, 100%': { transform: 'translateX(0) translateY(0)' },
+				'10%': { transform: 'translateX(-2px) translateY(1px)' },
+				'20%': { transform: 'translateX(3px) translateY(-1px)' },
+				'30%': { transform: 'translateX(-1px) translateY(2px)' },
+				'40%': { transform: 'translateX(2px) translateY(-2px)' },
+				'50%': { transform: 'translateX(-3px) translateY(1px)' },
+				'60%': { transform: 'translateX(1px) translateY(-1px)' },
+				'70%': { transform: 'translateX(-2px) translateY(2px)' },
+				'80%': { transform: 'translateX(2px) translateY(0)' },
+				'90%': { transform: 'translateX(-1px) translateY(-1px)' }
 			}
 		},
 		animation: {
@@ -139,7 +151,8 @@ export default {
 			'border-chase': 'border-chase 3s linear infinite',
 			'tire-mark': 'tire-mark 0.5s ease-out forwards',
 			'tire-smoke': 'tire-smoke 0.7s ease-out forwards',
-			'headlight-trail': 'headlight-trail 0.6s ease-out forwards'
+			'headlight-trail': 'headlight-trail 0.6s ease-out forwards',
+			'power-shake': 'power-shake 0.3s ease-in-out'
 		}
 		}
 	},

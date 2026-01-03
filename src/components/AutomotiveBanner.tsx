@@ -5,19 +5,27 @@ import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
 const AutomotiveBanner = () => {
   const [isExiting, setIsExiting] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isExiting) return;
+    if (isExiting || isShaking) return;
     
-    setIsExiting(true);
+    // Primeiro tremor de potência
+    setIsShaking(true);
     
-    // Aguarda animação de saída antes de navegar
+    // Depois arranca
     setTimeout(() => {
-      navigate('/automotivo');
-    }, 500);
+      setIsShaking(false);
+      setIsExiting(true);
+      
+      // Navegação após saída
+      setTimeout(() => {
+        navigate('/automotivo');
+      }, 500);
+    }, 300);
   };
 
   return (
@@ -54,7 +62,9 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-4 md:py-6 overflow-hidden">
+            <div className={`relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-4 md:py-6 overflow-hidden ${
+              isShaking ? 'animate-power-shake' : ''
+            }`}>
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
@@ -63,7 +73,7 @@ const AutomotiveBanner = () => {
                   <div className="relative">
                     {/* Tire Marks - marcas de derrapagem azul neon */}
                     {isExiting && (
-                      <div className="absolute bottom-[15%] left-[5%] pointer-events-none">
+                      <div className="absolute bottom-[32%] left-[12%] pointer-events-none">
                         <div 
                           className="absolute h-[3px] rounded-full animate-tire-mark"
                           style={{
@@ -108,21 +118,21 @@ const AutomotiveBanner = () => {
                     
                     {/* Headlight Trails - rastro de faróis */}
                     {isExiting && (
-                      <div className="absolute top-[42%] right-[-20px] pointer-events-none">
+                      <div className="absolute top-[35%] right-[0%] pointer-events-none">
                         <div 
                           className="absolute h-[2px] rounded-full animate-headlight-trail"
                           style={{
-                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.9))',
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.9), transparent)',
                             boxShadow: '0 0 12px rgba(30, 144, 255, 0.8), 0 0 24px rgba(30, 144, 255, 0.4)',
-                            top: '-8px'
+                            top: '-4px'
                           }}
                         />
                         <div 
                           className="absolute h-[2px] rounded-full animate-headlight-trail"
                           style={{
-                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.8))',
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.8), transparent)',
                             boxShadow: '0 0 10px rgba(30, 144, 255, 0.6), 0 0 20px rgba(30, 144, 255, 0.3)',
-                            top: '8px',
+                            top: '12px',
                             animationDelay: '0.03s'
                           }}
                         />
