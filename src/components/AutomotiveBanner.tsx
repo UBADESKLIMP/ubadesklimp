@@ -70,7 +70,7 @@ const AutomotiveBanner = () => {
                 {/* Logo Section */}
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Container with Reflection */}
-                  <div className="relative">
+                  <div className="relative -translate-y-10">
                     {/* Tire Marks - marcas de derrapagem azul neon */}
                     {isExiting && (
                       <div className="absolute bottom-[32%] left-[12%] pointer-events-none">
@@ -164,13 +164,13 @@ const AutomotiveBanner = () => {
                     
                     {/* Light beam from headlights to text */}
                     {isHovered && !isShaking && !isExiting && (
-                      <div className="absolute top-[35%] right-[-50%] pointer-events-none z-5 animate-headlight-beam origin-left">
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-5 translate-x-full">
                         <div 
-                          className="w-40 h-20"
+                          className="w-64 h-20 animate-headlight-beam origin-left"
                           style={{
-                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.4), rgba(30, 144, 255, 0.1) 50%, transparent)',
-                            clipPath: 'polygon(0% 40%, 0% 60%, 100% 100%, 100% 0%)',
-                            filter: 'blur(8px)'
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.45), rgba(30, 144, 255, 0.16) 55%, transparent)',
+                            clipPath: 'polygon(0% 42%, 0% 58%, 100% 100%, 100% 0%)',
+                            filter: 'blur(10px)'
                           }}
                         />
                       </div>
@@ -203,7 +203,7 @@ const AutomotiveBanner = () => {
                     <img 
                       src={carNeonLogo} 
                       alt="UbadeskCar Logo" 
-                      className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen -my-10 ${
+                      className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen ${
                         isExiting ? 'animate-car-exit' : 'animate-car-enter'
                       }`}
                       style={{ 
