@@ -141,21 +141,21 @@ const AutomotiveBanner = () => {
                     
                     {/* Headlight Glow during shake */}
                     {isShaking && (
-                      <div className="absolute top-[32%] right-[8%] pointer-events-none z-10">
-                        <div 
-                          className="absolute w-8 h-4 rounded-full animate-headlight-ignite"
-                          style={{
-                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.9), transparent 70%)',
-                            boxShadow: '0 0 20px rgba(30, 144, 255, 1), 0 0 40px rgba(30, 144, 255, 0.8), 0 0 60px rgba(30, 144, 255, 0.5)',
-                            top: '-2px'
-                          }}
-                        />
+                      <div className="absolute top-[38%] right-[18%] pointer-events-none z-10">
                         <div 
                           className="absolute w-6 h-3 rounded-full animate-headlight-ignite"
                           style={{
+                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.9), transparent 70%)',
+                            boxShadow: '0 0 20px rgba(30, 144, 255, 1), 0 0 40px rgba(30, 144, 255, 0.8), 0 0 60px rgba(30, 144, 255, 0.5)',
+                            top: '0px'
+                          }}
+                        />
+                        <div 
+                          className="absolute w-5 h-2 rounded-full animate-headlight-ignite"
+                          style={{
                             background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.8), transparent 70%)',
                             boxShadow: '0 0 15px rgba(30, 144, 255, 0.9), 0 0 30px rgba(30, 144, 255, 0.6), 0 0 50px rgba(30, 144, 255, 0.4)',
-                            top: '14px',
+                            top: '10px',
                             animationDelay: '0.05s'
                           }}
                         />
