@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import carNeonLogo from '@/assets/teste_carro_chat_gpt.png';
+import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
 const AutomotiveBanner = () => {
   return (
@@ -32,12 +32,12 @@ const AutomotiveBanner = () => {
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
-                <div className="flex items-center gap-6 md:gap-8">
+                <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Neon Image */}
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar Logo" 
-                    className="h-28 md:h-32 lg:h-36 w-auto object-contain mix-blend-screen -my-6"
+                    className="h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen -my-10"
                     style={{ filter: 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))' }}
                   />
                   
