@@ -41,11 +41,19 @@ const AutomotiveBanner = () => {
                     style={{ filter: 'drop-shadow(0 0 12px #1e90ff)' }}
                   />
                   
-                  {/* Bicolor logo */}
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
-                    <span className="text-white">Ubadesk</span>
-                    <span className="text-[#1e90ff]">Car</span>
-                  </h2>
+                  {/* Title + Tagline Container */}
+                  <div className="flex flex-col">
+                    {/* Bicolor logo */}
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
+                      <span className="text-white">Ubadesk</span>
+                      <span className="text-[#1e90ff]">Car</span>
+                    </h2>
+                    
+                    {/* Tagline */}
+                    <p className="text-zinc-400 text-sm md:text-base mt-1 tracking-wide">
+                      Nossa Linha profissional automotiva
+                    </p>
+                  </div>
                 </div>
                 
                 {/* Minimalist arrow button */}
