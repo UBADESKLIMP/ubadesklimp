@@ -28,29 +28,29 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-12 md:py-16">
+            <div className="relative bg-[#0b0d10] rounded-[20px] px-10 md:px-16 py-16 md:py-20">
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-6 md:gap-8">
                   {/* Car Neon Image */}
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar Logo" 
-                    className="h-16 md:h-20 w-auto object-contain mix-blend-screen"
-                    style={{ filter: 'drop-shadow(0 0 8px #1e90ff)' }}
+                    className="h-24 md:h-32 lg:h-40 w-auto object-contain mix-blend-screen"
+                    style={{ filter: 'drop-shadow(0 0 12px #1e90ff)' }}
                   />
                   
                   {/* Bicolor logo */}
-                  <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
                     <span className="text-white">Ubadesk</span>
                     <span className="text-[#1e90ff]">Car</span>
                   </h2>
                 </div>
                 
                 {/* Minimalist arrow button */}
-                <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center group-hover:border-[#1e90ff] group-hover:bg-[#1e90ff]/10 transition-all duration-300">
-                  <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#1e90ff] group-hover:translate-x-0.5 transition-all duration-300" />
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border border-zinc-700 flex items-center justify-center group-hover:border-[#1e90ff] group-hover:bg-[#1e90ff]/10 transition-all duration-300">
+                  <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-zinc-400 group-hover:text-[#1e90ff] group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
                 
               </div>
