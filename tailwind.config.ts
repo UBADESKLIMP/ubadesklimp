@@ -77,30 +77,53 @@ export default {
 			},
 		keyframes: {
 			'accordion-down': {
-				from: {
-					height: '0'
-				},
-				to: {
-					height: 'var(--radix-accordion-content-height)'
-				}
+				from: { height: '0' },
+				to: { height: 'var(--radix-accordion-content-height)' }
 			},
 			'accordion-up': {
-				from: {
-					height: 'var(--radix-accordion-content-height)'
-				},
-				to: {
-				height: '0'
-				}
+				from: { height: 'var(--radix-accordion-content-height)' },
+				to: { height: '0' }
 			},
 			'borderMove': {
 				'0%': { backgroundPosition: '0% 50%' },
 				'100%': { backgroundPosition: '300% 50%' }
+			},
+			'car-enter': {
+				'0%': { transform: 'translateX(-150%)', opacity: '0' },
+				'100%': { transform: 'translateX(0)', opacity: '1' }
+			},
+			'car-exit': {
+				'0%': { transform: 'translateX(0) scaleX(1)', filter: 'blur(0px)' },
+				'50%': { transform: 'translateX(50%) scaleX(1.05)', filter: 'blur(2px)' },
+				'100%': { transform: 'translateX(200%)', filter: 'blur(4px)', opacity: '0' }
+			},
+			'fade-in-up': {
+				'0%': { opacity: '0', transform: 'translateY(10px)' },
+				'100%': { opacity: '1', transform: 'translateY(0)' }
+			},
+			'fade-out-fast': {
+				'0%': { opacity: '1' },
+				'100%': { opacity: '0' }
+			},
+			'glow-pulse': {
+				'0%, 100%': { opacity: '0.5', transform: 'scale(1)' },
+				'50%': { opacity: '0.8', transform: 'scale(1.02)' }
+			},
+			'border-chase': {
+				'0%': { backgroundPosition: '0% 50%' },
+				'100%': { backgroundPosition: '400% 50%' }
 			}
 		},
 		animation: {
 			'accordion-down': 'accordion-down 0.2s ease-out',
 			'accordion-up': 'accordion-up 0.2s ease-out',
-			'border-move': 'borderMove 25s linear infinite'
+			'border-move': 'borderMove 25s linear infinite',
+			'car-enter': 'car-enter 0.9s ease-out forwards',
+			'car-exit': 'car-exit 0.5s ease-in forwards',
+			'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+			'fade-out-fast': 'fade-out-fast 0.3s ease-out forwards',
+			'glow-pulse': 'glow-pulse 1.5s ease-in-out infinite',
+			'border-chase': 'border-chase 3s linear infinite'
 		}
 		}
 	},
