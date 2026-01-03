@@ -141,7 +141,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Headlight Glow during shake */}
                     {isShaking && (
-                      <div className="absolute top-[44%] right-[18%] pointer-events-none z-10">
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-10">
                         <div 
                           className="absolute w-6 h-3 rounded-full animate-headlight-ignite"
                           style={{
