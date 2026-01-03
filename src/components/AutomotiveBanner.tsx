@@ -28,7 +28,7 @@ const AutomotiveBanner = () => {
             />
             
             {/* Inner Dark Container */}
-            <div className="relative bg-[#0b0d10] rounded-[20px] px-10 md:px-16 py-8 md:py-10">
+            <div className="relative bg-[#0b0d10] rounded-[20px] px-8 md:px-12 py-4 md:py-6">
               <div className="flex items-center justify-between">
                 
                 {/* Logo Section */}
@@ -37,7 +37,7 @@ const AutomotiveBanner = () => {
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar Logo" 
-                    className="h-36 md:h-40 lg:h-48 w-auto object-contain mix-blend-screen -my-4"
+                    className="h-28 md:h-32 lg:h-36 w-auto object-contain mix-blend-screen -my-6"
                     style={{ filter: 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))' }}
                   />
                   
