@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import carNeonLogo from '@/assets/ubadesk-car-neon.png';
+import carNeonLogo from '@/assets/carro_unico_gpt.png';
 
 const AutomotiveBanner = () => {
   return (
