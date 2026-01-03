@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -9,6 +9,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
+import BackgroundRemover from '@/components/BackgroundRemover';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
@@ -154,7 +155,7 @@ const Admin = () => {
 
         {/* Tabs for Products and Categories */}
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="products" className="flex items-center space-x-2">
               <Package className="h-4 w-4" />
               <span>Produtos</span>
@@ -162,6 +163,10 @@ const Admin = () => {
             <TabsTrigger value="categories" className="flex items-center space-x-2">
               <Tags className="h-4 w-4" />
               <span>Categorias</span>
+            </TabsTrigger>
+            <TabsTrigger value="tools" className="flex items-center space-x-2">
+              <Wand2 className="h-4 w-4" />
+              <span>Ferramentas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -269,6 +274,13 @@ const Admin = () => {
           {/* Categories Tab */}
           <TabsContent value="categories">
             <CategoryManager />
+          </TabsContent>
+
+          {/* Tools Tab */}
+          <TabsContent value="tools">
+            <div className="max-w-2xl mx-auto">
+              <BackgroundRemover />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
