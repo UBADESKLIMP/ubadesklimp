@@ -61,44 +61,68 @@ const AutomotiveBanner = () => {
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Container with Reflection */}
                   <div className="relative">
-                    {/* Neon Light Trail (only on exit) */}
+                    {/* Tire Marks - marcas de derrapagem no chão */}
                     {isExiting && (
-                      <>
+                      <div className="absolute bottom-[15%] left-[5%] pointer-events-none">
                         <div 
-                          className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-40 animate-light-trail pointer-events-none"
+                          className="absolute h-[3px] rounded-full animate-tire-mark"
                           style={{
-                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.8), rgba(90, 45, 255, 0.6), transparent)',
-                            filter: 'blur(8px)',
-                            animationDelay: '0.1s'
+                            background: 'linear-gradient(90deg, rgba(40,40,40,0.7), rgba(60,60,60,0.3), transparent)',
+                            top: '-6px'
                           }}
                         />
                         <div 
-                          className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-32 animate-light-trail pointer-events-none"
+                          className="absolute h-[3px] rounded-full animate-tire-mark"
                           style={{
-                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 1), transparent)',
-                            filter: 'blur(2px)',
-                            animationDelay: '0.05s'
+                            background: 'linear-gradient(90deg, rgba(40,40,40,0.6), rgba(60,60,60,0.2), transparent)',
+                            top: '6px',
+                            animationDelay: '0.02s'
                           }}
                         />
-                      </>
-                    )}
-                    
-                    {/* Sparks (only on exit) */}
-                    {isExiting && (
-                      <div className="absolute left-[20%] top-1/2 -translate-y-1/2 pointer-events-none">
-                        <div className="absolute w-2 h-2 rounded-full bg-[#1e90ff] animate-spark-1" style={{ boxShadow: '0 0 6px 2px rgba(30, 144, 255, 0.8)' }} />
-                        <div className="absolute w-1.5 h-1.5 rounded-full bg-[#5a2dff] animate-spark-2" style={{ boxShadow: '0 0 6px 2px rgba(90, 45, 255, 0.8)', animationDelay: '0.05s' }} />
-                        <div className="absolute w-2 h-2 rounded-full bg-cyan-400 animate-spark-3" style={{ boxShadow: '0 0 6px 2px rgba(34, 211, 238, 0.8)', animationDelay: '0.1s' }} />
-                        <div className="absolute w-1 h-1 rounded-full bg-[#1e90ff] animate-spark-4" style={{ boxShadow: '0 0 4px 2px rgba(30, 144, 255, 0.8)', animationDelay: '0.08s' }} />
                       </div>
                     )}
                     
-                    {/* Smoke Puffs (only on exit) */}
+                    {/* Tire Smoke - fumaça de borracha queimada */}
                     {isExiting && (
-                      <div className="absolute left-[15%] top-[60%] pointer-events-none">
-                        <div className="absolute w-6 h-6 rounded-full bg-zinc-500/40 animate-smoke-puff" style={{ filter: 'blur(4px)' }} />
-                        <div className="absolute w-4 h-4 rounded-full bg-zinc-400/30 animate-smoke-puff" style={{ filter: 'blur(3px)', animationDelay: '0.1s' }} />
-                        <div className="absolute w-5 h-5 rounded-full bg-zinc-600/30 animate-smoke-puff" style={{ filter: 'blur(5px)', animationDelay: '0.15s', top: '-8px' }} />
+                      <div className="absolute bottom-[20%] left-[10%] pointer-events-none">
+                        <div 
+                          className="absolute w-10 h-10 rounded-full bg-zinc-400/40 animate-tire-smoke"
+                          style={{ filter: 'blur(6px)' }}
+                        />
+                        <div 
+                          className="absolute w-8 h-8 rounded-full bg-zinc-500/35 animate-tire-smoke"
+                          style={{ filter: 'blur(5px)', animationDelay: '0.06s', left: '12px' }}
+                        />
+                        <div 
+                          className="absolute w-12 h-12 rounded-full bg-zinc-300/25 animate-tire-smoke"
+                          style={{ filter: 'blur(8px)', animationDelay: '0.12s', left: '-6px', top: '-4px' }}
+                        />
+                        <div 
+                          className="absolute w-6 h-6 rounded-full bg-zinc-600/30 animate-tire-smoke"
+                          style={{ filter: 'blur(4px)', animationDelay: '0.18s', left: '20px', top: '8px' }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Friction Sparks - faíscas de atrito (laranja/amarelo) */}
+                    {isExiting && (
+                      <div className="absolute bottom-[22%] left-[12%] pointer-events-none">
+                        <div 
+                          className="absolute w-1.5 h-1.5 rounded-full bg-orange-400 animate-friction-spark"
+                          style={{ boxShadow: '0 0 6px 2px rgba(251, 146, 60, 0.9)' }}
+                        />
+                        <div 
+                          className="absolute w-1 h-1 rounded-full bg-yellow-300 animate-friction-spark"
+                          style={{ boxShadow: '0 0 4px 1px rgba(253, 224, 71, 0.8)', animationDelay: '0.04s', top: '4px', left: '8px' }}
+                        />
+                        <div 
+                          className="absolute w-1 h-1 rounded-full bg-orange-500 animate-friction-spark"
+                          style={{ boxShadow: '0 0 5px 2px rgba(249, 115, 22, 0.8)', animationDelay: '0.08s', top: '-3px', left: '4px' }}
+                        />
+                        <div 
+                          className="absolute w-0.5 h-0.5 rounded-full bg-yellow-400 animate-friction-spark"
+                          style={{ boxShadow: '0 0 3px 1px rgba(250, 204, 21, 0.7)', animationDelay: '0.12s', top: '6px', left: '2px' }}
+                        />
                       </div>
                     )}
                     
