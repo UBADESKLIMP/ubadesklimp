@@ -113,30 +113,18 @@ export default {
 				'0%': { backgroundPosition: '0% 50%' },
 				'100%': { backgroundPosition: '400% 50%' }
 			},
-			'light-trail': {
-				'0%': { opacity: '0', transform: 'translateX(0) scaleX(0.3)' },
-				'20%': { opacity: '0.8', transform: 'translateX(20%) scaleX(1.5)' },
-				'100%': { opacity: '0', transform: 'translateX(150%) scaleX(3)' }
+			'tire-mark': {
+				'0%': { width: '0px', opacity: '0' },
+				'30%': { opacity: '0.7' },
+				'100%': { width: '150px', opacity: '0.4' }
 			},
-			'spark-1': {
+			'tire-smoke': {
+				'0%': { opacity: '0.5', transform: 'translateY(0) translateX(0) scale(1)' },
+				'100%': { opacity: '0', transform: 'translateY(-25px) translateX(-50px) scale(2.5)' }
+			},
+			'friction-spark': {
 				'0%': { opacity: '1', transform: 'translate(0, 0) scale(1)' },
-				'100%': { opacity: '0', transform: 'translate(-60px, -30px) scale(0)' }
-			},
-			'spark-2': {
-				'0%': { opacity: '1', transform: 'translate(0, 0) scale(1)' },
-				'100%': { opacity: '0', transform: 'translate(-80px, 10px) scale(0)' }
-			},
-			'spark-3': {
-				'0%': { opacity: '1', transform: 'translate(0, 0) scale(1)' },
-				'100%': { opacity: '0', transform: 'translate(-50px, 25px) scale(0)' }
-			},
-			'spark-4': {
-				'0%': { opacity: '1', transform: 'translate(0, 0) scale(1)' },
-				'100%': { opacity: '0', transform: 'translate(-70px, -15px) scale(0)' }
-			},
-			'smoke-puff': {
-				'0%': { opacity: '0.6', transform: 'translateX(0) scale(1)' },
-				'100%': { opacity: '0', transform: 'translateX(-40px) scale(2)' }
+				'100%': { opacity: '0', transform: 'translate(-40px, -20px) scale(0)' }
 			}
 		},
 		animation: {
@@ -149,12 +137,9 @@ export default {
 			'fade-out-fast': 'fade-out-fast 0.3s ease-out forwards',
 			'glow-pulse': 'glow-pulse 1.5s ease-in-out infinite',
 			'border-chase': 'border-chase 3s linear infinite',
-			'light-trail': 'light-trail 0.6s ease-out forwards',
-			'spark-1': 'spark-1 0.4s ease-out forwards',
-			'spark-2': 'spark-2 0.5s ease-out forwards',
-			'spark-3': 'spark-3 0.45s ease-out forwards',
-			'spark-4': 'spark-4 0.35s ease-out forwards',
-			'smoke-puff': 'smoke-puff 0.8s ease-out forwards'
+			'tire-mark': 'tire-mark 0.5s ease-out forwards',
+			'tire-smoke': 'tire-smoke 0.7s ease-out forwards',
+			'friction-spark': 'friction-spark 0.3s ease-out forwards'
 		}
 		}
 	},
