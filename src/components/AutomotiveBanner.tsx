@@ -51,7 +51,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Tagline */}
                     <p className="text-zinc-400 text-sm md:text-base mt-1 tracking-wide">
-                      Nossa Linha profissional automotiva
+                      Nossa Linha Profissional Automotiva
                     </p>
                   </div>
                 </div>
