@@ -59,18 +59,39 @@ const AutomotiveBanner = () => {
                 
                 {/* Logo Section */}
                 <div className="flex items-center gap-3 md:gap-4">
-                  {/* Car Neon Image */}
-                  <img 
-                    src={carNeonLogo} 
-                    alt="UbadeskCar Logo" 
-                    className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen -my-10 ${
-                      isExiting ? 'animate-car-exit' : 'animate-car-enter'
-                    }`}
-                    style={{ 
-                      filter: 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))',
-                      animationDelay: isExiting ? '0s' : '0.3s'
-                    }}
-                  />
+                  {/* Car Container with Reflection */}
+                  <div className="relative">
+                    {/* Car Neon Image */}
+                    <img 
+                      src={carNeonLogo} 
+                      alt="UbadeskCar Logo" 
+                      className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen -my-10 ${
+                        isExiting ? 'animate-car-exit' : 'animate-car-enter'
+                      }`}
+                      style={{ 
+                        filter: 'drop-shadow(0 0 15px rgba(30, 144, 255, 0.8))',
+                        animationDelay: isExiting ? '0s' : '0.3s'
+                      }}
+                    />
+                    
+                    {/* Car Reflection */}
+                    <img 
+                      src={carNeonLogo} 
+                      alt="" 
+                      aria-hidden="true"
+                      className={`absolute top-[85%] left-0 h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen pointer-events-none ${
+                        isExiting ? 'animate-car-exit' : 'animate-car-enter'
+                      }`}
+                      style={{ 
+                        transform: 'scaleY(-1)',
+                        filter: 'drop-shadow(0 0 10px rgba(30, 144, 255, 0.3)) blur(1px)',
+                        opacity: 0.2,
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 50%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 50%)',
+                        animationDelay: isExiting ? '0s' : '0.3s'
+                      }}
+                    />
+                  </div>
                   
                   {/* Title + Tagline Container */}
                   <div 
