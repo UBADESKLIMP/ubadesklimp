@@ -37,7 +37,7 @@ const AutomotiveBanner = () => {
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar Logo" 
-                    className="h-16 md:h-20 w-auto object-contain"
+                    className="h-16 md:h-20 w-auto object-contain mix-blend-screen"
                     style={{ filter: 'drop-shadow(0 0 8px #1e90ff)' }}
                   />
                   
