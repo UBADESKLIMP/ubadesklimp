@@ -61,6 +61,47 @@ const AutomotiveBanner = () => {
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Container with Reflection */}
                   <div className="relative">
+                    {/* Neon Light Trail (only on exit) */}
+                    {isExiting && (
+                      <>
+                        <div 
+                          className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-40 animate-light-trail pointer-events-none"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 0.8), rgba(90, 45, 255, 0.6), transparent)',
+                            filter: 'blur(8px)',
+                            animationDelay: '0.1s'
+                          }}
+                        />
+                        <div 
+                          className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-32 animate-light-trail pointer-events-none"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, rgba(30, 144, 255, 1), transparent)',
+                            filter: 'blur(2px)',
+                            animationDelay: '0.05s'
+                          }}
+                        />
+                      </>
+                    )}
+                    
+                    {/* Sparks (only on exit) */}
+                    {isExiting && (
+                      <div className="absolute left-[20%] top-1/2 -translate-y-1/2 pointer-events-none">
+                        <div className="absolute w-2 h-2 rounded-full bg-[#1e90ff] animate-spark-1" style={{ boxShadow: '0 0 6px 2px rgba(30, 144, 255, 0.8)' }} />
+                        <div className="absolute w-1.5 h-1.5 rounded-full bg-[#5a2dff] animate-spark-2" style={{ boxShadow: '0 0 6px 2px rgba(90, 45, 255, 0.8)', animationDelay: '0.05s' }} />
+                        <div className="absolute w-2 h-2 rounded-full bg-cyan-400 animate-spark-3" style={{ boxShadow: '0 0 6px 2px rgba(34, 211, 238, 0.8)', animationDelay: '0.1s' }} />
+                        <div className="absolute w-1 h-1 rounded-full bg-[#1e90ff] animate-spark-4" style={{ boxShadow: '0 0 4px 2px rgba(30, 144, 255, 0.8)', animationDelay: '0.08s' }} />
+                      </div>
+                    )}
+                    
+                    {/* Smoke Puffs (only on exit) */}
+                    {isExiting && (
+                      <div className="absolute left-[15%] top-[60%] pointer-events-none">
+                        <div className="absolute w-6 h-6 rounded-full bg-zinc-500/40 animate-smoke-puff" style={{ filter: 'blur(4px)' }} />
+                        <div className="absolute w-4 h-4 rounded-full bg-zinc-400/30 animate-smoke-puff" style={{ filter: 'blur(3px)', animationDelay: '0.1s' }} />
+                        <div className="absolute w-5 h-5 rounded-full bg-zinc-600/30 animate-smoke-puff" style={{ filter: 'blur(5px)', animationDelay: '0.15s', top: '-8px' }} />
+                      </div>
+                    )}
+                    
                     {/* Car Neon Image */}
                     <img 
                       src={carNeonLogo} 
