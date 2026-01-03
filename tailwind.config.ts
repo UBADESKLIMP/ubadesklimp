@@ -141,6 +141,18 @@ export default {
 			'headlight-ignite': {
 				'0%, 100%': { opacity: '0.6', transform: 'scale(0.8)' },
 				'50%': { opacity: '1', transform: 'scale(1.2)' }
+			},
+			'headlight-on': {
+				'0%': { opacity: '0', transform: 'scale(0.5)' },
+				'100%': { opacity: '1', transform: 'scale(1)' }
+			},
+			'headlight-beam': {
+				'0%': { opacity: '0', transform: 'scaleX(0)' },
+				'100%': { opacity: '1', transform: 'scaleX(1)' }
+			},
+			'text-illuminate': {
+				'0%': { filter: 'drop-shadow(0 0 0px rgba(30, 144, 255, 0))' },
+				'100%': { filter: 'drop-shadow(0 0 20px rgba(30, 144, 255, 0.8)) drop-shadow(0 0 40px rgba(30, 144, 255, 0.4))' }
 			}
 		},
 		animation: {
@@ -157,7 +169,10 @@ export default {
 			'tire-smoke': 'tire-smoke 0.7s ease-out forwards',
 			'headlight-trail': 'headlight-trail 0.6s ease-out forwards',
 			'power-shake': 'power-shake 0.3s ease-in-out',
-			'headlight-ignite': 'headlight-ignite 0.1s ease-in-out infinite'
+			'headlight-ignite': 'headlight-ignite 0.1s ease-in-out infinite',
+			'headlight-on': 'headlight-on 0.3s ease-out forwards',
+			'headlight-beam': 'headlight-beam 0.4s ease-out forwards',
+			'text-illuminate': 'text-illuminate 0.4s ease-out forwards'
 		}
 		}
 	},

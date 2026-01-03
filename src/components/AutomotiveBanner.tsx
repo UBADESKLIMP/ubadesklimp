@@ -139,6 +139,43 @@ const AutomotiveBanner = () => {
                       </div>
                     )}
                     
+                    {/* Headlight Glow on hover */}
+                    {isHovered && !isShaking && !isExiting && (
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-10">
+                        <div 
+                          className="absolute w-6 h-3 rounded-full animate-headlight-on"
+                          style={{
+                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.9), transparent 70%)',
+                            boxShadow: '0 0 20px rgba(30, 144, 255, 1), 0 0 40px rgba(30, 144, 255, 0.8), 0 0 60px rgba(30, 144, 255, 0.5)',
+                            top: '0px'
+                          }}
+                        />
+                        <div 
+                          className="absolute w-5 h-2 rounded-full animate-headlight-on"
+                          style={{
+                            background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.8), transparent 70%)',
+                            boxShadow: '0 0 15px rgba(30, 144, 255, 0.9), 0 0 30px rgba(30, 144, 255, 0.6), 0 0 50px rgba(30, 144, 255, 0.4)',
+                            top: '10px',
+                            animationDelay: '0.05s'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Light beam from headlights to text */}
+                    {isHovered && !isShaking && !isExiting && (
+                      <div className="absolute top-[35%] right-[-50%] pointer-events-none z-5 animate-headlight-beam origin-left">
+                        <div 
+                          className="w-40 h-20"
+                          style={{
+                            background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.4), rgba(30, 144, 255, 0.1) 50%, transparent)',
+                            clipPath: 'polygon(0% 40%, 0% 60%, 100% 100%, 100% 0%)',
+                            filter: 'blur(8px)'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     {/* Headlight Glow during shake */}
                     {isShaking && (
                       <div className="absolute top-[42%] right-[18%] pointer-events-none z-10">
@@ -204,8 +241,17 @@ const AutomotiveBanner = () => {
                     }`}
                     style={{ animationDelay: isExiting ? '0s' : '0.2s' }}
                   >
-                    {/* Bicolor logo */}
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
+                    {/* Bicolor logo with illumination effect */}
+                    <h2 
+                      className={`text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight transition-all duration-300 ${
+                        isHovered && !isShaking && !isExiting ? 'animate-text-illuminate' : ''
+                      }`}
+                      style={{
+                        filter: isHovered && !isShaking && !isExiting 
+                          ? 'drop-shadow(0 0 20px rgba(30, 144, 255, 0.8)) drop-shadow(0 0 40px rgba(30, 144, 255, 0.4))'
+                          : 'none'
+                      }}
+                    >
                       <span className="text-white">Ubadesk</span>
                       <span className="text-[#1e90ff]">Car</span>
                     </h2>
