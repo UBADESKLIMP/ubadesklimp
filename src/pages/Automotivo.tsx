@@ -150,7 +150,31 @@ const Automotivo = () => {
             }}
           />
           
-          {/* Floating Dust/Sparkle Particles */}
+          {/* Fog/Mist Effect at the base */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none"
+            style={{ 
+              background: 'linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(20,25,40,0.4) 30%, rgba(40,60,100,0.15) 60%, transparent 100%)',
+            }}
+          />
+          {/* Fog layer 2 - softer blue tint */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[25%] pointer-events-none"
+            style={{ 
+              background: 'linear-gradient(to top, rgba(30,50,80,0.3) 0%, rgba(60,100,150,0.1) 50%, transparent 100%)',
+              filter: 'blur(20px)',
+            }}
+          />
+          {/* Fog wisps - animated subtle movement */}
+          <div 
+            className="absolute bottom-[5%] left-0 right-0 h-[15%] pointer-events-none opacity-40"
+            style={{ 
+              background: 'radial-gradient(ellipse 80% 100% at 30% 100%, rgba(80,120,180,0.25), transparent 50%), radial-gradient(ellipse 60% 80% at 70% 100%, rgba(100,140,200,0.2), transparent 50%)',
+              filter: 'blur(30px)',
+              animation: 'floatParticle 12s ease-in-out infinite alternate',
+            }}
+          />
+
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {particles.map((p) => (
               <div
