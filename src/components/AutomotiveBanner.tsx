@@ -119,28 +119,18 @@ const AutomotiveBanner = () => {
                       </div>
                     )}
 
-                    {/* Headlight Trails - rastro de faróis */}
-                    {isExiting && (
-                      <div className="absolute top-[35%] right-[0%] pointer-events-none">
-                        <div
-                          className="absolute h-[2px] rounded-full animate-headlight-trail"
-                          style={{
-                            background: "linear-gradient(90deg, rgba(30, 144, 255, 0.9), transparent)",
-                            boxShadow: "0 0 12px rgba(30, 144, 255, 0.8), 0 0 24px rgba(30, 144, 255, 0.4)",
-                            top: "-4px",
-                          }}
-                        />
-                        <div
-                          className="absolute h-[2px] rounded-full animate-headlight-trail"
-                          style={{
-                            background: "linear-gradient(90deg, rgba(30, 144, 255, 0.8), transparent)",
-                            boxShadow: "0 0 10px rgba(30, 144, 255, 0.6), 0 0 20px rgba(30, 144, 255, 0.3)",
-                            top: "12px",
-                            animationDelay: "0.03s",
-                          }}
-                        />
-                      </div>
-                    )}
+                  {/* Headlight Trail - rastro do farol sincronizado com o glow */}
+                  {isExiting && (
+                    <div className="absolute top-[40%] right-[8%] pointer-events-none">
+                      <div
+                        className="absolute h-[2px] rounded-full animate-headlight-trail"
+                        style={{
+                          background: "linear-gradient(90deg, rgba(30, 144, 255, 0.9), transparent)",
+                          boxShadow: "0 0 12px rgba(30, 144, 255, 0.8), 0 0 24px rgba(30, 144, 255, 0.4)",
+                        }}
+                      />
+                    </div>
+                  )}
 
                     {/* Subtle headlight glow - stays within image bounds */}
                     {isHovered && !isShaking && !isExiting && (
