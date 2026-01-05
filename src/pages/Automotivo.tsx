@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Search, X } from 'lucide-react';
 import Header from '@/components/Header';
@@ -18,8 +18,23 @@ const Automotivo = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [parallaxY, setParallaxY] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  const parallaxRef = useRef(0);
+  const targetParallax = useRef(0);
+
+  // Generate floating particles
+  const particles = useMemo(() => 
+    Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      size: Math.random() * 2.5 + 1,
+      left: Math.random() * 100,
+      delay: Math.random() * 8,
+      duration: 6 + Math.random() * 5,
+      opacity: 0.15 + Math.random() * 0.25
+    })), 
+  []);
 
   // Animation trigger on load
   useEffect(() => {
@@ -27,11 +42,27 @@ const Automotivo = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Parallax scroll effect
+  // Smooth parallax with lerp interpolation
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
+    let animationId: number;
+    
+    const handleScroll = () => {
+      targetParallax.current = window.scrollY * 0.12;
+    };
+    
+    const animate = () => {
+      parallaxRef.current += (targetParallax.current - parallaxRef.current) * 0.08;
+      setParallaxY(parallaxRef.current);
+      animationId = requestAnimationFrame(animate);
+    };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    animationId = requestAnimationFrame(animate);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationId);
+    };
   }, []);
 
   // Filter only automotive products
@@ -97,6 +128,27 @@ const Automotivo = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(59,130,246,0.04),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.03),transparent_40%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.08),transparent_50%)]" />
+          
+          {/* Floating Dust/Sparkle Particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {particles.map((p) => (
+              <div
+                key={p.id}
+                className="absolute rounded-full"
+                style={{
+                  width: p.size,
+                  height: p.size,
+                  left: `${p.left}%`,
+                  bottom: '25%',
+                  background: 'rgba(140,180,255,0.6)',
+                  boxShadow: '0 0 6px rgba(140,180,255,0.5)',
+                  animation: `floatParticle ${p.duration}s ease-in-out infinite`,
+                  animationDelay: `${p.delay}s`,
+                  opacity: 0
+                }}
+              />
+            ))}
+          </div>
 
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[500px] md:min-h-[600px]">
@@ -180,10 +232,10 @@ const Automotivo = () => {
                   isLoaded ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-10 scale-95'
                 }`}
               >
-                {/* Car Image with Parallax */}
+                {/* Car Image with Smooth Parallax */}
                 <div 
-                  className="relative w-full max-w-lg lg:max-w-none transition-transform duration-100"
-                  style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+                  className="relative w-full max-w-lg lg:max-w-none"
+                  style={{ transform: `translateY(${parallaxY}px)` }}
                 >
                   <img 
                     src={carHeroImage} 
