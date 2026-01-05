@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Car, Search, X } from 'lucide-react';
+import { Car, Search, X } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
+import carHeroImage from '@/assets/carro-automotivo-hero.png';
+import ubadeskCarLogo from '@/assets/ubadesk-car-neon.png';
 
 const Automotivo = () => {
   const { products, loading } = useProducts();
@@ -43,72 +45,116 @@ const Automotivo = () => {
       <Header />
       
       <main className="pt-14 md:pt-16">
-        {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 py-16 md:py-24 overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.2),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.15),transparent_40%)]" />
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl" />
+        {/* Hero Section - Premium Layout */}
+        <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
+          {/* Floor light reflection */}
+          <div 
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] h-32 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse, rgba(30,144,255,0.18), transparent 70%)' }}
+          />
           
-          {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-            backgroundSize: '50px 50px'
-          }} />
+          {/* Subtle ambient gradients */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(30,144,255,0.08),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(30,144,255,0.05),transparent_40%)]" />
 
-          <div className="relative max-w-7xl mx-auto px-4 md:px-8">
-            <Link to="/">
-              <Button variant="ghost" className="text-blue-300 hover:text-white hover:bg-blue-500/20 mb-6">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao Início
-              </Button>
-            </Link>
-            
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-4 rounded-xl bg-blue-500/20 border border-blue-500/30">
-                <Car className="h-10 w-10 text-blue-400" />
-              </div>
-              <span className="text-blue-400 text-sm font-semibold uppercase tracking-wider">
-                Catálogo Exclusivo
-              </span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Linha Automotiva
-              <span className="block text-blue-400">Profissional</span>
-            </h1>
-            
-            <p className="text-slate-300 text-lg md:text-xl max-w-2xl mb-8">
-              Produtos especializados de alta qualidade para o cuidado completo do seu veículo. 
-              Limpeza, proteção e brilho profissional.
-            </p>
-
-            {/* Search */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Buscar produtos automotivos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-10 py-6 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+          <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[500px] md:min-h-[600px]">
+              
+              {/* Left Side - Content */}
+              <div className="py-12 md:py-16 order-2 lg:order-1 text-center lg:text-left">
+                {/* Logo UbadeskCar */}
+                <div className="flex items-center gap-3 mb-8 justify-center lg:justify-start">
+                  <img 
+                    src={ubadeskCarLogo} 
+                    alt="UbadeskCar" 
+                    className="h-12 w-auto"
+                  />
+                  <span className="text-2xl md:text-3xl font-bold">
+                    <span className="text-white">Ubadesk</span>
+                    <span className="text-blue-500">Car</span>
+                  </span>
+                </div>
+                
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight">
+                  Linha Automotiva
+                </h1>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-500 mb-6">
+                  Profissional
+                </h2>
+                
+                {/* Description */}
+                <p className="text-gray-400 text-lg md:text-xl max-w-md mb-8 mx-auto lg:mx-0">
+                  Limpeza, proteção e brilho para quem exige padrão profissional.
+                </p>
+                
+                {/* CTA Button */}
+                <Button 
+                  onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-[0_0_30px_rgba(30,144,255,0.4)]"
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
+                  <Car className="mr-2 h-5 w-5" />
+                  Ver produtos
+                </Button>
+              </div>
+              
+              {/* Right Side - Car */}
+              <div className="relative order-1 lg:order-2 flex items-end justify-center lg:justify-end">
+                {/* Car Image */}
+                <div className="relative w-full max-w-lg lg:max-w-none">
+                  <img 
+                    src={carHeroImage} 
+                    alt="Linha Automotiva Profissional" 
+                    className="w-full h-auto object-contain drop-shadow-2xl"
+                  />
+                  
+                  {/* Car Reflection */}
+                  <div className="absolute top-full left-0 w-full h-24 overflow-hidden pointer-events-none">
+                    <img 
+                      src={carHeroImage} 
+                      alt="" 
+                      className="w-full h-auto opacity-15"
+                      style={{ 
+                        transform: 'scaleY(-1)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)'
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Headlight Glow */}
+                  <div className="absolute top-[45%] left-[10%] w-16 h-6 bg-blue-400/25 blur-xl rounded-full pointer-events-none" />
+                  <div className="absolute top-[47%] left-[12%] w-8 h-3 bg-blue-300/40 blur-lg rounded-full pointer-events-none" />
+                </div>
+              </div>
+              
             </div>
           </div>
         </section>
 
         {/* Products Section */}
-        <section className="py-12 md:py-16 px-4 md:px-8">
+        <section id="products" className="py-12 md:py-16 px-4 md:px-8 bg-background">
           <div className="max-w-7xl mx-auto">
+            {/* Search Bar */}
+            <div className="relative max-w-md mb-8">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar produtos automotivos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-10 py-6"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
@@ -150,7 +196,6 @@ const Automotivo = () => {
                 </p>
                 <Link to="/">
                   <Button variant="outline">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
                     Voltar ao Início
                   </Button>
                 </Link>
