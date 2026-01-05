@@ -70,8 +70,8 @@ const Header = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
       isScrolled 
-        ? 'bg-[#0a1628]/98 backdrop-blur-lg shadow-md border-b border-blue-900/30' 
-        : 'bg-[#0a1628]/95 backdrop-blur-md shadow-soft border-b border-blue-900/20'
+        ? 'bg-[#0a1628]/80 backdrop-blur-lg shadow-md border-b border-blue-900/30' 
+        : 'bg-[#0a1628]/70 backdrop-blur-md shadow-soft border-b border-blue-900/20'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex justify-between items-center transition-all duration-300 ${
@@ -108,7 +108,7 @@ const Header = () => {
               user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-foreground hover:text-primary">
+                    <Button variant="ghost" size="sm" className="text-white hover:text-blue-400">
                       <User className="h-4 w-4 mr-2" />
                       {getDisplayName()}
                     </Button>
