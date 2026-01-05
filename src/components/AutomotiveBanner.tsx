@@ -23,6 +23,7 @@ const AutomotiveBanner = () => {
 
       // Navegação após saída
       setTimeout(() => {
+        window.scrollTo(0, 0);
         navigate("/automotivo");
       }, 500);
     }, 300);
