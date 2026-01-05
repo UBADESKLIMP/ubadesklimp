@@ -73,7 +73,7 @@ const Header = () => {
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
       isScrolled 
         ? isAutomotivoPage 
-          ? 'bg-[#111827]/90 backdrop-blur-md shadow-md border-b border-blue-900/30'
+          ? 'bg-[#111827]/70 backdrop-blur-md shadow-md border-b border-blue-900/30'
           : 'bg-background/98 backdrop-blur-lg shadow-md border-b border-border/80'
         : isAutomotivoPage
           ? 'bg-[#111827] shadow-soft border-b border-blue-900/20'
