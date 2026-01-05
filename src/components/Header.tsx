@@ -73,10 +73,10 @@ const Header = () => {
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
       isScrolled 
         ? isAutomotivoPage 
-          ? 'bg-[#0c1424] backdrop-blur-lg shadow-md border-b border-blue-900/30'
+          ? 'bg-[#0a0a0f] shadow-md border-b border-blue-900/30'
           : 'bg-background/98 backdrop-blur-lg shadow-md border-b border-border/80'
         : isAutomotivoPage
-          ? 'bg-[#0c1424]/95 backdrop-blur-sm shadow-soft border-b border-blue-900/20'
+          ? 'bg-[#0a0a0f] shadow-soft border-b border-blue-900/20'
           : 'bg-background/95 backdrop-blur-md shadow-soft border-b border-border/50'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -182,7 +182,7 @@ const Header = () => {
       <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
         isMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
-        <div className={`px-4 pt-3 pb-4 space-y-1 ${isAutomotivoPage ? 'bg-[#0c1424] border-blue-900/30' : 'bg-background/98 border-border/50'} backdrop-blur-sm border-t shadow-lg`}>
+        <div className={`px-4 pt-3 pb-4 space-y-1 ${isAutomotivoPage ? 'bg-[#0a0a0f] border-blue-900/30' : 'bg-background/98 border-border/50'} backdrop-blur-sm border-t shadow-lg`}>
           {navigation.map((item, index) => (
             <a
               key={item.name}
