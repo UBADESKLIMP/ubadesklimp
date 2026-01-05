@@ -64,38 +64,33 @@ const Automotivo = () => {
         <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
           {/* Showroom Floor - Light line extended across the car */}
           
-          {/* Front light line - extended to full width */}
+          {/* Front light line - subtle sophistication detail */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[98%] h-[2px] pointer-events-none"
+            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[55%] h-[1px] pointer-events-none"
             style={{ 
-              background: 'linear-gradient(90deg, transparent 2%, rgba(100,160,255,0.15) 10%, rgba(140,190,255,0.5) 35%, rgba(180,220,255,0.9) 50%, rgba(140,190,255,0.5) 65%, rgba(100,160,255,0.15) 90%, transparent 98%)',
-              boxShadow: '0 0 25px 4px rgba(100,160,255,0.5), 0 0 50px 12px rgba(80,140,255,0.3)'
+              background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.25) 30%, rgba(180,210,255,0.35) 50%, rgba(140,180,255,0.25) 70%, transparent 95%)',
+              boxShadow: '0 0 8px 1px rgba(100,160,255,0.12)'
             }}
           />
-          {/* Front line glow spread */}
+          {/* Front line subtle glow */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[95%] h-20 blur-2xl pointer-events-none"
-            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.2), rgba(80,140,255,0.08), transparent)' }}
+            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[50%] h-6 blur-xl pointer-events-none"
+            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.06), transparent)' }}
           />
           
-          {/* Back light line - behind the car for depth */}
+          {/* Back light line - subtle depth accent */}
           <div 
-            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[80%] h-[1.5px] pointer-events-none"
+            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[45%] h-[1px] pointer-events-none"
             style={{ 
-              background: 'linear-gradient(90deg, transparent 5%, rgba(100,160,255,0.1) 20%, rgba(130,180,255,0.3) 40%, rgba(160,200,255,0.5) 50%, rgba(130,180,255,0.3) 60%, rgba(100,160,255,0.1) 80%, transparent 95%)',
-              boxShadow: '0 0 15px 2px rgba(100,160,255,0.25), 0 0 30px 5px rgba(80,140,255,0.12)'
+              background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.18) 35%, rgba(160,200,255,0.28) 50%, rgba(140,180,255,0.18) 65%, transparent 90%)',
+              boxShadow: '0 0 6px 1px rgba(100,160,255,0.08)'
             }}
           />
-          {/* Back line subtle glow */}
-          <div 
-            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[75%] h-12 blur-xl pointer-events-none"
-            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.1), transparent)' }}
-          />
           
-          {/* Floor ambient reflection between lines */}
+          {/* Floor ambient reflection - very subtle */}
           <div 
-            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[90%] h-[18%] blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.18), transparent 70%)' }}
+            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] blur-2xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.06), transparent 70%)' }}
           />
           
           {/* Subtle ambient gradients - Premium blue showroom */}
