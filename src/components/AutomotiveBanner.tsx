@@ -142,7 +142,7 @@ const AutomotiveBanner = () => {
                     {/* Subtle headlight glow - stays within image bounds */}
                     {isHovered && !isShaking && !isExiting && (
                       <div 
-                        className="absolute top-[38%] right-[28%] w-6 h-3 pointer-events-none z-10 animate-headlight-on"
+                        className="absolute top-[38%] right-[18%] w-6 h-3 pointer-events-none z-10 animate-headlight-on"
                         style={{
                           background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.7), transparent 80%)',
                           filter: 'blur(4px)',
