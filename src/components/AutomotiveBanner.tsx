@@ -164,7 +164,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Light beam from headlights to text */}
                     {isHovered && !isShaking && !isExiting && (
-                      <div className="absolute top-[28%] right-[15%] pointer-events-none z-5 translate-x-full">
+                      <div className="absolute top-[24%] right-[15%] pointer-events-none z-5 translate-x-full">
                         <div 
                           className="w-64 h-20 animate-headlight-beam origin-left"
                           style={{
