@@ -64,32 +64,32 @@ const Automotivo = () => {
         <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
           {/* Showroom Floor - Light line extended across the car */}
           
-          {/* Front light line - subtle sophistication detail */}
+          {/* Front light line - subtle sophistication detail with pulse */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[55%] h-[1px] pointer-events-none"
+            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[55%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.25) 30%, rgba(180,210,255,0.35) 50%, rgba(140,180,255,0.25) 70%, transparent 95%)',
               boxShadow: '0 0 8px 1px rgba(100,160,255,0.12)'
             }}
           />
-          {/* Front line subtle glow */}
+          {/* Front line subtle glow with pulse */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[50%] h-6 blur-xl pointer-events-none"
+            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[50%] h-6 blur-xl pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.06), transparent)' }}
           />
           
-          {/* Back light line - subtle depth accent */}
+          {/* Back light line - subtle depth accent with delayed pulse */}
           <div 
-            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[45%] h-[1px] pointer-events-none"
+            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[45%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.18) 35%, rgba(160,200,255,0.28) 50%, rgba(140,180,255,0.18) 65%, transparent 90%)',
               boxShadow: '0 0 6px 1px rgba(100,160,255,0.08)'
             }}
           />
           
-          {/* Floor ambient reflection - very subtle */}
+          {/* Floor ambient reflection - very subtle with slow pulse */}
           <div 
-            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] blur-2xl pointer-events-none"
+            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] blur-2xl pointer-events-none animate-[lightPulse_5s_ease-in-out_infinite_1s]"
             style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.06), transparent 70%)' }}
           />
           
