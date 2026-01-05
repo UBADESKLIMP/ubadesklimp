@@ -70,7 +70,7 @@ const AutomotiveBanner = () => {
                 {/* Logo Section */}
                 <div className="flex items-center gap-3 md:gap-4">
                   {/* Car Container with Reflection */}
-                  <div className="relative -translate-y-10">
+                  <div className="relative">
                     {/* Tire Marks - marcas de derrapagem azul neon */}
                     {isExiting && (
                       <div className="absolute bottom-[32%] left-[12%] pointer-events-none">
@@ -203,7 +203,7 @@ const AutomotiveBanner = () => {
                     <img 
                       src={carNeonLogo} 
                       alt="UbadeskCar Logo" 
-                      className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen ${
+                      className={`h-40 md:h-44 lg:h-48 w-auto object-contain mix-blend-screen -my-10 ${
                         isExiting ? 'animate-car-exit' : 'animate-car-enter'
                       }`}
                       style={{ 
