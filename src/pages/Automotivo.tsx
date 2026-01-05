@@ -87,7 +87,7 @@ const Automotivo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background transition-opacity duration-700 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
       <Header />
       
       <main className="pt-14 md:pt-16">
