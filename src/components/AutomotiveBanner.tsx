@@ -141,7 +141,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Headlight Glow on hover */}
                     {isHovered && !isShaking && !isExiting && (
-                      <div className="absolute top-[30%] right-[2%] pointer-events-none z-10">
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-10">
                         <div 
                           className="absolute w-6 h-3 rounded-full animate-headlight-on"
                           style={{
@@ -164,7 +164,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Light beam from headlights to text */}
                     {isHovered && !isShaking && !isExiting && (
-                      <div className="absolute top-[30%] right-[2%] pointer-events-none z-5 translate-x-full">
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-5 translate-x-full">
                         <div 
                           className="w-64 h-20 animate-headlight-beam origin-left"
                           style={{
@@ -178,7 +178,7 @@ const AutomotiveBanner = () => {
                     
                     {/* Headlight Glow during shake */}
                     {isShaking && (
-                      <div className="absolute top-[30%] right-[2%] pointer-events-none z-10">
+                      <div className="absolute top-[42%] right-[18%] pointer-events-none z-10">
                         <div 
                           className="absolute w-6 h-3 rounded-full animate-headlight-ignite"
                           style={{
