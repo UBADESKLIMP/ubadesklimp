@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Cart from './Cart';
 
 const Header = () => {
@@ -13,6 +13,8 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut, loading, isAdmin } = useAuth();
   const { profile } = useProfile();
+  const location = useLocation();
+  const isAutomotivoPage = location.pathname === '/automotivo';
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   // Track scroll position
@@ -70,8 +72,12 @@ const Header = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
       isScrolled 
-        ? 'bg-[#0a1628]/98 backdrop-blur-lg shadow-md border-b border-blue-900/30' 
-        : 'bg-[#0a1628]/95 backdrop-blur-md shadow-soft border-b border-blue-900/20'
+        ? isAutomotivoPage 
+          ? 'bg-[#0a1628]/98 backdrop-blur-lg shadow-md border-b border-blue-900/30'
+          : 'bg-background/98 backdrop-blur-lg shadow-md border-b border-border/80'
+        : isAutomotivoPage
+          ? 'bg-[#0a1628]/95 backdrop-blur-md shadow-soft border-b border-blue-900/20'
+          : 'bg-background/95 backdrop-blur-md shadow-soft border-b border-border/50'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex justify-between items-center transition-all duration-300 ${
@@ -92,7 +98,7 @@ const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                    className="text-white hover:text-blue-400 transition-colors duration-200 font-medium"
+                    className={`${isAutomotivoPage ? 'text-white hover:text-blue-400' : 'text-foreground hover:text-primary'} transition-colors duration-200 font-medium`}
               >
                 {item.name}
               </a>
@@ -108,7 +114,7 @@ const Header = () => {
               user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-white hover:text-blue-400">
+                    <Button variant="ghost" size="sm" className={`${isAutomotivoPage ? 'text-white hover:text-blue-400' : 'text-foreground hover:text-primary'}`}>
                       <User className="h-4 w-4 mr-2" />
                       {getDisplayName()}
                     </Button>
@@ -176,12 +182,12 @@ const Header = () => {
       <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
         isMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
-        <div className="px-4 pt-3 pb-4 space-y-1 bg-[#0a1628]/98 backdrop-blur-sm border-t border-blue-900/30 shadow-lg">
+        <div className={`px-4 pt-3 pb-4 space-y-1 ${isAutomotivoPage ? 'bg-[#0a1628]/98 border-blue-900/30' : 'bg-background/98 border-border/50'} backdrop-blur-sm border-t shadow-lg`}>
           {navigation.map((item, index) => (
             <a
               key={item.name}
               href={item.href}
-              className="block px-4 py-3 text-white hover:text-blue-400 hover:bg-white/5 rounded-lg transition-all duration-200 transform hover:translate-x-1"
+              className={`block px-4 py-3 ${isAutomotivoPage ? 'text-white hover:text-blue-400 hover:bg-white/5' : 'text-foreground hover:text-primary hover:bg-muted'} rounded-lg transition-all duration-200 transform hover:translate-x-1`}
               style={{ transitionDelay: `${index * 50}ms` }}
               onClick={() => setIsMenuOpen(false)}
             >
