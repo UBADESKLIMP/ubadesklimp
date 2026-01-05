@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Search, X } from 'lucide-react';
 import Header from '@/components/Header';
@@ -11,13 +11,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import carHeroImage from '@/assets/carro-automotivo-hero.png';
-import ubadeskCarLogo from '@/assets/ubadesk-car-neon.png';
+import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
 const Automotivo = () => {
   const { products, loading } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Filter only automotive products
   const automotiveProducts = products.filter(
@@ -47,29 +55,53 @@ const Automotivo = () => {
       <main className="pt-14 md:pt-16">
         {/* Hero Section - Premium Layout */}
         <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
-          {/* Floor light reflection */}
+          {/* Intense Floor light reflection - 3 layers */}
           <div 
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] h-32 blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse, rgba(30,144,255,0.18), transparent 70%)' }}
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-40 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(30,144,255,0.35), transparent 70%)' }}
+          />
+          <div 
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-24 blur-2xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(30,144,255,0.25), transparent 60%)' }}
+          />
+          <div 
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-2 pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(30,144,255,0.5), rgba(30,144,255,0.8), rgba(30,144,255,0.5), transparent)' }}
           />
           
-          {/* Subtle ambient gradients */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(30,144,255,0.08),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(30,144,255,0.05),transparent_40%)]" />
+          {/* Stronger ambient gradients */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(30,144,255,0.12),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(30,144,255,0.08),transparent_40%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(30,144,255,0.15),transparent_50%)]" />
 
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[500px] md:min-h-[600px]">
               
               {/* Left Side - Content */}
               <div className="py-12 md:py-16 order-2 lg:order-1 text-center lg:text-left">
-                {/* Logo UbadeskCar */}
-                <div className="flex items-center gap-3 mb-8 justify-center lg:justify-start">
-                  <img 
-                    src={ubadeskCarLogo} 
-                    alt="UbadeskCar" 
-                    className="h-12 w-auto"
-                  />
-                  <span className="text-2xl md:text-3xl font-bold">
+                {/* Logo UbadeskCar - With neon car and glow */}
+                <div className="flex items-center gap-4 mb-8 justify-center lg:justify-start">
+                  <div className="relative">
+                    <img 
+                      src={carNeonLogo} 
+                      alt="UbadeskCar" 
+                      className="h-28 md:h-32 lg:h-36 w-auto drop-shadow-[0_0_25px_rgba(30,144,255,0.6)]"
+                    />
+                    {/* Logo reflection */}
+                    <div className="absolute top-full left-0 w-full h-12 overflow-hidden pointer-events-none opacity-30">
+                      <img 
+                        src={carNeonLogo} 
+                        alt="" 
+                        className="w-full h-auto"
+                        style={{ 
+                          transform: 'scaleY(-1)',
+                          maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)',
+                          WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-3xl md:text-4xl font-bold drop-shadow-[0_0_10px_rgba(30,144,255,0.4)]">
                     <span className="text-white">Ubadesk</span>
                     <span className="text-blue-500">Car</span>
                   </span>
@@ -98,33 +130,39 @@ const Automotivo = () => {
                 </Button>
               </div>
               
-              {/* Right Side - Car */}
+              {/* Right Side - Car with Parallax */}
               <div className="relative order-1 lg:order-2 flex items-end justify-center lg:justify-end">
-                {/* Car Image */}
-                <div className="relative w-full max-w-lg lg:max-w-none">
+                {/* Car Image with Parallax */}
+                <div 
+                  className="relative w-full max-w-lg lg:max-w-none transition-transform duration-100"
+                  style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+                >
                   <img 
                     src={carHeroImage} 
                     alt="Linha Automotiva Profissional" 
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
                   
-                  {/* Car Reflection */}
-                  <div className="absolute top-full left-0 w-full h-24 overflow-hidden pointer-events-none">
+                  {/* Car Reflection - More intense */}
+                  <div className="absolute top-full left-0 w-full h-40 overflow-hidden pointer-events-none">
                     <img 
                       src={carHeroImage} 
                       alt="" 
-                      className="w-full h-auto opacity-15"
+                      className="w-full h-auto opacity-25"
                       style={{ 
                         transform: 'scaleY(-1)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)'
+                        filter: 'blur(1px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)'
                       }}
                     />
                   </div>
                   
-                  {/* Headlight Glow */}
-                  <div className="absolute top-[45%] left-[10%] w-16 h-6 bg-blue-400/25 blur-xl rounded-full pointer-events-none" />
-                  <div className="absolute top-[47%] left-[12%] w-8 h-3 bg-blue-300/40 blur-lg rounded-full pointer-events-none" />
+                  {/* Headlight Glow - 4 layers of intensity */}
+                  <div className="absolute top-[45%] left-[8%] w-24 h-10 bg-blue-400/30 blur-2xl rounded-full pointer-events-none" />
+                  <div className="absolute top-[45%] left-[10%] w-16 h-6 bg-blue-400/40 blur-xl rounded-full pointer-events-none" />
+                  <div className="absolute top-[46%] left-[12%] w-8 h-3 bg-blue-300/60 blur-lg rounded-full pointer-events-none" />
+                  <div className="absolute top-[47%] left-[13%] w-3 h-2 bg-blue-200/70 blur-md rounded-full pointer-events-none" />
                 </div>
               </div>
               

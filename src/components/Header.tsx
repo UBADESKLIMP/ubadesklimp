@@ -92,7 +92,11 @@ const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                className={`transition-colors duration-200 font-medium ${
+                  isScrolled 
+                    ? 'text-blue-500 hover:text-blue-400' 
+                    : 'text-white hover:text-blue-400'
+                }`}
               >
                 {item.name}
               </a>
@@ -181,7 +185,11 @@ const Header = () => {
             <a
               key={item.name}
               href={item.href}
-              className="block px-4 py-3 text-foreground hover:text-primary hover:bg-accent/50 rounded-lg transition-all duration-200 transform hover:translate-x-1"
+              className={`block px-4 py-3 hover:bg-accent/50 rounded-lg transition-all duration-200 transform hover:translate-x-1 ${
+                isScrolled 
+                  ? 'text-blue-500 hover:text-blue-400' 
+                  : 'text-white hover:text-blue-400'
+              }`}
               style={{ transitionDelay: `${index * 50}ms` }}
               onClick={() => setIsMenuOpen(false)}
             >
