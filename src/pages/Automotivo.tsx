@@ -57,9 +57,9 @@ const Automotivo = () => {
         <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
           {/* Showroom Floor - Two Realistic Light Lines */}
           
-          {/* Front light line (closer to viewer) */}
+          {/* Front light line (closer to viewer - aligned with front wheels) */}
           <div 
-            className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[90%] h-[2px] pointer-events-none"
+            className="absolute bottom-[22%] left-1/2 -translate-x-1/2 w-[90%] h-[2px] pointer-events-none"
             style={{ 
               background: 'linear-gradient(90deg, transparent 5%, rgba(120,180,255,0.15) 20%, rgba(150,200,255,0.5) 40%, rgba(180,220,255,0.8) 50%, rgba(150,200,255,0.5) 60%, rgba(120,180,255,0.15) 80%, transparent 95%)',
               boxShadow: '0 0 20px 3px rgba(100,160,255,0.4), 0 0 40px 8px rgba(80,140,255,0.2), 0 0 60px 12px rgba(60,120,255,0.1)'
@@ -67,13 +67,13 @@ const Automotivo = () => {
           />
           {/* Front line glow spread */}
           <div 
-            className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[85%] h-16 blur-xl pointer-events-none"
+            className="absolute bottom-[22%] left-1/2 -translate-x-1/2 w-[85%] h-16 blur-xl pointer-events-none"
             style={{ background: 'linear-gradient(90deg, transparent, rgba(100,160,255,0.15), rgba(120,180,255,0.25), rgba(100,160,255,0.15), transparent)' }}
           />
           
-          {/* Back light line (further from viewer, under the car) */}
+          {/* Back light line (aligned with rear wheels) */}
           <div 
-            className="absolute bottom-[35%] left-1/2 -translate-x-1/2 w-[75%] h-[1.5px] pointer-events-none"
+            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[75%] h-[1.5px] pointer-events-none"
             style={{ 
               background: 'linear-gradient(90deg, transparent 10%, rgba(100,160,255,0.1) 25%, rgba(130,190,255,0.35) 45%, rgba(160,210,255,0.5) 50%, rgba(130,190,255,0.35) 55%, rgba(100,160,255,0.1) 75%, transparent 90%)',
               boxShadow: '0 0 15px 2px rgba(100,160,255,0.25), 0 0 30px 5px rgba(80,140,255,0.12)'
@@ -81,13 +81,13 @@ const Automotivo = () => {
           />
           {/* Back line glow spread */}
           <div 
-            className="absolute bottom-[35%] left-1/2 -translate-x-1/2 w-[70%] h-12 blur-xl pointer-events-none"
+            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[70%] h-12 blur-xl pointer-events-none"
             style={{ background: 'linear-gradient(90deg, transparent, rgba(100,160,255,0.08), rgba(120,180,255,0.15), rgba(100,160,255,0.08), transparent)' }}
           />
           
           {/* Floor ambient reflection between lines */}
           <div 
-            className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[80%] h-[20%] blur-2xl pointer-events-none opacity-60"
+            className="absolute bottom-[22%] left-1/2 -translate-x-1/2 w-[80%] h-[8%] blur-2xl pointer-events-none opacity-60"
             style={{ background: 'radial-gradient(ellipse 100% 50% at center, rgba(80,140,220,0.2), transparent 70%)' }}
           />
           
