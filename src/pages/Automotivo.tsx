@@ -55,24 +55,24 @@ const Automotivo = () => {
       <main className="pt-14 md:pt-16">
         {/* Hero Section - Premium Layout */}
         <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
-          {/* Floor light reflection - Showroom Premium */}
+          {/* Floor light reflection - Showroom Premium Blue */}
           <div 
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-48 blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(148,163,184,0.25), transparent 70%)' }}
+            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(59,130,246,0.3), transparent 70%)' }}
           />
           <div 
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-32 blur-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(148,163,184,0.2), transparent 60%)' }}
+            style={{ background: 'radial-gradient(ellipse at center bottom, rgba(59,130,246,0.25), transparent 60%)' }}
           />
           <div 
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-1 pointer-events-none"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.4), rgba(148,163,184,0.6), rgba(148,163,184,0.4), transparent)' }}
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(59,130,246,0.7), rgba(59,130,246,0.5), transparent)' }}
           />
           
-          {/* Subtle ambient gradients - Premium showroom */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(148,163,184,0.08),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(148,163,184,0.05),transparent_40%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(148,163,184,0.12),transparent_50%)]" />
+          {/* Subtle ambient gradients - Premium blue showroom */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(59,130,246,0.06),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.04),transparent_40%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.1),transparent_50%)]" />
 
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[500px] md:min-h-[600px]">
