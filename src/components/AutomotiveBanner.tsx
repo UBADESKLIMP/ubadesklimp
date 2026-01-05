@@ -139,15 +139,26 @@ const AutomotiveBanner = () => {
                       </div>
                     )}
                     
+                    {/* Subtle headlight glow - stays within image bounds */}
+                    {isHovered && !isShaking && !isExiting && (
+                      <div 
+                        className="absolute top-[40%] right-[16%] w-4 h-2 pointer-events-none z-10 animate-headlight-on"
+                        style={{
+                          background: 'radial-gradient(ellipse, rgba(30, 144, 255, 0.7), transparent 80%)',
+                          filter: 'blur(4px)',
+                          mixBlendMode: 'screen'
+                        }}
+                      />
+                    )}
                     
-                    {/* Light beam from headlights to text */}
+                    {/* Light beam from headlights to text - more tapered */}
                     {isHovered && !isShaking && !isExiting && (
                       <div className="absolute top-[14%] right-[15%] pointer-events-none z-5 translate-x-full">
                         <div 
                           className="w-64 h-20 animate-headlight-beam origin-left"
                           style={{
                             background: 'linear-gradient(90deg, rgba(30, 144, 255, 0.45), rgba(30, 144, 255, 0.16) 55%, transparent)',
-                            clipPath: 'polygon(0% 42%, 0% 58%, 100% 100%, 100% 0%)',
+                            clipPath: 'polygon(0% 48%, 0% 52%, 100% 100%, 100% 0%)',
                             filter: 'blur(10px)'
                           }}
                         />
