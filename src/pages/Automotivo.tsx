@@ -129,6 +129,27 @@ const Automotivo = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.03),transparent_40%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.08),transparent_50%)]" />
           
+          {/* Dynamic Spotlight that follows the car */}
+          <div 
+            className="absolute right-[10%] lg:right-[15%] w-[400px] md:w-[500px] lg:w-[600px] h-[400px] md:h-[500px] lg:h-[600px] pointer-events-none"
+            style={{ 
+              top: `calc(20% + ${parallaxY * 0.5}px)`,
+              background: 'radial-gradient(ellipse 60% 50% at center, rgba(59,130,246,0.12), rgba(100,160,255,0.06) 40%, transparent 70%)',
+              filter: 'blur(40px)',
+              transition: 'none'
+            }}
+          />
+          {/* Secondary spotlight glow */}
+          <div 
+            className="absolute right-[15%] lg:right-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] pointer-events-none"
+            style={{ 
+              top: `calc(25% + ${parallaxY * 0.3}px)`,
+              background: 'radial-gradient(circle at center, rgba(140,180,255,0.15), transparent 60%)',
+              filter: 'blur(60px)',
+              transition: 'none'
+            }}
+          />
+          
           {/* Floating Dust/Sparkle Particles */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {particles.map((p) => (
