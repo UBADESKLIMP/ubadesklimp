@@ -53,80 +53,69 @@ export const useProducts = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Buscar produtos
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .order('priority', { ascending: false })
-        .order('priority_order', { ascending: true })
-        .order('created_at', { ascending: false });
+      // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
+      const [productsResult, variationsResult, fragrancesResult] = await Promise.all([
+        supabase
+          .from('products')
+          .select('*')
+          .order('priority', { ascending: false })
+          .order('priority_order', { ascending: true })
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('product_variations')
+          .select('*')
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('product_fragrances')
+          .select('*')
+          .order('order_index', { ascending: true })
+      ]);
 
-      if (productsError) throw productsError;
+      if (productsResult.error) throw productsResult.error;
 
-      // Para cada produto, buscar suas variações se houver
-      const productsWithVariations: ProductWithVariations[] = await Promise.all(
-        (productsData || []).map(async (product) => {
-          let variations: any[] = [];
-          
-          if (product.has_variations) {
-            const { data: variationsData, error: variationsError } = await supabase
-              .from('product_variations')
-              .select('*')
-              .eq('product_id', product.id)
-              .order('created_at', { ascending: true });
-            
-            if (!variationsError) {
-              variations = variationsData || [];
-            }
-          }
+      const productsData = productsResult.data || [];
+      const allVariations = variationsResult.data || [];
+      const allFragrances = fragrancesResult.data || [];
 
-          // Carregar fragrâncias do banco de dados
-          let fragrances: any[] = [];
-          if (product.has_fragrances) {
-            const { data: fragrancesData, error: fragrancesError } = await supabase
-              .from('product_fragrances')
-              .select('*')
-              .eq('product_id', product.id)
-              .order('order_index', { ascending: true });
-            
-            if (!fragrancesError && fragrancesData) {
-              fragrances = fragrancesData.map(item => ({
-                id: item.id,
-                name: item.name,
-                description: item.description || undefined,
-                image_url: item.image_url || undefined,
-                available_literages: item.available_literages || [],
-                order: item.order_index
-              }));
-            }
-          }
+      // Associar variações e fragrâncias aos produtos no cliente
+      const productsWithVariations: ProductWithVariations[] = productsData.map((product) => {
+        const variations = allVariations.filter(v => v.product_id === product.id);
+        const fragrances = allFragrances
+          .filter(f => f.product_id === product.id)
+          .map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description || undefined,
+            image_url: item.image_url || undefined,
+            available_literages: item.available_literages || [],
+            order: item.order_index
+          }));
 
-          return {
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            category: product.category,
-            image_url: product.image_url,
-            priority: product.priority,
-            priority_order: product.priority_order || 0,
-            has_variations: product.has_variations || false,
-            has_fragrances: fragrances.length > 0,
-            highlight_type: (product as any).highlight_type || null,
-            material: product.material,
-            validity: product.validity,
-            specifications: product.specifications,
-            out_of_stock: product.out_of_stock || false,
-            literage_single: product.literage_single,
-            size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
-            price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
-            created_at: product.created_at,
-            updated_at: product.updated_at,
-            variations: variations,
-            fragrances: fragrances,
-            price: product.price
-          };
-        })
-      );
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          category: product.category,
+          image_url: product.image_url,
+          priority: product.priority,
+          priority_order: product.priority_order || 0,
+          has_variations: product.has_variations || false,
+          has_fragrances: fragrances.length > 0,
+          highlight_type: (product as any).highlight_type || null,
+          material: product.material,
+          validity: product.validity,
+          specifications: product.specifications,
+          out_of_stock: product.out_of_stock || false,
+          literage_single: product.literage_single,
+          size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
+          price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
+          created_at: product.created_at,
+          updated_at: product.updated_at,
+          variations: variations,
+          fragrances: fragrances,
+          price: product.price
+        };
+      });
 
       setProducts(productsWithVariations);
     } catch (error) {

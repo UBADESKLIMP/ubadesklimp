@@ -127,7 +127,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         category: product.category,
         variation: selectedVariation,
         fragrance: selectedFragrance,
-        productId: product.id
+        productId: product.id,
+        image_url: getCurrentImage() || undefined
       });
     } else if (product.price) {
       // Usar preço base se não tem variações OU se tem has_variations mas sem variações cadastradas
@@ -140,7 +141,8 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
         }).format(product.price),
         category: product.category,
         fragrance: selectedFragrance,
-        productId: product.id
+        productId: product.id,
+        image_url: getCurrentImage() || undefined
       });
     }
 
