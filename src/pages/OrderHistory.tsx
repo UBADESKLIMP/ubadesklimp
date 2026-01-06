@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShoppingBag, Calendar, Phone, ArrowLeft, Package, Clock, CheckCircle } from 'lucide-react';
+import { ShoppingBag, Calendar, Phone, ArrowLeft, Package, Clock, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const ORDERS_PER_PAGE = 5;
 
 interface Order {
   id: string;
@@ -27,17 +29,36 @@ const OrderHistory = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const totalPages = Math.ceil(totalCount / ORDERS_PER_PAGE);
 
   useEffect(() => {
     const fetchOrders = async () => {
       if (!user) return;
 
+      setLoading(true);
       try {
+        // Primeiro, buscar contagem total
+        const { count, error: countError } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if (countError) throw countError;
+        setTotalCount(count || 0);
+
+        // Buscar pedidos da página atual
+        const from = (currentPage - 1) * ORDERS_PER_PAGE;
+        const to = from + ORDERS_PER_PAGE - 1;
+
         const { data, error } = await supabase
           .from('orders')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .range(from, to);
 
         if (error) throw error;
         setOrders((data || []) as Order[]);
@@ -49,7 +70,7 @@ const OrderHistory = () => {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, currentPage]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -96,6 +117,13 @@ const OrderHistory = () => {
     window.open(`https://wa.me/551238332434?text=${message}`, '_blank');
   };
 
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
@@ -115,11 +143,14 @@ const OrderHistory = () => {
           </Link>
           <h1 className="text-3xl font-heading text-gradient mb-2">Histórico de Pedidos</h1>
           <p className="text-muted-foreground">
-            Acompanhe todos os seus pedidos realizados.
+            {totalCount > 0 
+              ? `Você tem ${totalCount} pedido${totalCount > 1 ? 's' : ''} registrado${totalCount > 1 ? 's' : ''}.`
+              : 'Acompanhe todos os seus pedidos realizados.'
+            }
           </p>
         </div>
 
-        {orders.length === 0 ? (
+        {totalCount === 0 ? (
           <Card className="shadow-elegant">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <ShoppingBag className="h-16 w-16 text-muted-foreground mb-4" />
@@ -227,6 +258,54 @@ const OrderHistory = () => {
                 </CardContent>
               </Card>
             ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => goToPage(page)}
+                      className="w-9 h-9 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Page info */}
+            {totalPages > 1 && (
+              <p className="text-center text-sm text-muted-foreground">
+                Mostrando {((currentPage - 1) * ORDERS_PER_PAGE) + 1} - {Math.min(currentPage * ORDERS_PER_PAGE, totalCount)} de {totalCount} pedidos
+              </p>
+            )}
           </div>
         )}
       </div>
