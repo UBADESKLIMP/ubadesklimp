@@ -194,16 +194,64 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   }
 };
 
+// Validar se um item do carrinho tem todos os campos obrigatórios
+const isValidCartItem = (item: unknown): item is CartItem => {
+  if (!item || typeof item !== 'object') return false;
+  
+  const obj = item as Record<string, unknown>;
+  
+  // Campos obrigatórios
+  if (typeof obj.id !== 'string' || !obj.id.trim()) return false;
+  if (typeof obj.name !== 'string' || !obj.name.trim()) return false;
+  if (typeof obj.category !== 'string' || !obj.category.trim()) return false;
+  if (typeof obj.quantity !== 'number' || obj.quantity < 1 || !Number.isFinite(obj.quantity)) return false;
+  
+  // Preço pode ser number (novo) ou string (antigo) - ambos são válidos
+  if (typeof obj.price !== 'number' && typeof obj.price !== 'string') return false;
+  if (typeof obj.price === 'number' && (!Number.isFinite(obj.price) || obj.price < 0)) return false;
+  if (typeof obj.price === 'string' && !obj.price.trim()) return false;
+  
+  return true;
+};
+
+// Validar e limpar estado do carrinho
+const validateCartState = (data: unknown): CartState => {
+  const defaultState: CartState = { items: [], total: 0 };
+  
+  if (!data || typeof data !== 'object') return defaultState;
+  
+  const obj = data as Record<string, unknown>;
+  
+  if (!Array.isArray(obj.items)) return defaultState;
+  
+  // Filtrar apenas itens válidos
+  const validItems = obj.items.filter(isValidCartItem);
+  
+  // Log se algum item foi removido
+  const removedCount = obj.items.length - validItems.length;
+  if (removedCount > 0) {
+    console.warn(`Carrinho: ${removedCount} item(s) inválido(s) removido(s) do localStorage`);
+  }
+  
+  return {
+    items: validItems,
+    total: typeof obj.total === 'number' ? obj.total : 0
+  };
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  // Inicializar estado do localStorage
+  // Inicializar estado do localStorage com validação
   const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 }, (initial) => {
     try {
       const savedCart = localStorage.getItem('ubadesk_cart');
       if (savedCart) {
-        return JSON.parse(savedCart);
+        const parsed = JSON.parse(savedCart);
+        return validateCartState(parsed);
       }
     } catch (error) {
       console.error('Erro ao carregar carrinho:', error);
+      // Limpar dados corrompidos
+      localStorage.removeItem('ubadesk_cart');
     }
     return initial;
   });
