@@ -63,14 +63,15 @@ const OrdersManager = () => {
     }
   };
 
-  const formatPrice = (amount: number | string) => {
-    // Handle string prices that are already formatted
-    if (typeof amount === 'string') {
-      if (amount.includes('R$')) return amount;
-      const parsed = parseFloat(amount.replace(',', '.'));
-      if (isNaN(parsed)) return 'R$ 0,00';
-      amount = parsed;
-    }
+  const parsePrice = (price: number | string): number => {
+    if (typeof price === 'number') return price;
+    // Remove "R$", espaços, pontos de milhar e troca vírgula por ponto
+    const cleaned = price.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.').trim();
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const formatPrice = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return 'R$ 0,00';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -282,10 +283,10 @@ const OrdersManager = () => {
                                           </div>
                                           <div className="text-right">
                                             <p className="font-semibold">
-                                              {formatPrice(item.price * item.quantity)}
+                                              {formatPrice(parsePrice(item.price) * item.quantity)}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                              {item.quantity}x {formatPrice(item.price)}
+                                              {item.quantity}x {formatPrice(parsePrice(item.price))}
                                             </p>
                                           </div>
                                         </div>
