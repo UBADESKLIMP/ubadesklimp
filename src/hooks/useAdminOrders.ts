@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type OrderStatus = 'pending' | 'confirmed' | 'delivered';
+export type OrderStatus = 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 
 export interface Order {
   id: string;
