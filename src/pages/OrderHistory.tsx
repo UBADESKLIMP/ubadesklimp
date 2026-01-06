@@ -69,6 +69,21 @@ const OrderHistory = () => {
     );
   };
 
+  const parsePrice = (price: any): number => {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') {
+      const numericPrice = parseFloat(
+        price
+          .replace('R$', '')
+          .replace(/\s/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      );
+      return isNaN(numericPrice) ? 0 : numericPrice;
+    }
+    return 0;
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -165,10 +180,10 @@ const OrderHistory = () => {
                               </div>
                               <div className="text-right">
                                 <div className="font-medium">
-                                  {item.quantity}x {formatCurrency(item.price)}
+                                  {item.quantity}x {formatCurrency(parsePrice(item.price))}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  = {formatCurrency(item.quantity * item.price)}
+                                  = {formatCurrency(item.quantity * parsePrice(item.price))}
                                 </div>
                               </div>
                             </div>
