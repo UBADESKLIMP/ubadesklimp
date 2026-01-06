@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { ShoppingCart, Info, Star, Zap, Sparkles, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ProductWithVariations } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
@@ -13,9 +15,9 @@ const ProductCard = ({
   product,
   onShowDetails
 }: ProductCardProps) => {
-  const {
-    addToCart
-  } = useCart();
+  const { addToCart } = useCart();
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const handleAddToCart = () => {
     // Verificar se está esgotado
     if ((product as any).out_of_stock) {
@@ -101,9 +103,30 @@ const ProductCard = ({
       <div className="flex flex-col h-full">
         {/* Product Image */}
         <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4 cursor-pointer" onClick={() => onShowDetails(product)}>
-          {getCurrentImage() ? <img src={getCurrentImage()!} alt={product.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-muted to-muted/50">
+          {getCurrentImage() && !imageError ? (
+            <>
+              {/* Skeleton while loading */}
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Skeleton className="w-full h-full rounded-none" />
+                </div>
+              )}
+              <img 
+                src={getCurrentImage()!} 
+                alt={product.name} 
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+                className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-all duration-500 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-muted to-muted/50">
               📦
-            </div>}
+            </div>
+          )}
           
           {/* Dynamic Priority Badge */}
           {(() => {
