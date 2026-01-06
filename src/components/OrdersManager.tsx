@@ -63,7 +63,15 @@ const OrdersManager = () => {
     }
   };
 
-  const formatPrice = (amount: number) => {
+  const formatPrice = (amount: number | string) => {
+    // Handle string prices that are already formatted
+    if (typeof amount === 'string') {
+      if (amount.includes('R$')) return amount;
+      const parsed = parseFloat(amount.replace(',', '.'));
+      if (isNaN(parsed)) return 'R$ 0,00';
+      amount = parsed;
+    }
+    if (typeof amount !== 'number' || isNaN(amount)) return 'R$ 0,00';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
