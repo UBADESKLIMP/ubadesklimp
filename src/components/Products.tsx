@@ -5,12 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
+import { useImagePreload } from '@/hooks/useImagePreload';
 import { ProductWithVariations } from '@/types/product';
 import ProductCard from './ProductCard';
 import ProductDetailModal from './ProductDetailModal';
 
 const Products = () => {
   const { products, loading } = useProducts();
+  
+  // Preload das imagens prioritárias
+  useImagePreload(products, 8);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);

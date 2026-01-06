@@ -9,12 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
+import { useImagePreload } from '@/hooks/useImagePreload';
 import { ProductWithVariations } from '@/types/product';
 import carHeroImage from '@/assets/carro-automotivo-hero.png';
 import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
 const Automotivo = () => {
   const { products, loading } = useProducts();
+  
+  // Preload das imagens prioritárias (produtos automotivos)
+  const automotiveProductsForPreload = products.filter(
+    p => p.category?.toLowerCase() === 'automotivo'
+  );
+  useImagePreload(automotiveProductsForPreload, 8);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
