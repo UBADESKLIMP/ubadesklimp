@@ -105,20 +105,36 @@ const ProductCard = ({
         <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4 cursor-pointer" onClick={() => onShowDetails(product)}>
           {getCurrentImage() && !imageError ? (
             <>
-              {/* Skeleton while loading */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Skeleton className="w-full h-full rounded-none" />
-                </div>
-              )}
+              {/* Blur placeholder while loading */}
+              <div 
+                className={`absolute inset-0 bg-gradient-to-br from-primary/5 via-muted to-primary/10 transition-opacity duration-500 ${
+                  imageLoaded ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
+                {/* Blurred preview using same image */}
+                <img 
+                  src={getCurrentImage()!} 
+                  alt="" 
+                  aria-hidden="true"
+                  className="w-full h-full object-cover scale-110 blur-xl opacity-50"
+                />
+                {/* Shimmer overlay */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  style={{ 
+                    animation: imageLoaded ? 'none' : 'shimmer 1.5s infinite',
+                  }}
+                />
+              </div>
+              {/* Main image */}
               <img 
                 src={getCurrentImage()!} 
                 alt={product.name} 
                 loading="lazy"
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
-                className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-all duration-500 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-all duration-700 ease-out ${
+                  imageLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-sm scale-105'
                 }`}
               />
             </>
