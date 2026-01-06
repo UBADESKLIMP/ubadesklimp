@@ -39,7 +39,7 @@ const Cart = () => {
       const orderPayload = {
         user_id: user?.id || null,
         customer_name: orderData.name,
-        customer_phone: null,
+        customer_phone: profile?.phone || profile?.contact_phone || 'Não informado',
         customer_email: user?.email || null,
         items: JSON.parse(JSON.stringify(state.items)) as any,
         total_amount: getTotalPrice(),
@@ -68,7 +68,8 @@ const Cart = () => {
       const encodedMessage = encodeURIComponent(whatsappMessage);
       const whatsappLink = `https://wa.me/551238332434?text=${encodedMessage}`;
       
-      window.open(whatsappLink, '_blank');
+      // Usar location.href para funcionar no iOS Safari (window.open é bloqueado após async)
+      window.location.href = whatsappLink;
       
       // Limpar carrinho após envio
       clearCart();
