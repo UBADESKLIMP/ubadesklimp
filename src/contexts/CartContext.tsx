@@ -4,7 +4,7 @@ import { ProductVariation, ProductFragrance } from '@/types/product';
 export interface CartItem {
   id: string;
   name: string;
-  price: string;
+  price: number;
   quantity: number;
   category: string;
   variation?: ProductVariation;
@@ -22,7 +22,7 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'UPDATE_VARIATION'; payload: { id: string; variation: ProductVariation; newPrice: string; productId: string } }
+  | { type: 'UPDATE_VARIATION'; payload: { id: string; variation: ProductVariation; newPrice: number; productId: string } }
   | { type: 'UPDATE_FRAGRANCE'; payload: { id: string; fragrance: ProductFragrance; productId: string } }
   | { type: 'CLEAR_CART' };
 
@@ -32,7 +32,7 @@ const CartContext = createContext<{
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateVariation: (id: string, variation: ProductVariation, newPrice: string, productId: string) => void;
+  updateVariation: (id: string, variation: ProductVariation, newPrice: number, productId: string) => void;
   updateFragrance: (id: string, fragrance: ProductFragrance, productId: string) => void;
   clearCart: () => void;
   getWhatsAppLink: () => string;
@@ -229,7 +229,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
   };
 
-  const updateVariation = (id: string, variation: ProductVariation, newPrice: string, productId: string) => {
+  const updateVariation = (id: string, variation: ProductVariation, newPrice: number, productId: string) => {
     dispatch({ type: 'UPDATE_VARIATION', payload: { id, variation, newPrice, productId } });
   };
 
@@ -239,6 +239,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
   };
 
   const getWhatsAppLink = () => {
@@ -256,7 +263,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     state.items.forEach(item => {
       const safeName = sanitize(item.name, 100);
       const safeCategory = sanitize(item.category, 50);
-      const safePrice = sanitize(item.price, 20);
+      const safePrice = formatPrice(item.price);
       const safeQuantity = Math.min(Math.max(1, item.quantity || 1), 9999);
       
       message += `• ${safeName}\n`;

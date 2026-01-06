@@ -120,10 +120,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       addToCart({
         id: productId,
         name: productName,
-        price: new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(selectedVariation.price),
+        price: selectedVariation.price,
         category: product.category,
         variation: selectedVariation,
         fragrance: selectedFragrance,
@@ -135,10 +132,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
       addToCart({
         id: productId,
         name: productName,
-        price: new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(product.price),
+        price: product.price,
         category: product.category,
         fragrance: selectedFragrance,
         productId: product.id,

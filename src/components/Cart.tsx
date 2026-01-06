@@ -94,15 +94,32 @@ const Cart = () => {
     }
   };
 
+  // Helper para converter preços antigos (strings) para números
+  const parsePrice = (price: string | number): number => {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') {
+      const numericPrice = parseFloat(
+        price
+          .replace('R$', '')
+          .replace(/\s/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      );
+      return isNaN(numericPrice) ? 0 : numericPrice;
+    }
+    return 0;
+  };
+
   const generateWhatsAppMessage = (orderData: { name: string; notes?: string }) => {
     let message = '🛒 *Pedido Ubadesklimp*\n\n';
     message += `👤 *Cliente:* ${orderData.name}\n`;
     message += '\n*Produtos:*\n';
     
     state.items.forEach(item => {
+      const itemPrice = parsePrice(item.price);
       message += `• ${item.name}\n`;
       message += `  Categoria: ${item.category}\n`;
-      message += `  Preço: ${item.price}\n`;
+      message += `  Preço: ${formatPrice(itemPrice)}\n`;
       message += `  Quantidade: ${item.quantity}\n`;
       if (item.fragrance) {
         message += `  Fragrância: ${item.fragrance.name}\n`;
@@ -123,17 +140,8 @@ const Cart = () => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      const priceString = item.price.toString();
-      const numericPrice = parseFloat(
-        priceString
-          .replace('R$', '')
-          .replace(/\s/g, '')
-          .replace(/\./g, '')
-          .replace(',', '.')
-      );
-      
-      const validPrice = isNaN(numericPrice) ? 0 : numericPrice;
-      return total + (validPrice * item.quantity);
+      const itemPrice = parsePrice(item.price);
+      return total + (itemPrice * item.quantity);
     }, 0);
   };
 
@@ -228,7 +236,7 @@ const Cart = () => {
     const newVariation = variations.find(v => v.id === variationId);
     
     if (newVariation) {
-      const newPrice = formatPrice(newVariation.price);
+      const newPrice = newVariation.price;
       const newId = `${productId}-${variationId}`;
       const existingItem = state.items.find(item => item.id === newId && item.id !== itemId);
       
@@ -306,7 +314,7 @@ const Cart = () => {
                             <div className="flex-1">
                               <h4 className="font-semibold text-sm">{item.name.split(' - ')[0]}</h4>
                               <p className="text-xs text-muted-foreground">{item.category}</p>
-                              <p className="font-bold text-primary">{item.price}</p>
+                              <p className="font-bold text-primary">{formatPrice(parsePrice(item.price))}</p>
                             </div>
                             <Button
                               variant="ghost"

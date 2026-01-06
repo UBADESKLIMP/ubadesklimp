@@ -41,7 +41,7 @@ const ProductCard = ({
       addToCart({
         id: product.id,
         name: product.name,
-        price: formatPrice(product.price),
+        price: product.price,
         category: product.category,
         productId: product.id,
         image_url: product.image_url || undefined
