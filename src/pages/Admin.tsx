@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
 import BackgroundRemover from '@/components/BackgroundRemover';
+import OrdersManager from '@/components/OrdersManager';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
@@ -155,10 +156,14 @@ const Admin = () => {
 
         {/* Tabs for Products and Categories */}
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="products" className="flex items-center space-x-2">
               <Package className="h-4 w-4" />
               <span>Produtos</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center space-x-2">
+              <ClipboardList className="h-4 w-4" />
+              <span>Pedidos</span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="flex items-center space-x-2">
               <Tags className="h-4 w-4" />
@@ -269,6 +274,11 @@ const Admin = () => {
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <OrdersManager />
           </TabsContent>
 
           {/* Categories Tab */}
