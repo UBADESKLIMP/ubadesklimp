@@ -40,13 +40,16 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSubmit, loadin
     notes: ''
   });
 
-  // Update form when profile loads
+  // Update form when profile loads - only set name if it's empty or profile changes
   React.useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      name: getInitialName()
-    }));
-  }, [profile]);
+    const profileName = profile?.name || profile?.company_name || profile?.trade_name || '';
+    if (profileName) {
+      setFormData(prev => ({
+        ...prev,
+        name: profileName
+      }));
+    }
+  }, [profile?.name, profile?.company_name, profile?.trade_name]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
