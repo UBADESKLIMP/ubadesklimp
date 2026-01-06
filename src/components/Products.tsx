@@ -1,9 +1,9 @@
-
 import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import ProductCard from './ProductCard';
@@ -54,17 +54,31 @@ const Products = () => {
               Carregando nossos produtos...
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-gradient-card border-border animate-pulse rounded-lg">
-                <div className="p-6">
-                  <div className="w-full h-48 bg-muted rounded mb-4"></div>
-                  <div className="h-4 bg-muted rounded mb-2"></div>
-                  <div className="h-6 bg-muted rounded mb-4"></div>
-                  <div className="h-4 bg-muted rounded mb-4"></div>
-                  <div className="flex justify-between items-center">
-                    <div className="h-6 w-20 bg-muted rounded"></div>
-                    <div className="h-10 w-24 bg-muted rounded"></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div 
+                key={i} 
+                className="bg-card rounded-2xl border border-border/50 overflow-hidden animate-fade-in"
+                style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
+              >
+                {/* Image skeleton with shimmer */}
+                <div className="relative h-52 bg-muted overflow-hidden">
+                  <Skeleton className="absolute inset-0 rounded-none" />
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    style={{ 
+                      animation: 'shimmer 1.5s infinite',
+                      transform: 'translateX(-100%)'
+                    }}
+                  />
+                </div>
+                {/* Content skeleton */}
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-4/5 rounded-md" />
+                  <Skeleton className="h-4 w-3/5 rounded-md" />
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-6 w-24 rounded-md" />
+                    <Skeleton className="h-9 w-9 rounded-full" />
                   </div>
                 </div>
               </div>
