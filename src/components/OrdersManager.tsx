@@ -1,4 +1,5 @@
-import { ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { ClipboardList, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useAdminOrders, OrderStatus } from '@/hooks/useAdminOrders';
 import { toast } from 'sonner';
 
@@ -24,15 +30,18 @@ const statusLabels: Record<string, string> = {
   pending: 'Pendente',
   confirmed: 'Confirmado',
   delivered: 'Entregue',
+  cancelled: 'Cancelado',
 };
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30',
   confirmed: 'bg-green-500/20 text-green-600 border-green-500/30',
   delivered: 'bg-muted text-muted-foreground border-border',
+  cancelled: 'bg-red-500/20 text-red-600 border-red-500/30',
 };
 
 const OrdersManager = () => {
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const {
     orders,
     loading,
@@ -126,6 +135,13 @@ const OrdersManager = () => {
             >
               Entregues
             </Button>
+            <Button
+              variant={statusFilter === 'cancelled' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('cancelled')}
+            >
+              Cancelados
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -156,48 +172,138 @@ const OrdersManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono text-xs">
-                        #{order.id.slice(0, 8)}
-                      </TableCell>
-                      <TableCell>
-                        {order.customer_name || 'Não informado'}
-                      </TableCell>
-                      <TableCell>{order.customer_phone}</TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(order.created_at)}
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatPrice(order.total_amount)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={statusColors[order.status || 'pending']}
-                        >
-                          {statusLabels[order.status || 'pending']}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={order.status || 'pending'}
-                          onValueChange={(value) =>
-                            handleStatusChange(order.id, value as OrderStatus)
-                          }
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pendente</SelectItem>
-                            <SelectItem value="confirmed">Confirmado</SelectItem>
-                            <SelectItem value="delivered">Entregue</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {orders.map((order) => {
+                    const isExpanded = expandedOrderId === order.id;
+                    const items = Array.isArray(order.items) ? order.items : [];
+                    
+                    return (
+                      <Collapsible
+                        key={order.id}
+                        open={isExpanded}
+                        onOpenChange={() => 
+                          setExpandedOrderId(isExpanded ? null : order.id)
+                        }
+                        asChild
+                      >
+                        <>
+                          <TableRow 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                          >
+                            <TableCell className="font-mono text-xs">
+                              <div className="flex items-center gap-2">
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                #{order.id.slice(0, 8)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {order.customer_name || 'Não informado'}
+                            </TableCell>
+                            <TableCell>{order.customer_phone}</TableCell>
+                            <TableCell className="text-sm">
+                              {formatDate(order.created_at)}
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              {formatPrice(order.total_amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={statusColors[order.status || 'pending']}
+                              >
+                                {statusLabels[order.status || 'pending']}
+                              </Badge>
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Select
+                                value={order.status || 'pending'}
+                                onValueChange={(value) =>
+                                  handleStatusChange(order.id, value as OrderStatus)
+                                }
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pendente</SelectItem>
+                                  <SelectItem value="confirmed">Confirmado</SelectItem>
+                                  <SelectItem value="delivered">Entregue</SelectItem>
+                                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                          
+                          {isExpanded && (
+                            <TableRow className="bg-muted/30 hover:bg-muted/30">
+                              <TableCell colSpan={7} className="p-0">
+                                <div className="p-4 space-y-3">
+                                  <h4 className="font-semibold text-sm">Itens do Pedido</h4>
+                                  <div className="space-y-2">
+                                    {items.length > 0 ? (
+                                      items.map((item: any, index: number) => (
+                                        <div 
+                                          key={index}
+                                          className="flex items-center justify-between p-3 bg-background rounded-lg border"
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            {item.image_url && (
+                                              <img 
+                                                src={item.image_url} 
+                                                alt={item.name}
+                                                className="w-12 h-12 object-cover rounded"
+                                              />
+                                            )}
+                                            <div>
+                                              <p className="font-medium">{item.name}</p>
+                                              {item.variation && (
+                                                <p className="text-xs text-muted-foreground">
+                                                  {item.variation}
+                                                </p>
+                                              )}
+                                              {item.fragrance && (
+                                                <p className="text-xs text-muted-foreground">
+                                                  Fragrância: {item.fragrance}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="font-semibold">
+                                              {formatPrice(item.price * item.quantity)}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {item.quantity}x {formatPrice(item.price)}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">
+                                        Nenhum item encontrado
+                                      </p>
+                                    )}
+                                  </div>
+                                  {order.notes && (
+                                    <div className="pt-2 border-t">
+                                      <p className="text-sm">
+                                        <span className="font-medium">Observações:</span>{' '}
+                                        {order.notes}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      </Collapsible>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
