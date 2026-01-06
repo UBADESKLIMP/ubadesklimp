@@ -315,10 +315,31 @@ const Automotivo = () => {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="space-y-4">
-                    <Skeleton className="h-48 w-full rounded-xl" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
+                  <div 
+                    key={i} 
+                    className="bg-card rounded-2xl border border-border/50 overflow-hidden animate-fade-in"
+                    style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
+                  >
+                    {/* Image skeleton with shimmer */}
+                    <div className="relative h-52 bg-muted overflow-hidden">
+                      <Skeleton className="absolute inset-0 rounded-none" />
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                        style={{ 
+                          animation: 'shimmer 1.5s infinite',
+                          transform: 'translateX(-100%)'
+                        }}
+                      />
+                    </div>
+                    {/* Content skeleton */}
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-5 w-4/5 rounded-md" />
+                      <Skeleton className="h-4 w-3/5 rounded-md" />
+                      <div className="flex items-center justify-between pt-2">
+                        <Skeleton className="h-6 w-24 rounded-md" />
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
