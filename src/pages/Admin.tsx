@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
 import BackgroundRemover from '@/components/BackgroundRemover';
 import OrdersManager from '@/components/OrdersManager';
+import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
@@ -156,10 +157,14 @@ const Admin = () => {
 
         {/* Tabs for Products and Categories */}
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="products" className="flex items-center space-x-2">
               <Package className="h-4 w-4" />
               <span>Produtos</span>
+            </TabsTrigger>
+            <TabsTrigger value="automotive" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <Car className="h-4 w-4" />
+              <span>Automotivo</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center space-x-2">
               <ClipboardList className="h-4 w-4" />
@@ -274,6 +279,11 @@ const Admin = () => {
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          {/* Automotive Tab */}
+          <TabsContent value="automotive">
+            <AutomotiveProductsManager />
           </TabsContent>
 
           {/* Orders Tab */}
