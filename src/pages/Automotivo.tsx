@@ -49,17 +49,30 @@ const Automotivo = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth parallax with lerp interpolation
+  // Smooth parallax with optimized lerp - more responsive and limited range
   useEffect(() => {
     let animationId: number;
+    let lastTime = 0;
+    const maxParallax = 60; // Limit max movement to stay within light trails
     
     const handleScroll = () => {
-      targetParallax.current = window.scrollY * 0.12;
+      // Clamp parallax to prevent car from leaving light trails
+      targetParallax.current = Math.min(window.scrollY * 0.08, maxParallax);
     };
     
-    const animate = () => {
-      parallaxRef.current += (targetParallax.current - parallaxRef.current) * 0.08;
-      setParallaxY(parallaxRef.current);
+    const animate = (currentTime: number) => {
+      // Throttle to ~60fps for consistent timing
+      if (currentTime - lastTime >= 16) {
+        // Higher lerp factor (0.15) for snappier response
+        const delta = targetParallax.current - parallaxRef.current;
+        parallaxRef.current += delta * 0.15;
+        
+        // Only update state if change is significant (reduces re-renders)
+        if (Math.abs(delta) > 0.1) {
+          setParallaxY(parallaxRef.current);
+        }
+        lastTime = currentTime;
+      }
       animationId = requestAnimationFrame(animate);
     };
     
@@ -136,24 +149,24 @@ const Automotivo = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.03),transparent_40%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.08),transparent_50%)]" />
           
-          {/* Dynamic Spotlight that follows the car */}
+          {/* Dynamic Spotlight that follows the car - synced movement */}
           <div 
-            className="absolute right-[10%] lg:right-[15%] w-[400px] md:w-[500px] lg:w-[600px] h-[400px] md:h-[500px] lg:h-[600px] pointer-events-none"
+            className="absolute right-[10%] lg:right-[15%] w-[400px] md:w-[500px] lg:w-[600px] h-[400px] md:h-[500px] lg:h-[600px] pointer-events-none will-change-transform"
             style={{ 
-              top: `calc(20% + ${parallaxY * 0.5}px)`,
+              transform: `translateY(${parallaxY * 0.5}px)`,
+              top: '20%',
               background: 'radial-gradient(ellipse 60% 50% at center, rgba(59,130,246,0.12), rgba(100,160,255,0.06) 40%, transparent 70%)',
-              filter: 'blur(40px)',
-              transition: 'none'
+              filter: 'blur(40px)'
             }}
           />
-          {/* Secondary spotlight glow */}
+          {/* Secondary spotlight glow - synced movement */}
           <div 
-            className="absolute right-[15%] lg:right-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] pointer-events-none"
+            className="absolute right-[15%] lg:right-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] pointer-events-none will-change-transform"
             style={{ 
-              top: `calc(25% + ${parallaxY * 0.3}px)`,
+              transform: `translateY(${parallaxY * 0.3}px)`,
+              top: '25%',
               background: 'radial-gradient(circle at center, rgba(140,180,255,0.15), transparent 60%)',
-              filter: 'blur(60px)',
-              transition: 'none'
+              filter: 'blur(60px)'
             }}
           />
           
@@ -284,10 +297,13 @@ const Automotivo = () => {
                   isLoaded ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-10 scale-95'
                 }`}
               >
-                {/* Car Image with Smooth Parallax */}
+                {/* Car Image with Smooth Parallax - GPU accelerated */}
                 <div 
-                  className="relative w-full max-w-lg lg:max-w-none"
-                  style={{ transform: `translateY(${parallaxY}px)` }}
+                  className="relative w-full max-w-lg lg:max-w-none will-change-transform"
+                  style={{ 
+                    transform: `translate3d(0, ${parallaxY}px, 0)`,
+                    backfaceVisibility: 'hidden'
+                  }}
                 >
                   <img 
                     src={carHeroImage} 
@@ -295,8 +311,10 @@ const Automotivo = () => {
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
                   
-                  {/* Car Reflection - Subtle showroom floor */}
-                  <div className="absolute top-full left-0 w-full h-32 overflow-hidden pointer-events-none">
+                  {/* Car Reflection - synced with car */}
+                  <div 
+                    className="absolute top-full left-0 w-full h-32 overflow-hidden pointer-events-none"
+                  >
                     <img 
                       src={carHeroImage} 
                       alt="" 
