@@ -46,17 +46,30 @@ const parsePrice = (price: number | string): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-export const useSalesStats = (categoryFilter?: string) => {
+export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate?: Date) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
         .select('id, items, total_amount, status, created_at')
         .order('created_at', { ascending: false });
+
+      // Apply date filters if provided
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+      if (endDate) {
+        // Set end date to end of day
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte('created_at', endOfDay.toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching orders:', error);
@@ -75,7 +88,7 @@ export const useSalesStats = (categoryFilter?: string) => {
     };
 
     fetchOrders();
-  }, []);
+  }, [startDate, endDate]);
 
   const stats = useMemo<SalesStats>(() => {
     // Filter orders that are not cancelled for revenue calculations
