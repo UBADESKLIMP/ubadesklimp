@@ -271,47 +271,45 @@ const Automotivo = () => {
           </div>
 
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[420px] sm:min-h-[480px] md:min-h-[550px] lg:min-h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-8 items-center min-h-[420px] sm:min-h-[480px] md:min-h-[550px] lg:min-h-[600px]">
               
-              {/* Left Side - Content - Logo first on mobile */}
-              <div className="py-6 sm:py-8 md:py-16 order-1 text-center lg:text-left">
-                {/* Logo UbadeskCar - Larger with subtle glow */}
-                <div 
-                  className={`flex items-center gap-4 mb-8 justify-center lg:justify-start transition-all duration-700 delay-100 ${
-                    isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                  }`}
-                >
-                  <img 
-                    src={carNeonLogo} 
-                    alt="UbadeskCar" 
-                    className="h-24 sm:h-32 md:h-44 lg:h-52 w-auto"
-                    style={{ filter: 'drop-shadow(0 0 18px rgba(59,130,246,0.35))' }}
-                  />
-                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                    <span className="text-white">Ubadesk</span>
-                    <span className="text-blue-500">Car</span>
-                  </span>
-                </div>
-                
-                {/* Title with animation */}
+              {/* 1. Logo - order-1 always */}
+              <div 
+                className={`order-1 lg:row-span-1 flex items-center gap-4 justify-center lg:justify-start pt-6 sm:pt-8 lg:pt-16 transition-all duration-700 delay-100 ${
+                  isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+              >
+                <img 
+                  src={carNeonLogo} 
+                  alt="UbadeskCar" 
+                  className="h-20 sm:h-28 md:h-44 lg:h-52 w-auto"
+                  style={{ filter: 'drop-shadow(0 0 18px rgba(59,130,246,0.35))' }}
+                />
+                <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                  <span className="text-white">Ubadesk</span>
+                  <span className="text-blue-500">Car</span>
+                </span>
+              </div>
+
+              {/* Desktop Content - Hidden on mobile, shown on lg+ */}
+              <div className="hidden lg:block order-2 lg:col-start-1 lg:row-start-2 py-8 md:py-0">
                 <h1 
-                  className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight transition-all duration-700 delay-200 ${
+                  className={`text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight transition-all duration-700 delay-200 ${
                     isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
                   }`}
                 >
                   Linha Automotiva
                 </h1>
                 <h2 
-                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-blue-500 mb-6 sm:mb-8 transition-all duration-700 delay-300 ${
+                  className={`text-4xl lg:text-5xl font-bold text-blue-500 mb-8 transition-all duration-700 delay-300 ${
                     isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
                   }`}
                 >
                   Profissional
                 </h2>
                 
-                {/* CTA Button with hover effect + Search below */}
                 <div 
-                  className={`flex flex-col items-center lg:items-start gap-4 transition-all duration-700 delay-400 ${
+                  className={`flex flex-col items-start gap-4 transition-all duration-700 delay-400 ${
                     isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                   }`}
                 >
@@ -324,7 +322,6 @@ const Automotivo = () => {
                     Ver produtos
                   </Button>
 
-                  {/* Search moved here */}
                   <div className="relative w-full max-w-sm">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
@@ -346,15 +343,14 @@ const Automotivo = () => {
                 </div>
               </div>
               
-              {/* Right Side - Car with Parallax + animation - Below content on mobile */}
+              {/* 2. Car - order-2 on mobile, spans right side on desktop */}
               <div 
-                className={`relative order-2 flex items-center justify-center lg:justify-end pb-8 md:pb-0 md:pt-0 transition-all duration-1000 delay-300 ${
+                className={`relative order-2 lg:order-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 flex items-center justify-center lg:justify-end transition-all duration-1000 delay-300 ${
                   isLoaded ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-10 scale-95'
                 }`}
               >
-                {/* Car Image with Smooth Parallax - smaller on mobile */}
                 <div 
-                  className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-lg lg:max-w-none will-change-transform"
+                  className="relative w-full max-w-[260px] sm:max-w-[300px] md:max-w-lg lg:max-w-none will-change-transform"
                   style={{ 
                     transform: `translate3d(0, ${parallaxY}px, 0)`,
                     backfaceVisibility: 'hidden'
@@ -366,7 +362,6 @@ const Automotivo = () => {
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
                   
-                  {/* Car Reflection - synced with car */}
                   <div 
                     className="absolute top-full left-0 w-full h-32 overflow-hidden pointer-events-none"
                   >
@@ -382,6 +377,62 @@ const Automotivo = () => {
                       }}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* 3. Title - order-3 on mobile only */}
+              <div 
+                className={`lg:hidden order-3 text-center transition-all duration-700 delay-200 ${
+                  isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+              >
+                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1 leading-tight">
+                  Linha Automotiva
+                </h1>
+                <h2 className="text-2xl sm:text-3xl font-bold text-blue-500">
+                  Profissional
+                </h2>
+              </div>
+
+              {/* 4. Button - order-4 on mobile only */}
+              <div 
+                className={`lg:hidden order-4 flex justify-center transition-all duration-700 delay-300 ${
+                  isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+              >
+                <Button 
+                  onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-5 text-base font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(59,130,246,0.5)]"
+                  style={{ boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}
+                >
+                  <Car className="mr-2 h-5 w-5" />
+                  Ver produtos
+                </Button>
+              </div>
+
+              {/* 5. Search - order-5 on mobile only */}
+              <div 
+                className={`lg:hidden order-5 flex justify-center pb-6 transition-all duration-700 delay-400 ${
+                  isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+              >
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar produtos automotivos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-11 pr-10 py-5 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               
