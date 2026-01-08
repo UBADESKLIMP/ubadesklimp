@@ -144,20 +144,20 @@ const Automotivo = () => {
             style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.06), transparent 70%)' }}
           />
           
-          {/* MOBILE-ONLY Light Lines - Positioned with the car (order-2 area ~56-62%) */}
+          {/* MOBILE-ONLY Light Lines - aligned with the car (more forgiving + "infinite" by extending offscreen) */}
           <div 
-            className="md:hidden absolute bottom-[56%] left-1/2 -translate-x-1/2 w-[85%] h-[2px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
+            className="md:hidden absolute bottom-[45%] left-1/2 -translate-x-1/2 w-[220vw] h-[2px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.35) 30%, rgba(180,210,255,0.5) 50%, rgba(140,180,255,0.35) 70%, transparent 95%)',
               boxShadow: '0 0 8px 2px rgba(100,160,255,0.2)'
             }}
           />
           <div 
-            className="md:hidden absolute bottom-[56%] left-1/2 -translate-x-1/2 w-[75%] h-6 blur-lg pointer-events-none"
+            className="md:hidden absolute bottom-[45%] left-1/2 -translate-x-1/2 w-[200vw] h-6 blur-lg pointer-events-none"
             style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.12), transparent)' }}
           />
           <div 
-            className="md:hidden absolute bottom-[62%] left-1/2 -translate-x-1/2 w-[70%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
+            className="md:hidden absolute bottom-[51%] left-1/2 -translate-x-1/2 w-[210vw] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.25) 35%, rgba(160,200,255,0.35) 50%, rgba(140,180,255,0.25) 65%, transparent 90%)',
               boxShadow: '0 0 6px 1px rgba(100,160,255,0.12)'
@@ -165,11 +165,11 @@ const Automotivo = () => {
           />
           {/* Mobile floor reflection - below the car */}
           <div 
-            className="md:hidden absolute bottom-[52%] left-1/2 -translate-x-1/2 w-[90%] h-[8%] blur-xl pointer-events-none"
+            className="md:hidden absolute bottom-[39%] left-1/2 -translate-x-1/2 w-[240vw] h-[8%] blur-xl pointer-events-none"
             style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.15), transparent 70%)' }}
           />
           {/* Mobile dust particles - around the car */}
-          <div className="md:hidden absolute inset-x-0 bottom-[54%] h-[15%] overflow-hidden pointer-events-none">
+          <div className="md:hidden absolute inset-x-0 bottom-[41%] h-[15%] overflow-hidden pointer-events-none">
             {[...Array(6)].map((_, i) => (
               <div
                 key={`mobile-particle-${i}`}
@@ -218,7 +218,7 @@ const Automotivo = () => {
           <div 
             className="md:hidden absolute left-1/2 -translate-x-1/2 w-[350px] h-[200px] pointer-events-none"
             style={{ 
-              bottom: '55%',
+              bottom: '43%',
               background: 'radial-gradient(ellipse 80% 70% at center, rgba(59,130,246,0.18), rgba(100,160,255,0.06) 50%, transparent 85%)',
               filter: 'blur(25px)'
             }}
@@ -360,6 +360,24 @@ const Automotivo = () => {
                     src={carHeroImage} 
                     alt="Linha Automotiva Profissional" 
                     className="w-full h-auto object-contain drop-shadow-2xl"
+                  />
+
+                  {/* Subtle pulsing headlight glow (blue neon) */}
+                  <div
+                    className="absolute left-[22%] top-[42%] w-16 h-10 sm:w-20 sm:h-12 pointer-events-none mix-blend-screen opacity-35 animate-[glow-pulse_3.6s_ease-in-out_infinite]"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 35% 50%, rgba(190,230,255,0.85) 0%, rgba(90,160,255,0.35) 35%, transparent 70%)',
+                      filter: 'blur(0.5px)'
+                    }}
+                  />
+                  <div
+                    className="absolute left-[29%] top-[44%] w-10 h-8 sm:w-12 sm:h-9 pointer-events-none mix-blend-screen opacity-25 animate-[glow-pulse_4.2s_ease-in-out_infinite]"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 35% 50%, rgba(190,230,255,0.75) 0%, rgba(90,160,255,0.25) 40%, transparent 70%)',
+                      filter: 'blur(0.5px)'
+                    }}
                   />
                   
                   <div 
