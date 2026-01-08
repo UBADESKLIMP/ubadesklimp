@@ -381,6 +381,86 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Comparison Bar Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Comparativo Visual: Mês Atual vs Anterior
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[
+                  {
+                    name: 'Faturamento (R$ mil)',
+                    'Mês Anterior': prevMonthStats.totalRevenue / 1000,
+                    'Mês Atual': currMonthStats.totalRevenue / 1000,
+                  },
+                  {
+                    name: 'Pedidos',
+                    'Mês Anterior': prevMonthStats.totalOrders,
+                    'Mês Atual': currMonthStats.totalOrders,
+                  },
+                  {
+                    name: 'Produtos',
+                    'Mês Anterior': productsSoldPrev,
+                    'Mês Atual': productsSoldCurr,
+                  },
+                ]}
+                layout="vertical"
+                margin={{ left: 20, right: 30 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  tick={{ fontSize: 12 }} 
+                  width={120}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: number, name: string) => {
+                    if (name.includes('Faturamento')) {
+                      return [formatPrice(value * 1000), name];
+                    }
+                    return [value, name];
+                  }}
+                />
+                <Bar 
+                  dataKey="Mês Anterior" 
+                  fill="hsl(var(--muted-foreground))" 
+                  radius={[0, 4, 4, 0]}
+                  opacity={0.6}
+                />
+                <Bar 
+                  dataKey="Mês Atual" 
+                  fill="hsl(var(--primary))" 
+                  radius={[0, 4, 4, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-muted-foreground opacity-60" />
+              <span className="text-sm text-muted-foreground">Mês Anterior</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-primary" />
+              <span className="text-sm text-muted-foreground">Mês Atual</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Sales Chart */}
