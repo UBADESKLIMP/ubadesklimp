@@ -95,13 +95,23 @@ const Header = () => {
           {/* Desktop Navigation - Centered */}
           <nav className="hidden md:flex space-x-8 flex-1 justify-center">
             {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                    className={`${isAutomotivoPage ? 'text-white hover:text-blue-400' : 'text-foreground hover:text-primary'} transition-colors duration-200 font-medium`}
-              >
-                {item.name}
-              </a>
+              item.name === 'Início' ? (
+                <button
+                  key={item.name}
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className={`${isAutomotivoPage ? 'text-white hover:text-blue-400' : 'text-foreground hover:text-primary'} transition-colors duration-200 font-medium`}
+                >
+                  {item.name}
+                </button>
+              ) : (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className={`${isAutomotivoPage ? 'text-white hover:text-blue-400' : 'text-foreground hover:text-primary'} transition-colors duration-200 font-medium`}
+                >
+                  {item.name}
+                </a>
+              )
             ))}
           </nav>
 
@@ -184,15 +194,29 @@ const Header = () => {
       }`}>
         <div className={`px-4 pt-3 pb-4 space-y-1 ${isAutomotivoPage ? 'bg-[#111827] border-blue-900/30' : 'bg-background/98 border-border/50'} backdrop-blur-sm border-t shadow-lg`}>
           {navigation.map((item, index) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className={`block px-4 py-3 ${isAutomotivoPage ? 'text-white hover:text-blue-400 hover:bg-white/5' : 'text-foreground hover:text-primary hover:bg-muted'} rounded-lg transition-all duration-200 transform hover:translate-x-1`}
-              style={{ transitionDelay: `${index * 50}ms` }}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.name}
-            </a>
+            item.name === 'Início' ? (
+              <button
+                key={item.name}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setIsMenuOpen(false);
+                }}
+                className={`block w-full text-left px-4 py-3 ${isAutomotivoPage ? 'text-white hover:text-blue-400 hover:bg-white/5' : 'text-foreground hover:text-primary hover:bg-muted'} rounded-lg transition-all duration-200 transform hover:translate-x-1`}
+                style={{ transitionDelay: `${index * 50}ms` }}
+              >
+                {item.name}
+              </button>
+            ) : (
+              <a
+                key={item.name}
+                href={item.href}
+                className={`block px-4 py-3 ${isAutomotivoPage ? 'text-white hover:text-blue-400 hover:bg-white/5' : 'text-foreground hover:text-primary hover:bg-muted'} rounded-lg transition-all duration-200 transform hover:translate-x-1`}
+                style={{ transitionDelay: `${index * 50}ms` }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.name}
+              </a>
+            )
           ))}
           <div className="pt-4 pb-2 px-2 space-y-2">
             
