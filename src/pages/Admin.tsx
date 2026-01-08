@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -12,6 +12,7 @@ import CategoryManager from '@/components/CategoryManager';
 import BackgroundRemover from '@/components/BackgroundRemover';
 import OrdersManager from '@/components/OrdersManager';
 import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
+import AdminDashboard from '@/components/AdminDashboard';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
@@ -156,8 +157,12 @@ const Admin = () => {
         </div>
 
         {/* Tabs for Products and Categories */}
-        <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
+            <TabsTrigger value="dashboard" className="flex items-center space-x-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span>Dashboard</span>
+            </TabsTrigger>
             <TabsTrigger value="products" className="flex items-center space-x-2">
               <Package className="h-4 w-4" />
               <span>Produtos</span>
@@ -179,6 +184,11 @@ const Admin = () => {
               <span>Ferramentas</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <AdminDashboard />
+          </TabsContent>
 
           {/* Products Tab */}
           <TabsContent value="products">

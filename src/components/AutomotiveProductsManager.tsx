@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit3, Trash2, Car, Package } from 'lucide-react';
+import { Plus, Edit3, Trash2, Car, Package, DollarSign, TrendingUp, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,9 +8,11 @@ import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import { supabase } from '@/integrations/supabase/client';
+import { useSalesStats } from '@/hooks/useSalesStats';
 
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
+  const { stats: automotiveStats, loading: statsLoading } = useSalesStats('automotivo');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -18,6 +20,13 @@ const AutomotiveProductsManager = () => {
   const automotiveProducts = products.filter(
     (product) => product.category?.toLowerCase() === 'automotivo'
   );
+
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(amount);
+  };
 
   const handleSaveProduct = async (productData: any) => {
     try {
@@ -84,7 +93,7 @@ const AutomotiveProductsManager = () => {
     }
   };
 
-  const formatPrice = (price: number | undefined) => {
+  const formatProductPrice = (price: number | undefined) => {
     if (!price) return 'Preço não definido';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -105,6 +114,62 @@ const AutomotiveProductsManager = () => {
 
   return (
     <div className="min-h-[500px] bg-[#0a0a0f] rounded-xl p-6 border border-blue-500/20">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card className="bg-[#12121a] border-blue-500/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-300/70">
+              Faturamento Automotivo
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-400">
+              {statsLoading ? '...' : formatPrice(automotiveStats.totalRevenue)}
+            </div>
+            <p className="text-xs text-blue-300/50 mt-1">
+              Total de vendas da categoria
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#12121a] border-blue-500/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-300/70">
+              Produtos Vendidos
+            </CardTitle>
+            <ShoppingBag className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-400">
+              {statsLoading ? '...' : automotiveStats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0)}
+            </div>
+            <p className="text-xs text-blue-300/50 mt-1">
+              Unidades vendidas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#12121a] border-blue-500/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-300/70">
+              Mais Vendido
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-blue-400 truncate">
+              {statsLoading ? '...' : (automotiveStats.productsSold[0]?.name || 'Nenhum')}
+            </div>
+            <p className="text-xs text-blue-300/50 mt-1">
+              {statsLoading ? '' : (automotiveStats.productsSold[0] 
+                ? `${automotiveStats.productsSold[0].totalQuantity} vendas` 
+                : 'Sem vendas ainda')}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
@@ -211,7 +276,7 @@ const AutomotiveProductsManager = () => {
                 )}
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-bold text-blue-400">
-                    {formatPrice(product.price)}
+                    {formatProductPrice(product.price)}
                   </p>
                 </div>
               </CardContent>
