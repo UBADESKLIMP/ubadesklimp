@@ -178,11 +178,11 @@ const Header = () => {
               className="relative h-10 w-10 p-0"
             >
               <Menu className={`h-6 w-6 absolute transition-all duration-300 ease-in-out ${
-                isMenuOpen ? 'rotate-90 opacity-0 scale-75' : 'rotate-0 opacity-100 scale-100'
-              }`} />
+                isAutomotivoPage ? 'text-white' : ''
+              } ${isMenuOpen ? 'rotate-90 opacity-0 scale-75' : 'rotate-0 opacity-100 scale-100'}`} />
               <X className={`h-6 w-6 absolute transition-all duration-300 ease-in-out ${
-                isMenuOpen ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-75'
-              }`} />
+                isAutomotivoPage ? 'text-white' : ''
+              } ${isMenuOpen ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-75'}`} />
             </Button>
           </div>
         </div>
