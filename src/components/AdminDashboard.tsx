@@ -19,7 +19,9 @@ import {
   Clock,
   CalendarIcon,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  GitCompare,
+  X
 } from 'lucide-react';
 import {
   AreaChart,
@@ -38,31 +40,48 @@ const AdminDashboard = () => {
   const defaultStartDate = useMemo(() => startOfMonth(new Date()), []);
   const defaultEndDate = useMemo(() => endOfMonth(new Date()), []);
   
-  // Previous month dates for comparison
-  const prevMonthStart = useMemo(() => startOfMonth(subMonths(new Date(), 1)), []);
-  const prevMonthEnd = useMemo(() => endOfMonth(subMonths(new Date(), 1)), []);
-  const currMonthStart = useMemo(() => startOfMonth(new Date()), []);
-  const currMonthEnd = useMemo(() => endOfMonth(new Date()), []);
-  
   const [startDate, setStartDate] = useState<Date | undefined>(defaultStartDate);
   const [endDate, setEndDate] = useState<Date | undefined>(defaultEndDate);
   
+  // Comparison mode states
+  const [showComparison, setShowComparison] = useState(false);
+  const [compareStartDate1, setCompareStartDate1] = useState<Date | undefined>();
+  const [compareEndDate1, setCompareEndDate1] = useState<Date | undefined>();
+  const [compareStartDate2, setCompareStartDate2] = useState<Date | undefined>();
+  const [compareEndDate2, setCompareEndDate2] = useState<Date | undefined>();
+  
   const { stats, loading } = useSalesStats(undefined, startDate, endDate);
   
-  // Stats for comparison
-  const { stats: prevMonthStats, loading: prevLoading } = useSalesStats(undefined, prevMonthStart, prevMonthEnd);
-  const { stats: currMonthStats, loading: currLoading } = useSalesStats(undefined, currMonthStart, currMonthEnd);
+  // Only fetch comparison stats when comparison mode is active and dates are selected
+  const shouldFetchComparison = showComparison && compareStartDate1 && compareEndDate1 && compareStartDate2 && compareEndDate2;
+  
+  const { stats: period1Stats, loading: period1Loading } = useSalesStats(
+    undefined, 
+    shouldFetchComparison ? compareStartDate1 : undefined, 
+    shouldFetchComparison ? compareEndDate1 : undefined
+  );
+  const { stats: period2Stats, loading: period2Loading } = useSalesStats(
+    undefined, 
+    shouldFetchComparison ? compareStartDate2 : undefined, 
+    shouldFetchComparison ? compareEndDate2 : undefined
+  );
   
   const calculatePercentChange = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   };
   
-  const revenueChange = calculatePercentChange(currMonthStats.totalRevenue, prevMonthStats.totalRevenue);
-  const ordersChange = calculatePercentChange(currMonthStats.totalOrders, prevMonthStats.totalOrders);
-  const productsSoldCurr = currMonthStats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
-  const productsSoldPrev = prevMonthStats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
-  const productsChange = calculatePercentChange(productsSoldCurr, productsSoldPrev);
+  // Comparison calculations (only when both periods are selected)
+  const revenueChange = shouldFetchComparison ? calculatePercentChange(period2Stats.totalRevenue, period1Stats.totalRevenue) : 0;
+  const ordersChange = shouldFetchComparison ? calculatePercentChange(period2Stats.totalOrders, period1Stats.totalOrders) : 0;
+  const productsSoldPeriod1 = period1Stats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
+  const productsSoldPeriod2 = period2Stats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
+  const productsChange = shouldFetchComparison ? calculatePercentChange(productsSoldPeriod2, productsSoldPeriod1) : 0;
+  
+  const formatPeriodLabel = (start: Date | undefined, end: Date | undefined) => {
+    if (!start || !end) return '';
+    return `${format(start, "dd/MM", { locale: ptBR })} - ${format(end, "dd/MM", { locale: ptBR })}`;
+  };
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -82,7 +101,7 @@ const AdminDashboard = () => {
     return date.toLocaleDateString('pt-BR', { month: 'short' });
   };
 
-  if (loading || prevLoading || currLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -287,177 +306,344 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Monthly Comparison */}
+      {/* Comparison Section */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Comparativo: Mês Atual vs Mês Anterior
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Revenue Comparison */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Faturamento</p>
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-2xl font-bold">{formatPrice(currMonthStats.totalRevenue)}</p>
-                  <p className="text-xs text-muted-foreground">Este mês</p>
-                </div>
-                <div className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
-                  revenueChange >= 0 
-                    ? "bg-green-500/10 text-green-600" 
-                    : "bg-red-500/10 text-red-600"
-                )}>
-                  {revenueChange >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4" />
-                  )}
-                  {Math.abs(revenueChange).toFixed(1)}%
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Mês anterior: {formatPrice(prevMonthStats.totalRevenue)}
-              </p>
-            </div>
-
-            {/* Orders Comparison */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Pedidos</p>
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-2xl font-bold">{currMonthStats.totalOrders}</p>
-                  <p className="text-xs text-muted-foreground">Este mês</p>
-                </div>
-                <div className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
-                  ordersChange >= 0 
-                    ? "bg-green-500/10 text-green-600" 
-                    : "bg-red-500/10 text-red-600"
-                )}>
-                  {ordersChange >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4" />
-                  )}
-                  {Math.abs(ordersChange).toFixed(1)}%
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Mês anterior: {prevMonthStats.totalOrders} pedidos
-              </p>
-            </div>
-
-            {/* Products Comparison */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Produtos Vendidos</p>
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-2xl font-bold">{productsSoldCurr}</p>
-                  <p className="text-xs text-muted-foreground">Este mês</p>
-                </div>
-                <div className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
-                  productsChange >= 0 
-                    ? "bg-green-500/10 text-green-600" 
-                    : "bg-red-500/10 text-red-600"
-                )}>
-                  {productsChange >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4" />
-                  )}
-                  {Math.abs(productsChange).toFixed(1)}%
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Mês anterior: {productsSoldPrev} produtos
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Comparison Bar Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Comparativo Visual: Mês Atual vs Anterior
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={[
-                  {
-                    name: 'Faturamento (R$ mil)',
-                    'Mês Anterior': prevMonthStats.totalRevenue / 1000,
-                    'Mês Atual': currMonthStats.totalRevenue / 1000,
-                  },
-                  {
-                    name: 'Pedidos',
-                    'Mês Anterior': prevMonthStats.totalOrders,
-                    'Mês Atual': currMonthStats.totalOrders,
-                  },
-                  {
-                    name: 'Produtos',
-                    'Mês Anterior': productsSoldPrev,
-                    'Mês Atual': productsSoldCurr,
-                  },
-                ]}
-                layout="vertical"
-                margin={{ left: 20, right: 30 }}
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <GitCompare className="h-5 w-5 text-primary" />
+              Comparar Períodos
+            </CardTitle>
+            {showComparison && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowComparison(false);
+                  setCompareStartDate1(undefined);
+                  setCompareEndDate1(undefined);
+                  setCompareStartDate2(undefined);
+                  setCompareEndDate2(undefined);
+                }}
               >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  tick={{ fontSize: 12 }} 
-                  width={120}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value: number, name: string) => {
-                    if (name.includes('Faturamento')) {
-                      return [formatPrice(value * 1000), name];
-                    }
-                    return [value, name];
-                  }}
-                />
-                <Bar 
-                  dataKey="Mês Anterior" 
-                  fill="hsl(var(--muted-foreground))" 
-                  radius={[0, 4, 4, 0]}
-                  opacity={0.6}
-                />
-                <Bar 
-                  dataKey="Mês Atual" 
-                  fill="hsl(var(--primary))" 
-                  radius={[0, 4, 4, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                <X className="h-4 w-4 mr-1" />
+                Fechar
+              </Button>
+            )}
           </div>
-          <div className="flex justify-center gap-6 mt-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-muted-foreground opacity-60" />
-              <span className="text-sm text-muted-foreground">Mês Anterior</span>
+        </CardHeader>
+        <CardContent>
+          {!showComparison ? (
+            <Button
+              variant="outline"
+              onClick={() => setShowComparison(true)}
+              className="w-full"
+            >
+              <GitCompare className="h-4 w-4 mr-2" />
+              Comparar dois períodos
+            </Button>
+          ) : (
+            <div className="space-y-6">
+              {/* Period Selectors */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Period 1 */}
+                <div className="p-4 rounded-lg border bg-muted/30">
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Período 1 (Base)</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-[130px] justify-start text-left font-normal",
+                            !compareStartDate1 && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {compareStartDate1 ? format(compareStartDate1, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compareStartDate1}
+                          onSelect={setCompareStartDate1}
+                          initialFocus
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="text-muted-foreground">até</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-[130px] justify-start text-left font-normal",
+                            !compareEndDate1 && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {compareEndDate1 ? format(compareEndDate1, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compareEndDate1}
+                          onSelect={setCompareEndDate1}
+                          initialFocus
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Period 2 */}
+                <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
+                  <h4 className="font-medium mb-3 text-sm text-primary">Período 2 (Comparar)</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-[130px] justify-start text-left font-normal",
+                            !compareStartDate2 && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {compareStartDate2 ? format(compareStartDate2, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compareStartDate2}
+                          onSelect={setCompareStartDate2}
+                          initialFocus
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="text-muted-foreground">até</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-[130px] justify-start text-left font-normal",
+                            !compareEndDate2 && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {compareEndDate2 ? format(compareEndDate2, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compareEndDate2}
+                          onSelect={setCompareEndDate2}
+                          initialFocus
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comparison Results */}
+              {shouldFetchComparison && (
+                <>
+                  {(period1Loading || period2Loading) ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2 animate-pulse">📊</div>
+                        <p className="text-sm text-muted-foreground">Carregando comparativo...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Stats Comparison */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
+                        {/* Revenue Comparison */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Faturamento</p>
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="text-2xl font-bold">{formatPrice(period2Stats.totalRevenue)}</p>
+                              <p className="text-xs text-muted-foreground">{formatPeriodLabel(compareStartDate2, compareEndDate2)}</p>
+                            </div>
+                            <div className={cn(
+                              "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                              revenueChange >= 0 
+                                ? "bg-green-500/10 text-green-600" 
+                                : "bg-red-500/10 text-red-600"
+                            )}>
+                              {revenueChange >= 0 ? (
+                                <ArrowUpRight className="h-4 w-4" />
+                              ) : (
+                                <ArrowDownRight className="h-4 w-4" />
+                              )}
+                              {Math.abs(revenueChange).toFixed(1)}%
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Período 1: {formatPrice(period1Stats.totalRevenue)}
+                          </p>
+                        </div>
+
+                        {/* Orders Comparison */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Pedidos</p>
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="text-2xl font-bold">{period2Stats.totalOrders}</p>
+                              <p className="text-xs text-muted-foreground">{formatPeriodLabel(compareStartDate2, compareEndDate2)}</p>
+                            </div>
+                            <div className={cn(
+                              "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                              ordersChange >= 0 
+                                ? "bg-green-500/10 text-green-600" 
+                                : "bg-red-500/10 text-red-600"
+                            )}>
+                              {ordersChange >= 0 ? (
+                                <ArrowUpRight className="h-4 w-4" />
+                              ) : (
+                                <ArrowDownRight className="h-4 w-4" />
+                              )}
+                              {Math.abs(ordersChange).toFixed(1)}%
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Período 1: {period1Stats.totalOrders} pedidos
+                          </p>
+                        </div>
+
+                        {/* Products Comparison */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Produtos Vendidos</p>
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="text-2xl font-bold">{productsSoldPeriod2}</p>
+                              <p className="text-xs text-muted-foreground">{formatPeriodLabel(compareStartDate2, compareEndDate2)}</p>
+                            </div>
+                            <div className={cn(
+                              "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                              productsChange >= 0 
+                                ? "bg-green-500/10 text-green-600" 
+                                : "bg-red-500/10 text-red-600"
+                            )}>
+                              {productsChange >= 0 ? (
+                                <ArrowUpRight className="h-4 w-4" />
+                              ) : (
+                                <ArrowDownRight className="h-4 w-4" />
+                              )}
+                              {Math.abs(productsChange).toFixed(1)}%
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Período 1: {productsSoldPeriod1} produtos
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Bar Chart */}
+                      <div className="pt-4 border-t">
+                        <h4 className="text-sm font-medium mb-4">Comparativo Visual</h4>
+                        <div className="h-[250px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={[
+                                {
+                                  name: 'Faturamento (R$ mil)',
+                                  'Período 1': period1Stats.totalRevenue / 1000,
+                                  'Período 2': period2Stats.totalRevenue / 1000,
+                                },
+                                {
+                                  name: 'Pedidos',
+                                  'Período 1': period1Stats.totalOrders,
+                                  'Período 2': period2Stats.totalOrders,
+                                },
+                                {
+                                  name: 'Produtos',
+                                  'Período 1': productsSoldPeriod1,
+                                  'Período 2': productsSoldPeriod2,
+                                },
+                              ]}
+                              layout="vertical"
+                              margin={{ left: 20, right: 30 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis type="number" tick={{ fontSize: 12 }} />
+                              <YAxis 
+                                dataKey="name" 
+                                type="category" 
+                                tick={{ fontSize: 12 }} 
+                                width={120}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px'
+                                }}
+                                formatter={(value: number, name: string) => {
+                                  if (name.includes('Faturamento')) {
+                                    return [formatPrice(value * 1000), name];
+                                  }
+                                  return [value, name];
+                                }}
+                              />
+                              <Bar 
+                                dataKey="Período 1" 
+                                fill="hsl(var(--muted-foreground))" 
+                                radius={[0, 4, 4, 0]}
+                                opacity={0.6}
+                              />
+                              <Bar 
+                                dataKey="Período 2" 
+                                fill="hsl(var(--primary))" 
+                                radius={[0, 4, 4, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex justify-center gap-6 mt-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-muted-foreground opacity-60" />
+                            <span className="text-sm text-muted-foreground">Período 1 ({formatPeriodLabel(compareStartDate1, compareEndDate1)})</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <span className="text-sm text-muted-foreground">Período 2 ({formatPeriodLabel(compareStartDate2, compareEndDate2)})</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {showComparison && !shouldFetchComparison && (
+                <div className="text-center py-8 text-muted-foreground border-t">
+                  <GitCompare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Selecione as datas de início e fim de ambos os períodos para comparar</p>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary" />
-              <span className="text-sm text-muted-foreground">Mês Atual</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
