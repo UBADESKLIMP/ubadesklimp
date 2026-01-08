@@ -112,36 +112,61 @@ const Automotivo = () => {
       
       <main className="pt-14 md:pt-16">
         {/* Hero Section - Premium Layout */}
-        <section className="relative bg-[#0a0a0f] min-h-[500px] md:min-h-[600px] overflow-hidden">
-          {/* Showroom Floor - Light line extended across the car */}
+        <section className="relative bg-[#0a0a0f] min-h-[420px] sm:min-h-[480px] md:min-h-[550px] lg:min-h-[600px] overflow-hidden">
+          {/* Showroom Floor - Light lines - Desktop only */}
           
-          {/* Front light line - subtle sophistication detail with pulse */}
+          {/* Front light line - desktop */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[55%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
+            className="hidden md:block absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[55%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.25) 30%, rgba(180,210,255,0.35) 50%, rgba(140,180,255,0.25) 70%, transparent 95%)',
               boxShadow: '0 0 8px 1px rgba(100,160,255,0.12)'
             }}
           />
-          {/* Front line subtle glow with pulse */}
+          {/* Front line subtle glow - desktop */}
           <div 
-            className="absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[50%] h-6 blur-xl pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
+            className="hidden md:block absolute bottom-[32%] left-1/2 -translate-x-1/2 w-[50%] h-6 blur-xl pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.06), transparent)' }}
           />
           
-          {/* Back light line - subtle depth accent with delayed pulse */}
+          {/* Back light line - desktop */}
           <div 
-            className="absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[45%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
+            className="hidden md:block absolute bottom-[42%] left-1/2 -translate-x-1/2 w-[45%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
             style={{ 
               background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.18) 35%, rgba(160,200,255,0.28) 50%, rgba(140,180,255,0.18) 65%, transparent 90%)',
               boxShadow: '0 0 6px 1px rgba(100,160,255,0.08)'
             }}
           />
           
-          {/* Floor ambient reflection - very subtle with slow pulse */}
+          {/* Floor ambient reflection - desktop */}
           <div 
-            className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] blur-2xl pointer-events-none animate-[lightPulse_5s_ease-in-out_infinite_1s]"
+            className="hidden md:block absolute bottom-[28%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] blur-2xl pointer-events-none animate-[lightPulse_5s_ease-in-out_infinite_1s]"
             style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.06), transparent 70%)' }}
+          />
+          
+          {/* MOBILE-ONLY Light Lines - Better positioned for mobile layout */}
+          <div 
+            className="md:hidden absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[85%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
+            style={{ 
+              background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.3) 30%, rgba(180,210,255,0.4) 50%, rgba(140,180,255,0.3) 70%, transparent 95%)',
+              boxShadow: '0 0 6px 1px rgba(100,160,255,0.15)'
+            }}
+          />
+          <div 
+            className="md:hidden absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-5 blur-lg pointer-events-none"
+            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.08), transparent)' }}
+          />
+          <div 
+            className="md:hidden absolute bottom-[26%] left-1/2 -translate-x-1/2 w-[70%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
+            style={{ 
+              background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.2) 35%, rgba(160,200,255,0.3) 50%, rgba(140,180,255,0.2) 65%, transparent 90%)',
+              boxShadow: '0 0 5px 1px rgba(100,160,255,0.1)'
+            }}
+          />
+          {/* Mobile floor reflection */}
+          <div 
+            className="md:hidden absolute bottom-[12%] left-1/2 -translate-x-1/2 w-[90%] h-[8%] blur-xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.08), transparent 70%)' }}
           />
           
           {/* Subtle ambient gradients - Premium blue showroom */}
@@ -149,9 +174,9 @@ const Automotivo = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.03),transparent_40%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.08),transparent_50%)]" />
           
-          {/* Dynamic Spotlight that follows the car - synced movement */}
+          {/* Dynamic Spotlight - Desktop only */}
           <div 
-            className="absolute right-[10%] lg:right-[15%] w-[400px] md:w-[500px] lg:w-[600px] h-[400px] md:h-[500px] lg:h-[600px] pointer-events-none will-change-transform"
+            className="hidden md:block absolute right-[10%] lg:right-[15%] w-[400px] md:w-[500px] lg:w-[600px] h-[400px] md:h-[500px] lg:h-[600px] pointer-events-none will-change-transform"
             style={{ 
               transform: `translateY(${parallaxY * 0.5}px)`,
               top: '20%',
@@ -159,9 +184,9 @@ const Automotivo = () => {
               filter: 'blur(40px)'
             }}
           />
-          {/* Secondary spotlight glow - synced movement */}
+          {/* Secondary spotlight - Desktop only */}
           <div 
-            className="absolute right-[15%] lg:right-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] pointer-events-none will-change-transform"
+            className="hidden md:block absolute right-[15%] lg:right-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] pointer-events-none will-change-transform"
             style={{ 
               transform: `translateY(${parallaxY * 0.3}px)`,
               top: '25%',
@@ -170,24 +195,34 @@ const Automotivo = () => {
             }}
           />
           
-          {/* Fog/Mist Effect at the base */}
+          {/* Mobile spotlight - Centered and optimized */}
           <div 
-            className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none"
+            className="md:hidden absolute left-1/2 -translate-x-1/2 w-[300px] h-[250px] pointer-events-none"
+            style={{ 
+              top: '15%',
+              background: 'radial-gradient(ellipse 70% 60% at center, rgba(59,130,246,0.15), rgba(100,160,255,0.05) 50%, transparent 80%)',
+              filter: 'blur(30px)'
+            }}
+          />
+          
+          {/* Fog/Mist Effect at the base - adjusted for mobile */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[25%] md:h-[35%] pointer-events-none"
             style={{ 
               background: 'linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(20,25,40,0.4) 30%, rgba(40,60,100,0.15) 60%, transparent 100%)',
             }}
           />
           {/* Fog layer 2 - softer blue tint */}
           <div 
-            className="absolute bottom-0 left-0 right-0 h-[25%] pointer-events-none"
+            className="absolute bottom-0 left-0 right-0 h-[15%] md:h-[25%] pointer-events-none"
             style={{ 
               background: 'linear-gradient(to top, rgba(30,50,80,0.3) 0%, rgba(60,100,150,0.1) 50%, transparent 100%)',
               filter: 'blur(20px)',
             }}
           />
-          {/* Fog wisps - animated subtle movement */}
+          {/* Fog wisps - hidden on mobile for cleaner look */}
           <div 
-            className="absolute bottom-[5%] left-0 right-0 h-[15%] pointer-events-none opacity-40"
+            className="hidden md:block absolute bottom-[5%] left-0 right-0 h-[15%] pointer-events-none opacity-40"
             style={{ 
               background: 'radial-gradient(ellipse 80% 100% at 30% 100%, rgba(80,120,180,0.25), transparent 50%), radial-gradient(ellipse 60% 80% at 70% 100%, rgba(100,140,200,0.2), transparent 50%)',
               filter: 'blur(30px)',
@@ -195,7 +230,8 @@ const Automotivo = () => {
             }}
           />
 
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Particles - hidden on mobile for performance */}
+          <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
             {particles.map((p) => (
               <div
                 key={p.id}
@@ -216,10 +252,10 @@ const Automotivo = () => {
           </div>
 
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[500px] md:min-h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[420px] sm:min-h-[480px] md:min-h-[550px] lg:min-h-[600px]">
               
               {/* Left Side - Content */}
-              <div className="py-12 md:py-16 order-2 lg:order-1 text-center lg:text-left">
+              <div className="py-8 sm:py-10 md:py-16 order-2 lg:order-1 text-center lg:text-left">
                 {/* Logo UbadeskCar - Larger with subtle glow */}
                 <div 
                   className={`flex items-center gap-4 mb-8 justify-center lg:justify-start transition-all duration-700 delay-100 ${
@@ -229,10 +265,10 @@ const Automotivo = () => {
                   <img 
                     src={carNeonLogo} 
                     alt="UbadeskCar" 
-                    className="h-36 md:h-44 lg:h-52 w-auto"
+                    className="h-24 sm:h-32 md:h-44 lg:h-52 w-auto"
                     style={{ filter: 'drop-shadow(0 0 18px rgba(59,130,246,0.35))' }}
                   />
-                  <span className="text-3xl md:text-4xl font-bold">
+                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
                     <span className="text-white">Ubadesk</span>
                     <span className="text-blue-500">Car</span>
                   </span>
@@ -240,14 +276,14 @@ const Automotivo = () => {
                 
                 {/* Title with animation */}
                 <h1 
-                  className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight transition-all duration-700 delay-200 ${
+                  className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight transition-all duration-700 delay-200 ${
                     isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
                   }`}
                 >
                   Linha Automotiva
                 </h1>
                 <h2 
-                  className={`text-3xl md:text-4xl lg:text-5xl font-bold text-blue-500 mb-8 transition-all duration-700 delay-300 ${
+                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-blue-500 mb-6 sm:mb-8 transition-all duration-700 delay-300 ${
                     isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
                   }`}
                 >
@@ -293,13 +329,13 @@ const Automotivo = () => {
               
               {/* Right Side - Car with Parallax + animation */}
               <div 
-                className={`relative order-1 lg:order-2 flex items-end justify-center lg:justify-end transition-all duration-1000 delay-300 ${
+                className={`relative order-1 lg:order-2 flex items-center justify-center lg:justify-end pt-6 sm:pt-8 md:pt-0 transition-all duration-1000 delay-300 ${
                   isLoaded ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-10 scale-95'
                 }`}
               >
-                {/* Car Image with Smooth Parallax - GPU accelerated */}
+                {/* Car Image with Smooth Parallax - smaller on mobile */}
                 <div 
-                  className="relative w-full max-w-lg lg:max-w-none will-change-transform"
+                  className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-lg lg:max-w-none will-change-transform"
                   style={{ 
                     transform: `translate3d(0, ${parallaxY}px, 0)`,
                     backfaceVisibility: 'hidden'
