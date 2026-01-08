@@ -6,17 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format, startOfMonth, endOfMonth, subDays, startOfYear } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subDays, startOfYear, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   DollarSign,
   ShoppingCart,
   TrendingUp,
+  TrendingDown,
   Package,
   CheckCircle,
   XCircle,
   Clock,
-  CalendarIcon
+  CalendarIcon,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 import {
   AreaChart,
@@ -35,10 +38,31 @@ const AdminDashboard = () => {
   const defaultStartDate = useMemo(() => startOfMonth(new Date()), []);
   const defaultEndDate = useMemo(() => endOfMonth(new Date()), []);
   
+  // Previous month dates for comparison
+  const prevMonthStart = useMemo(() => startOfMonth(subMonths(new Date(), 1)), []);
+  const prevMonthEnd = useMemo(() => endOfMonth(subMonths(new Date(), 1)), []);
+  const currMonthStart = useMemo(() => startOfMonth(new Date()), []);
+  const currMonthEnd = useMemo(() => endOfMonth(new Date()), []);
+  
   const [startDate, setStartDate] = useState<Date | undefined>(defaultStartDate);
   const [endDate, setEndDate] = useState<Date | undefined>(defaultEndDate);
   
   const { stats, loading } = useSalesStats(undefined, startDate, endDate);
+  
+  // Stats for comparison
+  const { stats: prevMonthStats, loading: prevLoading } = useSalesStats(undefined, prevMonthStart, prevMonthEnd);
+  const { stats: currMonthStats, loading: currLoading } = useSalesStats(undefined, currMonthStart, currMonthEnd);
+  
+  const calculatePercentChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+  
+  const revenueChange = calculatePercentChange(currMonthStats.totalRevenue, prevMonthStats.totalRevenue);
+  const ordersChange = calculatePercentChange(currMonthStats.totalOrders, prevMonthStats.totalOrders);
+  const productsSoldCurr = currMonthStats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
+  const productsSoldPrev = prevMonthStats.productsSold.reduce((sum, p) => sum + p.totalQuantity, 0);
+  const productsChange = calculatePercentChange(productsSoldCurr, productsSoldPrev);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -58,7 +82,7 @@ const AdminDashboard = () => {
     return date.toLocaleDateString('pt-BR', { month: 'short' });
   };
 
-  if (loading) {
+  if (loading || prevLoading || currLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -262,6 +286,100 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monthly Comparison */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Comparativo: Mês Atual vs Mês Anterior
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Revenue Comparison */}
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Faturamento</p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-2xl font-bold">{formatPrice(currMonthStats.totalRevenue)}</p>
+                  <p className="text-xs text-muted-foreground">Este mês</p>
+                </div>
+                <div className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                  revenueChange >= 0 
+                    ? "bg-green-500/10 text-green-600" 
+                    : "bg-red-500/10 text-red-600"
+                )}>
+                  {revenueChange >= 0 ? (
+                    <ArrowUpRight className="h-4 w-4" />
+                  ) : (
+                    <ArrowDownRight className="h-4 w-4" />
+                  )}
+                  {Math.abs(revenueChange).toFixed(1)}%
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Mês anterior: {formatPrice(prevMonthStats.totalRevenue)}
+              </p>
+            </div>
+
+            {/* Orders Comparison */}
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Pedidos</p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-2xl font-bold">{currMonthStats.totalOrders}</p>
+                  <p className="text-xs text-muted-foreground">Este mês</p>
+                </div>
+                <div className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                  ordersChange >= 0 
+                    ? "bg-green-500/10 text-green-600" 
+                    : "bg-red-500/10 text-red-600"
+                )}>
+                  {ordersChange >= 0 ? (
+                    <ArrowUpRight className="h-4 w-4" />
+                  ) : (
+                    <ArrowDownRight className="h-4 w-4" />
+                  )}
+                  {Math.abs(ordersChange).toFixed(1)}%
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Mês anterior: {prevMonthStats.totalOrders} pedidos
+              </p>
+            </div>
+
+            {/* Products Comparison */}
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Produtos Vendidos</p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-2xl font-bold">{productsSoldCurr}</p>
+                  <p className="text-xs text-muted-foreground">Este mês</p>
+                </div>
+                <div className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium",
+                  productsChange >= 0 
+                    ? "bg-green-500/10 text-green-600" 
+                    : "bg-red-500/10 text-red-600"
+                )}>
+                  {productsChange >= 0 ? (
+                    <ArrowUpRight className="h-4 w-4" />
+                  ) : (
+                    <ArrowDownRight className="h-4 w-4" />
+                  )}
+                  {Math.abs(productsChange).toFixed(1)}%
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Mês anterior: {productsSoldPrev} produtos
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
