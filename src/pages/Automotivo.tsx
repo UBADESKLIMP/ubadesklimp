@@ -144,30 +144,49 @@ const Automotivo = () => {
             style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.06), transparent 70%)' }}
           />
           
-          {/* MOBILE-ONLY Light Lines - Better positioned for mobile layout */}
+          {/* MOBILE-ONLY Light Lines - Positioned at bottom with the car */}
           <div 
-            className="md:hidden absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[85%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
+            className="md:hidden absolute bottom-[8%] left-1/2 -translate-x-1/2 w-[90%] h-[2px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite]"
             style={{ 
-              background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.3) 30%, rgba(180,210,255,0.4) 50%, rgba(140,180,255,0.3) 70%, transparent 95%)',
-              boxShadow: '0 0 6px 1px rgba(100,160,255,0.15)'
+              background: 'linear-gradient(90deg, transparent 5%, rgba(140,180,255,0.35) 30%, rgba(180,210,255,0.5) 50%, rgba(140,180,255,0.35) 70%, transparent 95%)',
+              boxShadow: '0 0 8px 2px rgba(100,160,255,0.2)'
             }}
           />
           <div 
-            className="md:hidden absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-5 blur-lg pointer-events-none"
-            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.08), transparent)' }}
+            className="md:hidden absolute bottom-[8%] left-1/2 -translate-x-1/2 w-[80%] h-6 blur-lg pointer-events-none"
+            style={{ background: 'linear-gradient(to top, rgba(100,160,255,0.12), transparent)' }}
           />
           <div 
-            className="md:hidden absolute bottom-[26%] left-1/2 -translate-x-1/2 w-[70%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
+            className="md:hidden absolute bottom-[14%] left-1/2 -translate-x-1/2 w-[75%] h-[1px] pointer-events-none animate-[lightPulse_4s_ease-in-out_infinite_2s]"
             style={{ 
-              background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.2) 35%, rgba(160,200,255,0.3) 50%, rgba(140,180,255,0.2) 65%, transparent 90%)',
-              boxShadow: '0 0 5px 1px rgba(100,160,255,0.1)'
+              background: 'linear-gradient(90deg, transparent 10%, rgba(140,180,255,0.25) 35%, rgba(160,200,255,0.35) 50%, rgba(140,180,255,0.25) 65%, transparent 90%)',
+              boxShadow: '0 0 6px 1px rgba(100,160,255,0.12)'
             }}
           />
-          {/* Mobile floor reflection */}
+          {/* Mobile floor reflection - at the base */}
           <div 
-            className="md:hidden absolute bottom-[12%] left-1/2 -translate-x-1/2 w-[90%] h-[8%] blur-xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.08), transparent 70%)' }}
+            className="md:hidden absolute bottom-[3%] left-1/2 -translate-x-1/2 w-[95%] h-[10%] blur-xl pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 100% 80% at center, rgba(80,140,220,0.12), transparent 70%)' }}
           />
+          {/* Mobile dust particles */}
+          <div className="md:hidden absolute inset-x-0 bottom-[5%] h-[20%] overflow-hidden pointer-events-none">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={`mobile-particle-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 2 + Math.random() * 2,
+                  height: 2 + Math.random() * 2,
+                  left: `${15 + i * 14}%`,
+                  bottom: `${25 + (i % 3) * 20}%`,
+                  background: 'rgba(140,180,255,0.5)',
+                  boxShadow: '0 0 4px rgba(140,180,255,0.4)',
+                  animation: `floatParticle ${5 + i * 0.5}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.8}s`,
+                }}
+              />
+            ))}
+          </div>
           
           {/* Subtle ambient gradients - Premium blue showroom */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(59,130,246,0.04),transparent_50%)]" />
@@ -195,13 +214,13 @@ const Automotivo = () => {
             }}
           />
           
-          {/* Mobile spotlight - Centered and optimized */}
+          {/* Mobile spotlight - Positioned at bottom with the car */}
           <div 
-            className="md:hidden absolute left-1/2 -translate-x-1/2 w-[300px] h-[250px] pointer-events-none"
+            className="md:hidden absolute left-1/2 -translate-x-1/2 w-[350px] h-[200px] pointer-events-none"
             style={{ 
-              top: '15%',
-              background: 'radial-gradient(ellipse 70% 60% at center, rgba(59,130,246,0.15), rgba(100,160,255,0.05) 50%, transparent 80%)',
-              filter: 'blur(30px)'
+              bottom: '5%',
+              background: 'radial-gradient(ellipse 80% 70% at center, rgba(59,130,246,0.18), rgba(100,160,255,0.06) 50%, transparent 85%)',
+              filter: 'blur(25px)'
             }}
           />
           
@@ -254,8 +273,8 @@ const Automotivo = () => {
           <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center min-h-[420px] sm:min-h-[480px] md:min-h-[550px] lg:min-h-[600px]">
               
-              {/* Left Side - Content */}
-              <div className="py-8 sm:py-10 md:py-16 order-2 lg:order-1 text-center lg:text-left">
+              {/* Left Side - Content - Logo first on mobile */}
+              <div className="py-6 sm:py-8 md:py-16 order-1 text-center lg:text-left">
                 {/* Logo UbadeskCar - Larger with subtle glow */}
                 <div 
                   className={`flex items-center gap-4 mb-8 justify-center lg:justify-start transition-all duration-700 delay-100 ${
@@ -327,9 +346,9 @@ const Automotivo = () => {
                 </div>
               </div>
               
-              {/* Right Side - Car with Parallax + animation */}
+              {/* Right Side - Car with Parallax + animation - Below content on mobile */}
               <div 
-                className={`relative order-1 lg:order-2 flex items-center justify-center lg:justify-end pt-6 sm:pt-8 md:pt-0 transition-all duration-1000 delay-300 ${
+                className={`relative order-2 flex items-center justify-center lg:justify-end pb-8 md:pb-0 md:pt-0 transition-all duration-1000 delay-300 ${
                   isLoaded ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-10 scale-95'
                 }`}
               >
