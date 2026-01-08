@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subDays, startOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   DollarSign,
@@ -135,16 +135,48 @@ const AdminDashboard = () => {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setStartDate(defaultStartDate);
-                setEndDate(defaultEndDate);
-              }}
-            >
-              Mês Atual
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate(subDays(new Date(), 7));
+                  setEndDate(new Date());
+                }}
+              >
+                Últimos 7 dias
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate(subDays(new Date(), 30));
+                  setEndDate(new Date());
+                }}
+              >
+                Últimos 30 dias
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate(defaultStartDate);
+                  setEndDate(defaultEndDate);
+                }}
+              >
+                Mês Atual
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate(startOfYear(new Date()));
+                  setEndDate(new Date());
+                }}
+              >
+                Ano Atual
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
