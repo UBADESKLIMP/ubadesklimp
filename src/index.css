@@ -261,3 +261,24 @@
     transform: translateX(100%);
   }
 }
+
+@keyframes lightSweep {
+  0% { 
+    transform: translateX(-150%) skewX(-12deg); 
+  }
+  40%, 60% { 
+    transform: translateX(350%) skewX(-12deg); 
+  }
+  100% { 
+    transform: translateX(350%) skewX(-12deg); 
+  }
+}
+
+@keyframes chromeShift {
+  0% { 
+    background-position: 0% 50%; 
+  }
+  100% { 
+    background-position: 200% 50%; 
+  }
+}

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X, Loader2, Star, Package, Settings, Layers } from 'lucide-react';
+import { Save, X, Loader2, Star, Package, Settings, Layers, Car, Droplets, MapPin } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
@@ -43,6 +43,9 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     out_of_stock: boolean;
     size_unit: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
     price_position: 'below_image' | 'below_text';
+    action_type: string;
+    ph_level: string;
+    application_area: string;
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -62,6 +65,9 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     out_of_stock: (product as any)?.out_of_stock || false,
     size_unit: (product as any)?.size_unit || 'litros',
     price_position: (product as any)?.price_position || 'below_text',
+    action_type: (product as any)?.action_type || '',
+    ph_level: (product as any)?.ph_level || '',
+    application_area: (product as any)?.application_area || '',
   });
 
   useEffect(() => {
@@ -96,6 +102,9 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         out_of_stock: (product as any)?.out_of_stock || false,
         size_unit: (product as any)?.size_unit || 'litros',
         price_position: (product as any)?.price_position || 'below_text',
+        action_type: (product as any)?.action_type || '',
+        ph_level: (product as any)?.ph_level || '',
+        application_area: (product as any)?.application_area || '',
       });
     }
   }, [product]);
@@ -137,6 +146,9 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         out_of_stock: formData.out_of_stock,
         size_unit: formData.size_unit,
         price_position: formData.price_position,
+        action_type: formData.action_type || null,
+        ph_level: formData.ph_level || null,
+        application_area: formData.application_area || null,
       };
 
       await onSave({ ...productData, fragrances: formData.fragrances });
@@ -359,6 +371,78 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Campos Técnicos Automotivos */}
+          {formData.category?.toLowerCase() === 'automotivo' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5 text-blue-400" />
+                  Detalhes Técnicos Automotivos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="action_type" className="flex items-center gap-2">
+                    <Droplets className="h-4 w-4 text-blue-400" />
+                    Ação
+                  </Label>
+                  <Select value={formData.action_type} onValueChange={(value) => setFormData({...formData, action_type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a ação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desengraxante">Desengraxante</SelectItem>
+                      <SelectItem value="polish">Polish</SelectItem>
+                      <SelectItem value="cera">Cera</SelectItem>
+                      <SelectItem value="limpador">Limpador</SelectItem>
+                      <SelectItem value="renovador">Renovador</SelectItem>
+                      <SelectItem value="hidratante">Hidratante</SelectItem>
+                      <SelectItem value="selante">Selante</SelectItem>
+                      <SelectItem value="pretinho">Pretinho</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="ph_level">PH</Label>
+                  <Select value={formData.ph_level} onValueChange={(value) => setFormData({...formData, ph_level: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o PH" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="neutro">Neutro (7)</SelectItem>
+                      <SelectItem value="acido">Ácido (&lt;7)</SelectItem>
+                      <SelectItem value="alcalino">Alcalino (&gt;7)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="application_area" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-400" />
+                    Local de Aplicação
+                  </Label>
+                  <Select value={formData.application_area} onValueChange={(value) => setFormData({...formData, application_area: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o local" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="motor">Motor</SelectItem>
+                      <SelectItem value="lataria">Lataria</SelectItem>
+                      <SelectItem value="interior">Interior</SelectItem>
+                      <SelectItem value="rodas">Rodas</SelectItem>
+                      <SelectItem value="vidros">Vidros</SelectItem>
+                      <SelectItem value="pneus">Pneus</SelectItem>
+                      <SelectItem value="plasticos">Plásticos</SelectItem>
+                      <SelectItem value="couro">Couro</SelectItem>
+                      <SelectItem value="universal">Universal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

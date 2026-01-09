@@ -40,25 +40,15 @@ const AutomotiveBanner = () => {
         >
           {/* Animated Gradient Border Container */}
           <div className="relative rounded-[20px] animate-fade-in-up">
-            {/* GLOW Effect (diffuse light behind) */}
+            {/* Chrome outline - sutil */}
             <div
-              className={`absolute inset-[-8px] rounded-[28px] blur-xl transition-all duration-300 ${
-                isHovered ? "animate-glow-pulse" : "opacity-50"
+              className={`absolute inset-[-2px] rounded-[22px] transition-all duration-500 ${
+                isHovered ? "opacity-60" : "opacity-30"
               } ${isExiting ? "animate-fade-out-fast" : ""}`}
               style={{
-                background: "linear-gradient(120deg, #1e90ff, #5a2dff, #1e90ff)",
-                backgroundSize: "300% 300%",
-              }}
-            />
-
-            {/* Animated Border (sharp line) */}
-            <div
-              className={`absolute inset-[-1px] rounded-[22px] ${
-                isHovered ? "animate-border-chase" : "animate-border-move"
-              } ${isExiting ? "animate-fade-out-fast" : ""}`}
-              style={{
-                background: "linear-gradient(120deg, #1e90ff, #5a2dff, #1e90ff)",
-                backgroundSize: "300% 300%",
+                background: "linear-gradient(90deg, rgba(255,255,255,0.1), rgba(140,180,255,0.2), rgba(255,255,255,0.15), rgba(140,180,255,0.2), rgba(255,255,255,0.1))",
+                backgroundSize: "200% 100%",
+                animation: "chromeShift 8s linear infinite",
               }}
             />
 
@@ -136,28 +126,13 @@ const AutomotiveBanner = () => {
                     {/* Subtle headlight glow - stays within image bounds */}
                     {isHovered && !isShaking && !isExiting && (
                       <div
-                        className="absolute top-[40%] right-[8%] w-6 h-3 pointer-events-none z-10 animate-headlight-on"
+                        className="absolute top-[40%] right-[8%] w-4 h-2 pointer-events-none z-10"
                         style={{
-                          background: "radial-gradient(ellipse, rgba(30, 144, 255, 0.7), transparent 80%)",
-                          filter: "blur(4px)",
+                          background: "radial-gradient(ellipse, rgba(30, 144, 255, 0.4), transparent 80%)",
+                          filter: "blur(3px)",
                           mixBlendMode: "screen",
                         }}
                       />
-                    )}
-
-                    {/* Light beam from headlights to text - more tapered */}
-                    {isHovered && !isShaking && !isExiting && (
-                      <div className="absolute top-[14%] right-[15%] pointer-events-none z-5 translate-x-full">
-                        <div
-                          className="w-64 h-20 animate-headlight-beam origin-left"
-                          style={{
-                            background:
-                              "linear-gradient(90deg, rgba(30, 144, 255, 0.45), rgba(30, 144, 255, 0.16) 55%, transparent)",
-                            clipPath: "polygon(0% 48%, 0% 52%, 100% 100%, 100% 0%)",
-                            filter: "blur(10px)",
-                          }}
-                        />
-                      </div>
                     )}
 
                     {/* Car Neon Image */}

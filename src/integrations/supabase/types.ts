@@ -19,18 +19,21 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          type: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          type?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          type?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -162,6 +165,8 @@ export type Database = {
       }
       products: {
         Row: {
+          action_type: string | null
+          application_area: string | null
           category: string
           created_at: string
           description: string | null
@@ -174,6 +179,7 @@ export type Database = {
           material: string | null
           name: string
           out_of_stock: boolean | null
+          ph_level: string | null
           price: number
           price_position: string | null
           priority: boolean
@@ -184,6 +190,8 @@ export type Database = {
           validity: string | null
         }
         Insert: {
+          action_type?: string | null
+          application_area?: string | null
           category: string
           created_at?: string
           description?: string | null
@@ -196,6 +204,7 @@ export type Database = {
           material?: string | null
           name: string
           out_of_stock?: boolean | null
+          ph_level?: string | null
           price: number
           price_position?: string | null
           priority?: boolean
@@ -206,6 +215,8 @@ export type Database = {
           validity?: string | null
         }
         Update: {
+          action_type?: string | null
+          application_area?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -218,6 +229,7 @@ export type Database = {
           material?: string | null
           name?: string
           out_of_stock?: boolean | null
+          ph_level?: string | null
           price?: number
           price_position?: string | null
           priority?: boolean

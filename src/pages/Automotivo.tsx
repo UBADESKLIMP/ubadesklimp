@@ -367,6 +367,20 @@ const Automotivo = () => {
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
 
+                  {/* Light sweep effect - percorre a lateral do carro */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none overflow-hidden"
+                    style={{ clipPath: 'inset(0)' }}
+                  >
+                    <div
+                      className="absolute h-full w-[40%] -skew-x-12"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent)',
+                        animation: 'lightSweep 6s ease-in-out infinite',
+                        animationDelay: '2s'
+                      }}
+                    />
+                  </div>
                   
                   <div 
                     className="absolute top-full left-0 w-full h-32 overflow-hidden pointer-events-none"
@@ -447,7 +461,7 @@ const Automotivo = () => {
         </section>
 
         {/* Products Section */}
-        <section id="products" className="py-12 md:py-16 px-4 md:px-8 bg-background">
+        <section id="products" className="py-12 md:py-16 px-4 md:px-8 bg-[#0a0a0f]">
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -483,18 +497,19 @@ const Automotivo = () => {
             ) : filteredProducts.length > 0 ? (
               <>
                 <div className="flex items-center justify-between mb-8">
-                  <p className="text-muted-foreground">
+                  <p className="text-blue-300/60">
                     {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onShowDetails={() => handleShowDetails(product)}
-                    />
+                    <div key={product.id} className="[&_.bg-card]:bg-[#12121a] [&_.bg-card]:border-blue-500/20 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-blue-300/50">
+                      <ProductCard
+                        product={product}
+                        onShowDetails={() => handleShowDetails(product)}
+                      />
+                    </div>
                   ))}
                 </div>
               </>
@@ -503,24 +518,24 @@ const Automotivo = () => {
                 <div className="p-6 rounded-full bg-blue-500/10 w-fit mx-auto mb-6">
                   <Car className="h-12 w-12 text-blue-400" />
                 </div>
-                <h3 className="text-2xl font-semibold text-foreground mb-2">
+                <h3 className="text-2xl font-semibold text-white mb-2">
                   Em breve
                 </h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                <p className="text-blue-300/60 mb-6 max-w-md mx-auto">
                   Estamos preparando nossa linha automotiva profissional. Volte em breve para conferir nossos produtos!
                 </p>
                 <Link to="/">
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10">
                     Voltar ao Início
                   </Button>
                 </Link>
               </div>
             ) : (
               <div className="text-center py-16">
-                <p className="text-muted-foreground mb-4">
+                <p className="text-blue-300/60 mb-4">
                   Nenhum produto encontrado para "{searchTerm}"
                 </p>
-                <Button variant="outline" onClick={() => setSearchTerm('')}>
+                <Button variant="outline" onClick={() => setSearchTerm('')} className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10">
                   Limpar busca
                 </Button>
               </div>
