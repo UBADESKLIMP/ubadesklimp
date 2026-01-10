@@ -1,25 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface Category {
   id: string;
   name: string;
+  type: 'limpeza' | 'automotivo' | null;
   created_at: string;
   updated_at: string;
 }
 
-export const useCategories = () => {
+export const useCategories = (filterType?: 'limpeza' | 'automotivo') => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('categories')
         .select('*')
         .order('name');
+
+      if (filterType) {
+        query = query.eq('type', filterType);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setCategories((data as Category[]) || []);
@@ -33,13 +40,14 @@ export const useCategories = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType]);
 
-  const createCategory = async (name: string) => {
+  const createCategory = async (name: string, type?: 'limpeza' | 'automotivo') => {
     try {
+      const categoryType = type || filterType || 'limpeza';
       const { data, error } = await supabase
         .from('categories')
-        .insert([{ name }])
+        .insert([{ name, type: categoryType }])
         .select()
         .single();
 
@@ -155,7 +163,7 @@ export const useCategories = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   return {
     categories,
