@@ -1,20 +1,25 @@
 import { useState } from 'react';
-import { Plus, Edit3, Trash2, Car, Package, DollarSign, TrendingUp, ShoppingBag } from 'lucide-react';
+import { Plus, Edit3, Trash2, Car, Package, DollarSign, TrendingUp, ShoppingBag, Tags, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalesStats } from '@/hooks/useSalesStats';
-
+import { useCategories } from '@/hooks/useCategories';
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
   const { stats: automotiveStats, loading: statsLoading } = useSalesStats('automotivo');
+  const { categories: automotiveCategories, loading: catLoading, createCategory, deleteCategory } = useCategories('automotivo');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [savingCategory, setSavingCategory] = useState(false);
 
   // Filtrar apenas produtos automotivos
   const automotiveProducts = products.filter(
@@ -112,8 +117,106 @@ const AutomotiveProductsManager = () => {
     );
   }
 
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    setSavingCategory(true);
+    try {
+      await createCategory(newCategoryName.trim(), 'automotivo');
+      setNewCategoryName('');
+      setIsCategoryDialogOpen(false);
+    } catch (error) {
+      // Error handling is done in the hook
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    await deleteCategory(id, name);
+  };
+
   return (
     <div className="min-h-[500px] bg-[#0a0a0f] rounded-xl p-6 border border-blue-500/20">
+      {/* Automotive Categories Section */}
+      <Card className="bg-[#12121a] border-blue-500/20 mb-6">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Tags className="h-5 w-5 text-blue-400" />
+              Categorias Automotivas
+              <Badge className="bg-blue-600/30 text-blue-300 border-blue-500/50 ml-2">
+                {automotiveCategories.length}
+              </Badge>
+            </CardTitle>
+            <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+                  <Plus className="h-4 w-4 mr-1" /> Nova Categoria
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#0f0f18] border-blue-500/30 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-white flex items-center gap-2">
+                    <Car className="h-5 w-5 text-blue-400" />
+                    Nova Categoria Automotiva
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Nome da categoria"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                    className="bg-[#12121a] border-blue-500/30 text-white"
+                  />
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={handleAddCategory} 
+                      disabled={savingCategory || !newCategoryName.trim()}
+                      className="bg-blue-600 hover:bg-blue-500"
+                    >
+                      {savingCategory ? 'Salvando...' : 'Adicionar'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsCategoryDialogOpen(false)}
+                      className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {catLoading ? (
+            <p className="text-blue-300/50">Carregando categorias...</p>
+          ) : automotiveCategories.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {automotiveCategories.map(cat => (
+                <Badge 
+                  key={cat.id} 
+                  className="bg-blue-600/20 text-blue-300 border border-blue-500/30 px-3 py-1.5 flex items-center gap-2"
+                >
+                  <Car className="h-3 w-3" />
+                  {cat.name}
+                  <button 
+                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                    className="ml-1 hover:text-red-400 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-blue-300/50">Nenhuma categoria automotiva. Adicione a primeira!</p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card className="bg-[#12121a] border-blue-500/20">

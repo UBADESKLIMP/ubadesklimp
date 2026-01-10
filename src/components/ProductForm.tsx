@@ -372,50 +372,38 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             </CardContent>
           </Card>
 
-          {/* Campos Técnicos Automotivos */}
+          {/* Campos Técnicos Automotivos - Opcionais */}
           {formData.category?.toLowerCase() === 'automotivo' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="h-5 w-5 text-blue-400" />
                   Detalhes Técnicos Automotivos
+                  <span className="text-sm font-normal text-muted-foreground">(opcionais)</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="action_type" className="flex items-center gap-2">
                     <Droplets className="h-4 w-4 text-blue-400" />
                     Ação
                   </Label>
-                  <Select value={formData.action_type} onValueChange={(value) => setFormData({...formData, action_type: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a ação" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="desengraxante">Desengraxante</SelectItem>
-                      <SelectItem value="polish">Polish</SelectItem>
-                      <SelectItem value="cera">Cera</SelectItem>
-                      <SelectItem value="limpador">Limpador</SelectItem>
-                      <SelectItem value="renovador">Renovador</SelectItem>
-                      <SelectItem value="hidratante">Hidratante</SelectItem>
-                      <SelectItem value="selante">Selante</SelectItem>
-                      <SelectItem value="pretinho">Pretinho</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="action_type"
+                    value={formData.action_type}
+                    onChange={(e) => setFormData({...formData, action_type: e.target.value})}
+                    placeholder="Ex: Desengraxante, Limpador..."
+                  />
                 </div>
 
                 <div>
                   <Label htmlFor="ph_level">PH</Label>
-                  <Select value={formData.ph_level} onValueChange={(value) => setFormData({...formData, ph_level: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o PH" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="neutro">Neutro (7)</SelectItem>
-                      <SelectItem value="acido">Ácido (&lt;7)</SelectItem>
-                      <SelectItem value="alcalino">Alcalino (&gt;7)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="ph_level"
+                    value={formData.ph_level}
+                    onChange={(e) => setFormData({...formData, ph_level: e.target.value})}
+                    placeholder="Ex: Neutro, Ácido, 7.0..."
+                  />
                 </div>
 
                 <div>
@@ -423,22 +411,12 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                     <MapPin className="h-4 w-4 text-blue-400" />
                     Local de Aplicação
                   </Label>
-                  <Select value={formData.application_area} onValueChange={(value) => setFormData({...formData, application_area: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o local" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="motor">Motor</SelectItem>
-                      <SelectItem value="lataria">Lataria</SelectItem>
-                      <SelectItem value="interior">Interior</SelectItem>
-                      <SelectItem value="rodas">Rodas</SelectItem>
-                      <SelectItem value="vidros">Vidros</SelectItem>
-                      <SelectItem value="pneus">Pneus</SelectItem>
-                      <SelectItem value="plasticos">Plásticos</SelectItem>
-                      <SelectItem value="couro">Couro</SelectItem>
-                      <SelectItem value="universal">Universal</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="application_area"
+                    value={formData.application_area}
+                    onChange={(e) => setFormData({...formData, application_area: e.target.value})}
+                    placeholder="Ex: Motor, Lataria, Rodas..."
+                  />
                 </div>
               </CardContent>
             </Card>

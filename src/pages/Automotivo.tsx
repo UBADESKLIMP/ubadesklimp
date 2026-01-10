@@ -367,17 +367,16 @@ const Automotivo = () => {
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
 
-                  {/* Light sweep effect - percorre a lateral do carro */}
+                  {/* Light sweep effect - só visível sobre pixels opacos do carro */}
                   <div 
-                    className="absolute inset-0 pointer-events-none overflow-hidden"
-                    style={{ clipPath: 'inset(0)' }}
+                    className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-overlay"
                   >
                     <div
-                      className="absolute h-full w-[40%] -skew-x-12"
+                      className="absolute h-full w-[30%] -skew-x-12"
                       style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent)',
-                        animation: 'lightSweep 6s ease-in-out infinite',
-                        animationDelay: '2s'
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2) 50%, transparent)',
+                        animation: 'lightSweep 8s ease-in-out infinite',
+                        animationDelay: '3s'
                       }}
                     />
                   </div>
@@ -461,7 +460,7 @@ const Automotivo = () => {
         </section>
 
         {/* Products Section */}
-        <section id="products" className="py-12 md:py-16 px-4 md:px-8 bg-[#0a0a0f]">
+        <section id="products" className="py-12 md:py-16 px-4 md:px-8" style={{ background: 'linear-gradient(180deg, #0a0a0f 0%, #0a1628 50%, #0f1f3d 100%)' }}>
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -504,7 +503,7 @@ const Automotivo = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredProducts.map((product) => (
-                    <div key={product.id} className="[&_.bg-card]:bg-[#12121a] [&_.bg-card]:border-blue-500/20 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-blue-300/50">
+                    <div key={product.id} className="[&_.bg-card]:bg-[#0d1829] [&_.bg-card]:border-blue-500/30 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-blue-300/60">
                       <ProductCard
                         product={product}
                         onShowDetails={() => handleShowDetails(product)}
