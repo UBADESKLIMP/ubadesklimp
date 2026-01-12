@@ -85,9 +85,9 @@ const Automotivo = () => {
     };
   }, []);
 
-  // Filter only automotive products
+  // Filter only automotive products (by line_type or category fallback)
   const automotiveProducts = products.filter(
-    product => product.category?.toLowerCase() === 'automotivo'
+    product => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
   );
 
   // Apply search filter
@@ -367,16 +367,26 @@ const Automotivo = () => {
                     className="w-full h-auto object-contain drop-shadow-2xl"
                   />
 
-                  {/* Light sweep effect - só visível sobre pixels opacos do carro */}
+                  {/* Light sweep effect - usa CSS mask para limitar aos pixels do carro */}
                   <div 
-                    className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-overlay"
+                    className="absolute inset-0 pointer-events-none overflow-hidden"
+                    style={{
+                      maskImage: `url(${carHeroImage})`,
+                      WebkitMaskImage: `url(${carHeroImage})`,
+                      maskSize: 'contain',
+                      WebkitMaskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      WebkitMaskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                      WebkitMaskPosition: 'center',
+                    }}
                   >
                     <div
-                      className="absolute h-full w-[30%] -skew-x-12"
+                      className="absolute h-full w-[40%] -skew-x-12"
                       style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2) 50%, transparent)',
-                        animation: 'lightSweep 8s ease-in-out infinite',
-                        animationDelay: '3s'
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35) 50%, transparent)',
+                        animation: 'lightSweep 6s ease-in-out infinite',
+                        animationDelay: '2s'
                       }}
                     />
                   </div>
@@ -503,12 +513,12 @@ const Automotivo = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredProducts.map((product) => (
-                    <div key={product.id} className="[&_.bg-card]:bg-[#0d1829] [&_.bg-card]:border-blue-500/30 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-blue-300/60">
-                      <ProductCard
-                        product={product}
-                        onShowDetails={() => handleShowDetails(product)}
-                      />
-                    </div>
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onShowDetails={() => handleShowDetails(product)}
+                      variant="automotive"
+                    />
                   ))}
                 </div>
               </>

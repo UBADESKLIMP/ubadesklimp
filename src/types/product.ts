@@ -42,4 +42,12 @@ export interface ProductWithVariations {
   price?: number;
   size_unit?: 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades';
   price_position?: 'below_image' | 'below_text';
+  // Campos automotivos
+  action_type?: string | null;
+  ph_level?: string | null;
+  application_area?: string | null;
+  // Linha do produto (automotivo ou limpeza)
+  line_type?: 'limpeza' | 'automotivo';
+  out_of_stock?: boolean;
+  literage_single?: string;
 }

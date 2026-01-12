@@ -41,7 +41,11 @@ export const useProducts = () => {
       'literage_single',
       'out_of_stock',
       'size_unit',
-      'price_position'
+      'price_position',
+      'action_type',
+      'ph_level',
+      'application_area',
+      'line_type'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -109,6 +113,10 @@ export const useProducts = () => {
           literage_single: product.literage_single,
           size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
           price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
+          action_type: product.action_type || null,
+          ph_level: product.ph_level || null,
+          application_area: product.application_area || null,
+          line_type: (product.line_type || 'limpeza') as 'limpeza' | 'automotivo',
           created_at: product.created_at,
           updated_at: product.updated_at,
           variations: variations,
