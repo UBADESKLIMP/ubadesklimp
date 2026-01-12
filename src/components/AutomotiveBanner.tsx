@@ -40,15 +40,25 @@ const AutomotiveBanner = () => {
         >
           {/* Animated Gradient Border Container */}
           <div className="relative rounded-[20px] animate-fade-in-up">
-            {/* Chrome outline - sutil */}
+            {/* Iluminação sutil externa */}
             <div
-              className={`absolute inset-[-2px] rounded-[22px] transition-all duration-500 ${
-                isHovered ? "opacity-60" : "opacity-30"
+              className={`absolute inset-[-6px] rounded-[26px] blur-md transition-all duration-500 ${
+                isHovered ? "opacity-50" : "opacity-25"
               } ${isExiting ? "animate-fade-out-fast" : ""}`}
               style={{
-                background: "linear-gradient(90deg, rgba(255,255,255,0.1), rgba(140,180,255,0.2), rgba(255,255,255,0.15), rgba(140,180,255,0.2), rgba(255,255,255,0.1))",
-                backgroundSize: "200% 100%",
-                animation: "chromeShift 8s linear infinite",
+                background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6)",
+              }}
+            />
+            
+            {/* Borda gradiente azul/roxa animada */}
+            <div
+              className={`absolute inset-[-2px] rounded-[22px] transition-all duration-500 ${
+                isHovered ? "opacity-90" : "opacity-70"
+              } ${isExiting ? "animate-fade-out-fast" : ""}`}
+              style={{
+                background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6, #8b5cf6)",
+                backgroundSize: "300% 100%",
+                animation: "gradientBorder 4s linear infinite",
               }}
             />
 

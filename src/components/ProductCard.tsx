@@ -10,10 +10,12 @@ import { getHighlightTypeByCategory, HIGHLIGHT_CONFIGS, HighlightType } from '@/
 interface ProductCardProps {
   product: ProductWithVariations;
   onShowDetails: (product: ProductWithVariations) => void;
+  variant?: 'default' | 'automotive';
 }
 const ProductCard = ({
   product,
-  onShowDetails
+  onShowDetails,
+  variant = 'default'
 }: ProductCardProps) => {
   const { addToCart } = useCart();
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -100,7 +102,15 @@ const ProductCard = ({
     return highlightConfig;
   };
 
-  return <Card className="bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col">
+  // Automotive variant styles
+  const cardClasses = variant === 'automotive' 
+    ? 'bg-[#0d1829] border-blue-500/30 hover-lift group animate-slide-up overflow-hidden h-full flex flex-col'
+    : 'bg-gradient-card border-border hover-lift group animate-slide-up overflow-hidden h-full flex flex-col';
+
+  const textForegroundClass = variant === 'automotive' ? 'text-white' : 'text-foreground';
+  const textMutedClass = variant === 'automotive' ? 'text-blue-300/70' : 'text-muted-foreground';
+
+  return <Card className={cardClasses}>
       <div className="flex flex-col h-full">
         {/* Product Image */}
         <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4 cursor-pointer" onClick={() => onShowDetails(product)}>
@@ -198,17 +208,38 @@ const ProductCard = ({
         <div className="p-4 flex-1 flex flex-col">
           {/* Nome do produto - altura fixa */}
           <div className="h-14">
-            <h3 className="text-lg font-heading text-foreground line-clamp-2 leading-tight">
+            <h3 className={`text-lg font-heading ${textForegroundClass} line-clamp-2 leading-tight`}>
               {product.name}
             </h3>
           </div>
 
           {/* Descrição expandida - altura fixa maior */}
           {product.description && <div className="h-20 mb-4">
-              <p className="text-muted-foreground text-sm line-clamp-4 leading-relaxed">
+              <p className={`${textMutedClass} text-sm line-clamp-4 leading-relaxed`}>
                 {product.description}
               </p>
             </div>}
+          
+          {/* Detalhes Técnicos Automotivos */}
+          {(product.action_type || product.ph_level || product.application_area) && (
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {product.action_type && (
+                <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
+                  {product.action_type}
+                </span>
+              )}
+              {product.ph_level && (
+                <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                  PH: {product.ph_level}
+                </span>
+              )}
+              {product.application_area && (
+                <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
+                  {product.application_area}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Espaçador flexível */}
           <div className="flex-1"></div>
@@ -220,7 +251,7 @@ const ProductCard = ({
 
           {/* Price and CTA - sempre na parte inferior */}
           <div className="flex items-center justify-between mt-auto">
-            <span className="text-xl font-bold text-foreground">
+            <span className={`text-xl font-bold ${textForegroundClass}`}>
               {(product as any).out_of_stock ? 'Em Falta' : 
                 (getCurrentPrice() > 0 ? 
                   (product.has_variations && product.variations && product.variations.length > 0 ? 

@@ -21,9 +21,9 @@ const AutomotiveProductsManager = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [savingCategory, setSavingCategory] = useState(false);
 
-  // Filtrar apenas produtos automotivos
+  // Filtrar apenas produtos automotivos (por line_type ou fallback para category)
   const automotiveProducts = products.filter(
-    (product) => product.category?.toLowerCase() === 'automotivo'
+    (product) => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
   );
 
   const formatPrice = (amount: number) => {
@@ -36,8 +36,8 @@ const AutomotiveProductsManager = () => {
   const handleSaveProduct = async (productData: any) => {
     try {
       const { fragrances, ...productPayload } = productData;
-      // Forçar categoria automotivo
-      productPayload.category = 'automotivo';
+      // Forçar linha automotiva
+      productPayload.line_type = 'automotivo';
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, productPayload);

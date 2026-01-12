@@ -22,8 +22,16 @@ interface ProductFormProps {
 
 const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
   const { uploadImage, uploading } = useImageUpload();
-  const { categories } = useCategories();
   const [saving, setSaving] = useState(false);
+  
+  // Linha do produto (limpeza ou automotivo)
+  const [lineType, setLineType] = useState<'limpeza' | 'automotivo'>(
+    product?.line_type || 'limpeza'
+  );
+  
+  // Buscar categorias filtradas pela linha
+  const { categories } = useCategories(lineType);
+  
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -80,9 +88,10 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     }
   }, [formData.fragrances, product?.id]);
 
-  // Atualizar formData quando o produto mudar (após refetch)
+  // Atualizar formData e lineType quando o produto mudar (após refetch)
   useEffect(() => {
     if (product) {
+      setLineType(product.line_type || 'limpeza');
       setFormData({
         name: product.name || '',
         description: product.description || '',
@@ -149,6 +158,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         action_type: formData.action_type || null,
         ph_level: formData.ph_level || null,
         application_area: formData.application_area || null,
+        line_type: lineType,
       };
 
       await onSave({ ...productData, fragrances: formData.fragrances });
@@ -282,20 +292,58 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 </div>
               )}
               
-              <div>
-                <Label htmlFor="category">Categoria *</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="line_type">Linha do Produto *</Label>
+                  <Select value={lineType} onValueChange={(value: 'limpeza' | 'automotivo') => {
+                    setLineType(value);
+                    // Limpar categoria ao trocar de linha
+                    setFormData({...formData, category: ''});
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a linha" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="limpeza">
+                        <div className="flex items-center gap-2">
+                          <Droplets className="h-4 w-4 text-cyan-500" />
+                          <span>Limpeza</span>
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      <SelectItem value="automotivo">
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4 text-blue-500" />
+                          <span>Automotivo</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="category">Categoria *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.length > 0 ? (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          Nenhuma categoria {lineType === 'automotivo' ? 'automotiva' : 'de limpeza'}
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Categorias da linha {lineType === 'automotivo' ? 'Automotiva' : 'Limpeza'}
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -373,7 +421,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           </Card>
 
           {/* Campos Técnicos Automotivos - Opcionais */}
-          {formData.category?.toLowerCase() === 'automotivo' && (
+          {lineType === 'automotivo' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
