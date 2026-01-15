@@ -13,18 +13,21 @@ import ProductDetailModal from './ProductDetailModal';
 const Products = () => {
   const { products, loading } = useProducts();
   
+  // Filtrar apenas produtos de LIMPEZA (não automotivos)
+  const limpezaProducts = products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza');
+  
   // Preload das imagens prioritárias
-  useImagePreload(products, 8);
+  useImagePreload(limpezaProducts, 8);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Get unique categories from products
-  const categories = Array.from(new Set(products.map(product => product.category))).sort();
+  // Get unique categories from limpeza products only
+  const categories = Array.from(new Set(limpezaProducts.map(product => product.category))).sort();
 
   // Filter products based on search and category
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = limpezaProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -107,7 +110,7 @@ const Products = () => {
         </div>
 
         {/* Search and Filter Section */}
-        {products.length > 0 && (
+        {limpezaProducts.length > 0 && (
           <div className="mb-12 animate-fade-in">
             <div className="bg-gradient-card rounded-2xl p-6 shadow-soft border border-border">
               <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -154,9 +157,9 @@ const Products = () => {
 
               {/* Results Counter */}
               <div className="mt-4 text-sm text-muted-foreground">
-                {filteredProducts.length === products.length
-                  ? `${products.length} produtos encontrados`
-                  : `${filteredProducts.length} de ${products.length} produtos`}
+                {filteredProducts.length === limpezaProducts.length
+                  ? `${limpezaProducts.length} produtos encontrados`
+                  : `${filteredProducts.length} de ${limpezaProducts.length} produtos`}
               </div>
             </div>
           </div>
@@ -173,7 +176,7 @@ const Products = () => {
               />
             ))}
           </div>
-        ) : products.length > 0 ? (
+        ) : limpezaProducts.length > 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>

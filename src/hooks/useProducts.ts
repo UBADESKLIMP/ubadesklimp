@@ -55,7 +55,11 @@ export const useProducts = () => {
   };
 
   const fetchProducts = async () => {
-    setLoading(true);
+    // Só mostrar loading no primeiro carregamento para evitar "flash" do modal
+    const isInitialLoad = products.length === 0;
+    if (isInitialLoad) {
+      setLoading(true);
+    }
     try {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
       const [productsResult, variationsResult, fragrancesResult] = await Promise.all([
