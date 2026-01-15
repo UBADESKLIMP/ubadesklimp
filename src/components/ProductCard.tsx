@@ -113,7 +113,7 @@ const ProductCard = ({
   return <Card className={cardClasses}>
       <div className="flex flex-col h-full">
         {/* Product Image */}
-        <div className="relative h-48 w-full overflow-hidden bg-muted/50 flex items-center justify-center p-4 cursor-pointer" onClick={() => onShowDetails(product)}>
+        <div className={`relative ${variant === 'automotive' ? 'h-56' : 'h-48'} w-full overflow-hidden bg-muted/50 flex items-center justify-center ${variant === 'automotive' ? '' : 'p-4'} cursor-pointer`} onClick={() => onShowDetails(product)}>
           {getCurrentImage() && !imageError ? (
             <>
               {/* Blur placeholder while loading */}
@@ -137,15 +137,17 @@ const ProductCard = ({
                   }}
                 />
               </div>
-              {/* Main image */}
+              {/* Main image - zoom para automotivo */}
               <img 
                 src={getCurrentImage()!} 
                 alt={product.name} 
                 loading="lazy"
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
-                className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-all duration-700 ease-out ${
-                  imageLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-sm scale-105'
+                className={`transition-all duration-700 ease-out ${
+                  variant === 'automotive'
+                    ? `w-full h-full object-cover scale-125 group-hover:scale-[1.35] ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}`
+                    : `max-w-full max-h-full object-contain group-hover:scale-105 ${imageLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-sm scale-105'}`
                 }`}
               />
             </>
