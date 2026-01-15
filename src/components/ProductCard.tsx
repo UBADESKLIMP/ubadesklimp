@@ -146,7 +146,7 @@ const ProductCard = ({
                 onError={() => setImageError(true)}
                 className={`transition-all duration-700 ease-out ${
                   variant === 'automotive'
-                    ? `w-full h-full object-cover scale-125 group-hover:scale-[1.35] ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}`
+                    ? `w-full h-full object-cover scale-110 group-hover:scale-[1.20] ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}`
                     : `max-w-full max-h-full object-contain group-hover:scale-105 ${imageLoaded ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-sm scale-105'}`
                 }`}
               />
