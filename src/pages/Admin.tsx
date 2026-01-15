@@ -216,10 +216,12 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            {/* Products Grid */}
-            {products.length > 0 ? (
+            {/* Products Grid - Apenas produtos de LIMPEZA */}
+            {(() => {
+              const limpezaProducts = products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza');
+              return limpezaProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
+                {limpezaProducts.map((product) => (
                   <Card key={product.id} className="bg-[#12121a] border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
                     <div className="relative">
                       {product.image_url ? (
@@ -279,16 +281,17 @@ const Admin = () => {
             ) : (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">📦</div>
-                <h3 className="text-xl font-semibold mb-2 text-white">Nenhum produto encontrado</h3>
+                <h3 className="text-xl font-semibold mb-2 text-white">Nenhum produto de limpeza encontrado</h3>
                 <p className="text-blue-300/50 mb-6">
-                  Comece adicionando seu primeiro produto
+                  Comece adicionando seu primeiro produto de limpeza
                 </p>
                 <Button onClick={() => setIsDialogOpen(true)} className="bg-blue-600 hover:bg-blue-500 text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Produto
                 </Button>
               </div>
-            )}
+            );
+            })()}
           </TabsContent>
 
           {/* Automotive Tab */}
