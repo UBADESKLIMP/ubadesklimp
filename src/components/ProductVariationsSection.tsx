@@ -32,12 +32,6 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
 
   const handleFragrancesChange = (newFragrances: any[]) => {
     onFragrancesChange(newFragrances);
-    
-    // Atualizar imagem principal automaticamente se há fragrância com imagem
-    const firstFragranceWithImage = newFragrances.find(f => f.image_url);
-    if (firstFragranceWithImage?.image_url && onMainImageChange) {
-      onMainImageChange(firstFragranceWithImage.image_url);
-    }
   };
 
   const handleAddVariation = async () => {
@@ -49,17 +43,9 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         literage: newVariation.literage,
         price: parseFloat(newVariation.price),
         image_url: newVariation.image_url || null,
-        is_primary: variations.length === 0, // Primeira variação é principal
-        display_order: 0 // O hook vai calcular o order correto
+        is_primary: variations.length === 0,
+        display_order: 0
       });
-
-      // Atualizar imagem principal automaticamente se não há fragrância com imagem
-      if (newVariation.image_url && onMainImageChange) {
-        const hasFragranceWithImage = fragrances.some(f => f.image_url);
-        if (!hasFragranceWithImage) {
-          onMainImageChange(newVariation.image_url);
-        }
-      }
 
       setNewVariation({ literage: '', price: '', image_url: '' });
     } catch (error) {
@@ -71,14 +57,6 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
     try {
       const updates = { [field]: value };
       await updateVariation(id, updates);
-
-      // Atualizar imagem principal automaticamente se não há fragrância com imagem
-      if (field === 'image_url' && onMainImageChange && value) {
-        const hasFragranceWithImage = fragrances.some(f => f.image_url);
-        if (!hasFragranceWithImage && variations[0]?.id === id) {
-          onMainImageChange(value as string);
-        }
-      }
     } catch (error) {
       // Error handled in hook
     }
@@ -306,12 +284,6 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
           </div>
         )}
 
-        {variations.length > 0 && (
-          <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded">
-            💡 <strong>Novo Sistema Automático:</strong> A imagem do produto se atualiza automaticamente! 
-            Fragrâncias têm prioridade sobre volumes para definir a imagem principal.
-          </div>
-        )}
       </div>
 
       <Separator />
