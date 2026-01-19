@@ -113,7 +113,7 @@ const ProductCard = ({
   return <Card className={cardClasses}>
       <div className="flex flex-col h-full">
         {/* Product Image */}
-        <div className={`relative ${variant === 'automotive' ? 'h-60' : 'h-48'} w-full overflow-hidden bg-muted/50 flex items-center justify-center ${variant === 'automotive' ? 'p-3' : 'p-4'} cursor-pointer`} onClick={() => onShowDetails(product)}>
+        <div className={`relative ${variant === 'automotive' ? 'h-60' : 'h-48'} w-full overflow-hidden ${variant === 'automotive' ? 'bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950' : 'bg-muted/50'} flex items-center justify-center ${variant === 'automotive' ? 'p-3' : 'p-4'} cursor-pointer`} onClick={() => onShowDetails(product)}>
           {getCurrentImage() && !imageError ? (
             <>
               {/* Blur placeholder while loading */}
@@ -230,14 +230,14 @@ const ProductCard = ({
                   {product.action_type}
                 </span>
               )}
-              {product.ph_level && (
-                <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
-                  PH: {product.ph_level}
-                </span>
-              )}
               {product.application_area && (
                 <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
                   {product.application_area}
+                </span>
+              )}
+              {product.ph_level && (
+                <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                  PH: {product.ph_level}
                 </span>
               )}
             </div>
