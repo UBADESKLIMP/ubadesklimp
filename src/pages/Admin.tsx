@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,6 +13,7 @@ import BackgroundRemover from '@/components/BackgroundRemover';
 import OrdersManager from '@/components/OrdersManager';
 import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
+import PriorityProductsManager from '@/components/PriorityProductsManager';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
@@ -158,7 +159,7 @@ const Admin = () => {
 
         {/* Tabs for Products and Categories */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8 bg-[#12121a] border border-blue-500/20">
+          <TabsList className="grid w-full grid-cols-7 mb-8 bg-[#12121a] border border-blue-500/20">
             <TabsTrigger value="dashboard" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
               <LayoutDashboard className="h-4 w-4" />
               <span>Dashboard</span>
@@ -170,6 +171,10 @@ const Admin = () => {
             <TabsTrigger value="automotive" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-300/70">
               <Car className="h-4 w-4" />
               <span>Automotivo</span>
+            </TabsTrigger>
+            <TabsTrigger value="highlights" className="flex items-center space-x-2 data-[state=active]:bg-yellow-600/30 data-[state=active]:text-yellow-300 text-blue-300/70">
+              <Star className="h-4 w-4" />
+              <span>Destaques</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
               <ClipboardList className="h-4 w-4" />
@@ -297,6 +302,19 @@ const Admin = () => {
           {/* Automotive Tab */}
           <TabsContent value="automotive">
             <AutomotiveProductsManager />
+          </TabsContent>
+
+          {/* Highlights Tab */}
+          <TabsContent value="highlights">
+            <PriorityProductsManager 
+              onEditProduct={(productId) => {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                  setEditingProduct(product);
+                  setIsDialogOpen(true);
+                }
+              }}
+            />
           </TabsContent>
 
           {/* Orders Tab */}
