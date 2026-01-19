@@ -13,6 +13,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
 import ProductVariationsSection from './ProductVariationsSection';
+import PriorityPositionSelect from './PriorityPositionSelect';
 
 interface ProductFormProps {
   product?: ProductWithVariations | null;
@@ -489,20 +490,12 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               </div>
 
               {formData.priority && (
-                <div>
-                  <Label htmlFor="priority_order">Ordem de Prioridade</Label>
-                  <Input
-                    id="priority_order"
-                    type="number"
-                    min="0"
-                    value={formData.priority_order}
-                    onChange={(e) => setFormData({...formData, priority_order: e.target.value})}
-                    placeholder="0"
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Menor número = maior prioridade
-                  </p>
-                </div>
+                <PriorityPositionSelect
+                  value={formData.priority_order}
+                  onChange={(value) => setFormData({...formData, priority_order: value})}
+                  currentProductId={product?.id}
+                  lineType={lineType}
+                />
               )}
 
               {formData.priority && (
