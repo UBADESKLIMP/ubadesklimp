@@ -19,7 +19,16 @@ const PriorityPositionSelect = ({
   currentProductId,
   lineType 
 }: PriorityPositionSelectProps) => {
-  const { priorityProducts, loading, getPositionStatus } = usePriorityProducts('all');
+  // Filter by line type to show only positions within that line
+  const { priorityProducts, loading, getPositionStatus, getNextAvailablePosition } = usePriorityProducts(lineType || 'all');
+
+  // Auto-set to next available position when first enabling priority
+  useEffect(() => {
+    if (value === '0' || value === '') {
+      const nextPos = getNextAvailablePosition(lineType);
+      onChange(nextPos.toString());
+    }
+  }, [value, lineType, getNextAvailablePosition, onChange]);
 
   const positions = Array.from({ length: MAX_POSITIONS }, (_, i) => i + 1);
 
@@ -49,9 +58,17 @@ const PriorityPositionSelect = ({
     }
   };
 
+  // Filter products by line type for display
+  const filteredProducts = lineType 
+    ? priorityProducts.filter(p => p.line_type === lineType)
+    : priorityProducts;
+
   const renderPositionOption = (position: number) => {
-    const { occupied, product } = getPositionStatus(position, currentProductId);
-    const isCurrentPosition = value === position.toString();
+    // Check if this position is occupied within the same line type
+    const occupyingProduct = filteredProducts.find(
+      p => p.priority_order === position && p.id !== currentProductId
+    );
+    const isOccupied = !!occupyingProduct;
 
     return (
       <SelectItem 
@@ -78,7 +95,7 @@ const PriorityPositionSelect = ({
                 {getPositionLabel(position)} lugar
               </span>
               
-              {occupied ? (
+              {isOccupied ? (
                 <span className="flex items-center gap-1 text-xs text-orange-400">
                   <AlertCircle className="h-3 w-3" />
                   Ocupada
@@ -91,9 +108,9 @@ const PriorityPositionSelect = ({
               )}
             </div>
 
-            {occupied && product && (
+            {isOccupied && occupyingProduct && (
               <div className="text-xs text-muted-foreground truncate mt-0.5">
-                ⚠️ {product.name.slice(0, 30)}{product.name.length > 30 ? '...' : ''}
+                ⚠️ {occupyingProduct.name.slice(0, 30)}{occupyingProduct.name.length > 30 ? '...' : ''}
               </div>
             )}
           </div>
@@ -103,7 +120,7 @@ const PriorityPositionSelect = ({
   };
 
   // Mostrar resumo das posições ocupadas
-  const occupiedPositions = priorityProducts
+  const occupiedPositions = filteredProducts
     .filter(p => p.id !== currentProductId)
     .slice(0, 5);
 
@@ -124,7 +141,7 @@ const PriorityPositionSelect = ({
       {occupiedPositions.length > 0 && (
         <div className="p-3 bg-muted/30 rounded-lg border">
           <p className="text-xs font-medium text-muted-foreground mb-2">
-            📊 Posições ocupadas atualmente:
+            📊 Posições ocupadas {lineType ? `(${lineType === 'automotivo' ? 'Automotivo' : 'Limpeza'})` : ''}:
           </p>
           <div className="space-y-1">
             {occupiedPositions.map((p) => (
@@ -138,9 +155,9 @@ const PriorityPositionSelect = ({
                 </span>
               </div>
             ))}
-            {priorityProducts.filter(p => p.id !== currentProductId).length > 5 && (
+            {filteredProducts.filter(p => p.id !== currentProductId).length > 5 && (
               <p className="text-xs text-muted-foreground italic">
-                + {priorityProducts.filter(p => p.id !== currentProductId).length - 5} outros...
+                + {filteredProducts.filter(p => p.id !== currentProductId).length - 5} outros...
               </p>
             )}
           </div>
@@ -148,8 +165,7 @@ const PriorityPositionSelect = ({
       )}
 
       <p className="text-xs text-muted-foreground">
-        💡 Posições com ⚠️ já estão ocupadas por outro produto. 
-        Se selecionar uma posição ocupada, o outro produto perderá essa posição.
+        💡 Novos produtos são adicionados ao final da lista. Você pode reordenar na aba "Destaques".
       </p>
     </div>
   );

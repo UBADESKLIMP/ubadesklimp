@@ -96,10 +96,42 @@ export const usePriorityProducts = (lineTypeFilter?: 'limpeza' | 'automotivo' | 
     await fetchPriorityProducts();
   };
 
+  // Batch update for drag & drop reordering
+  const batchUpdateOrder = async (updates: { id: string; order: number }[]) => {
+    try {
+      // Update all items in parallel
+      await Promise.all(
+        updates.map(({ id, order }) =>
+          supabase
+            .from('products')
+            .update({ priority_order: order })
+            .eq('id', id)
+        )
+      );
+
+      await fetchPriorityProducts();
+    } catch (error) {
+      console.error('Error in batch update:', error);
+      throw error;
+    }
+  };
+
   const getOccupiedPositions = (excludeProductId?: string): number[] => {
     return priorityProducts
       .filter(p => p.id !== excludeProductId)
       .map(p => p.priority_order);
+  };
+
+  // Get next available position (for adding new priority products at the end)
+  const getNextAvailablePosition = (lineType?: 'limpeza' | 'automotivo'): number => {
+    const filtered = lineType 
+      ? priorityProducts.filter(p => p.line_type === lineType)
+      : priorityProducts;
+    
+    if (filtered.length === 0) return 1;
+    
+    const maxOrder = Math.max(...filtered.map(p => p.priority_order));
+    return Math.min(maxOrder + 1, 10);
   };
 
   return {
@@ -111,6 +143,8 @@ export const usePriorityProducts = (lineTypeFilter?: 'limpeza' | 'automotivo' | 
     getPositionStatus,
     removePriority,
     updatePriorityOrder,
+    batchUpdateOrder,
     getOccupiedPositions,
+    getNextAvailablePosition,
   };
 };
