@@ -1,9 +1,21 @@
-import { useState } from 'react';
-import { Trophy, Medal, Star, Edit3, Trash2, Plus, AlertCircle, Package, Sparkles, Target, Award } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useMemo } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { Trophy, Star, AlertCircle, Package, Droplets, Car, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePriorityProducts, PriorityProduct } from '@/hooks/usePriorityProducts';
 import { toast } from 'sonner';
 import {
@@ -16,60 +28,76 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import SortablePriorityItem from './SortablePriorityItem';
 
 interface PriorityProductsManagerProps {
   onEditProduct?: (productId: string) => void;
-  onAddProduct?: (position: number) => void;
+  onAddProduct?: (position: number, lineType: 'limpeza' | 'automotivo') => void;
 }
 
 const MAX_POSITIONS = 10;
 
-const getPositionIcon = (position: number) => {
-  switch (position) {
-    case 1:
-      return <Trophy className="h-5 w-5 text-yellow-400" />;
-    case 2:
-      return <Medal className="h-5 w-5 text-slate-300" />;
-    case 3:
-      return <Medal className="h-5 w-5 text-amber-600" />;
-    default:
-      return <Star className="h-4 w-4 text-blue-400" />;
-  }
-};
-
-const getPositionLabel = (position: number) => {
-  switch (position) {
-    case 1:
-      return '🥇 1º lugar';
-    case 2:
-      return '🥈 2º lugar';
-    case 3:
-      return '🥉 3º lugar';
-    default:
-      return `⭐ ${position}º lugar`;
-  }
-};
-
-const getHighlightBadge = (type: string | null) => {
-  switch (type) {
-    case 'bestseller':
-      return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30"><Trophy className="h-3 w-3 mr-1" /> Mais Vendido</Badge>;
-    case 'promotion':
-      return <Badge className="bg-red-500/20 text-red-400 border-red-500/30"><Target className="h-3 w-3 mr-1" /> Promoção</Badge>;
-    case 'new':
-      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30"><Sparkles className="h-3 w-3 mr-1" /> Novidade</Badge>;
-    case 'featured':
-      return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30"><Award className="h-3 w-3 mr-1" /> Destaque</Badge>;
-    default:
-      return null;
-  }
-};
-
 const PriorityProductsManager = ({ onEditProduct, onAddProduct }: PriorityProductsManagerProps) => {
-  const [lineFilter, setLineFilter] = useState<'all' | 'limpeza' | 'automotivo'>('all');
-  const { priorityProducts, loading, removePriority, refetch } = usePriorityProducts(lineFilter);
+  // Fetch all priority products
+  const { priorityProducts, loading, removePriority, batchUpdateOrder, refetch } = usePriorityProducts('all');
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [productToRemove, setProductToRemove] = useState<PriorityProduct | null>(null);
+
+  // Separate products by line type
+  const limpezaProducts = useMemo(() => 
+    priorityProducts
+      .filter(p => p.line_type === 'limpeza')
+      .sort((a, b) => a.priority_order - b.priority_order),
+    [priorityProducts]
+  );
+
+  const automotivoProducts = useMemo(() => 
+    priorityProducts
+      .filter(p => p.line_type === 'automotivo')
+      .sort((a, b) => a.priority_order - b.priority_order),
+    [priorityProducts]
+  );
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent, lineType: 'limpeza' | 'automotivo') => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const products = lineType === 'limpeza' ? limpezaProducts : automotivoProducts;
+    const oldIndex = products.findIndex(p => p.id === active.id);
+    const newIndex = products.findIndex(p => p.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder locally
+    const newProducts = arrayMove(products, oldIndex, newIndex);
+
+    // Create batch updates with new order (1-indexed, sequential)
+    const updates = newProducts.map((product, index) => ({
+      id: product.id,
+      order: index + 1,
+    }));
+
+    try {
+      await batchUpdateOrder(updates);
+      toast.success('Ordem atualizada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao atualizar ordem');
+      refetch();
+    }
+  };
 
   const handleRemovePriority = async () => {
     if (!productToRemove) return;
@@ -89,9 +117,89 @@ const PriorityProductsManager = ({ onEditProduct, onAddProduct }: PriorityProduc
     setRemoveDialogOpen(true);
   };
 
-  // Criar array com todas as 10 posições
-  const positions = Array.from({ length: MAX_POSITIONS }, (_, i) => i + 1);
-  const occupiedCount = priorityProducts.length;
+  const renderProductList = (
+    products: PriorityProduct[],
+    lineType: 'limpeza' | 'automotivo',
+    icon: React.ReactNode,
+    title: string,
+    emptyMessage: string
+  ) => {
+    const occupiedCount = products.length;
+
+    return (
+      <Card className="bg-[#12121a] border-blue-500/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              {icon}
+              {title}
+            </CardTitle>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full">
+              <Package className="h-4 w-4 text-blue-400" />
+              <span className="text-white font-medium">{occupiedCount}</span>
+              <span className="text-blue-300/60">/ {MAX_POSITIONS}</span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <AlertCircle className="h-10 w-10 text-blue-400/40 mb-3" />
+              <p className="text-blue-300/60 text-sm">{emptyMessage}</p>
+              {onAddProduct && (
+                <button
+                  onClick={() => onAddProduct(1, lineType)}
+                  className="mt-3 text-sm text-blue-400 hover:text-blue-300 underline underline-offset-4"
+                >
+                  Adicionar primeiro produto
+                </button>
+              )}
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(e) => handleDragEnd(e, lineType)}
+            >
+              <SortableContext
+                items={products.map(p => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {products.map((product, index) => (
+                    <SortablePriorityItem
+                      key={product.id}
+                      product={product}
+                      position={index + 1}
+                      onEdit={onEditProduct}
+                      onRemove={confirmRemove}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+
+          {/* Empty slots indicator */}
+          {products.length > 0 && products.length < MAX_POSITIONS && (
+            <div className="mt-4 p-3 border border-dashed border-blue-500/20 rounded-lg flex items-center justify-between">
+              <span className="text-sm text-blue-300/50">
+                {MAX_POSITIONS - products.length} {MAX_POSITIONS - products.length === 1 ? 'posição disponível' : 'posições disponíveis'}
+              </span>
+              {onAddProduct && (
+                <button
+                  onClick={() => onAddProduct(products.length + 1, lineType)}
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  + Adicionar produto
+                </button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (loading) {
     return (
@@ -105,177 +213,45 @@ const PriorityProductsManager = ({ onEditProduct, onAddProduct }: PriorityProduc
 
   return (
     <div className="space-y-6">
-      {/* Header com estatísticas */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-heading text-white flex items-center gap-2">
-            <Star className="h-6 w-6 text-yellow-400" />
-            Produtos em Destaque
-          </h2>
-          <p className="text-blue-300/60 mt-1">
-            Gerencie os produtos que aparecem em destaque na vitrine
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {/* Filtro por linha */}
-          <Tabs value={lineFilter} onValueChange={(v) => setLineFilter(v as any)}>
-            <TabsList className="bg-[#12121a] border border-blue-500/20">
-              <TabsTrigger value="all" className="data-[state=active]:bg-blue-600/30">
-                Todos
-              </TabsTrigger>
-              <TabsTrigger value="limpeza" className="data-[state=active]:bg-blue-600/30">
-                Limpeza
-              </TabsTrigger>
-              <TabsTrigger value="automotivo" className="data-[state=active]:bg-blue-600/30">
-                Automotivo
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {/* Estatísticas */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#12121a] border border-blue-500/20 rounded-lg">
-            <Package className="h-4 w-4 text-blue-400" />
-            <span className="text-white font-medium">{occupiedCount}</span>
-            <span className="text-blue-300/60">/ {MAX_POSITIONS}</span>
-          </div>
-        </div>
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-heading text-white flex items-center gap-2">
+          <Star className="h-6 w-6 text-yellow-400" />
+          Produtos em Destaque
+        </h2>
+        <p className="text-blue-300/60 mt-1">
+          Gerencie os produtos que aparecem em destaque na vitrine. Arraste para reordenar.
+        </p>
       </div>
 
-      {/* Grid de posições */}
-      <div className="grid gap-3">
-        {positions.map((position) => {
-          const product = priorityProducts.find(p => p.priority_order === position);
-          const isOccupied = !!product;
+      {/* Two columns for each line */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Limpeza Column */}
+        {renderProductList(
+          limpezaProducts,
+          'limpeza',
+          <Droplets className="h-5 w-5 text-cyan-400" />,
+          'Linha Limpeza',
+          'Nenhum produto de limpeza em destaque'
+        )}
 
-          return (
-            <Card 
-              key={position}
-              className={`
-                transition-all duration-200
-                ${isOccupied 
-                  ? 'bg-[#12121a] border-blue-500/30 hover:border-blue-500/50' 
-                  : 'bg-[#0a0a0f] border-dashed border-blue-500/20 hover:border-blue-500/30'
-                }
-                ${position <= 3 ? 'ring-1 ring-yellow-500/10' : ''}
-              `}
-            >
-              <CardContent className="flex items-center gap-4 p-4">
-                {/* Posição */}
-                <div className={`
-                  flex items-center justify-center w-12 h-12 rounded-xl
-                  ${position <= 3 
-                    ? 'bg-gradient-to-br from-yellow-500/20 to-amber-600/20' 
-                    : 'bg-blue-500/10'
-                  }
-                `}>
-                  {getPositionIcon(position)}
-                </div>
-
-                {/* Conteúdo */}
-                <div className="flex-1 min-w-0">
-                  {isOccupied ? (
-                    <div className="flex items-center gap-3">
-                      {/* Imagem do produto */}
-                      {product.image_url ? (
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name}
-                          className="w-12 h-12 object-contain rounded-lg bg-white/5"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                          <Package className="h-5 w-5 text-blue-400" />
-                        </div>
-                      )}
-
-                      {/* Info do produto */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-white truncate">
-                            {product.name}
-                          </span>
-                          {getHighlightBadge(product.highlight_type)}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-300">
-                            {product.category}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-300">
-                            {product.line_type === 'automotivo' ? '🚗 Auto' : '🧹 Limpeza'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-blue-300/40">
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="text-sm">Posição disponível</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Label da posição */}
-                <div className={`
-                  text-sm font-medium px-3 py-1 rounded-full
-                  ${position <= 3 
-                    ? 'bg-yellow-500/10 text-yellow-400' 
-                    : 'bg-blue-500/10 text-blue-400'
-                  }
-                `}>
-                  {getPositionLabel(position)}
-                </div>
-
-                {/* Ações */}
-                <div className="flex items-center gap-2">
-                  {isOccupied ? (
-                    <>
-                      {onEditProduct && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEditProduct(product.id)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => confirmRemove(product)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    onAddProduct && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onAddProduct(position)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Adicionar
-                      </Button>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {/* Automotivo Column */}
+        {renderProductList(
+          automotivoProducts,
+          'automotivo',
+          <Car className="h-5 w-5 text-blue-400" />,
+          'Linha Automotivo',
+          'Nenhum produto automotivo em destaque'
+        )}
       </div>
 
       {/* Dica */}
       <div className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-        <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5" />
+        <GripVertical className="h-5 w-5 text-blue-400 mt-0.5" />
         <div>
           <p className="text-sm text-blue-300">
-            <strong>Dica:</strong> Os produtos prioritários aparecem em destaque na página inicial. 
-            As 3 primeiras posições recebem destaque especial (medalhas de ouro, prata e bronze).
+            <strong>Dica:</strong> Arraste os produtos pelo ícone <GripVertical className="h-4 w-4 inline mx-1" /> para reorganizar a ordem de exibição.
+            As 3 primeiras posições recebem destaque especial (🥇🥈🥉).
           </p>
         </div>
       </div>
