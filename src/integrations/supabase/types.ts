@@ -170,6 +170,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          display_order: number | null
           has_fragrances: boolean | null
           has_variations: boolean | null
           highlight_type: string | null
@@ -196,6 +197,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          display_order?: number | null
           has_fragrances?: boolean | null
           has_variations?: boolean | null
           highlight_type?: string | null
@@ -222,6 +224,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          display_order?: number | null
           has_fragrances?: boolean | null
           has_variations?: boolean | null
           highlight_type?: string | null

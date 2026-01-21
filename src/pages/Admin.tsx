@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Package, Tags, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard, Star } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Edit3, Trash2, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard, Star, Package, Tags, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,9 +14,10 @@ import OrdersManager from '@/components/OrdersManager';
 import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
+import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 
 const Admin = () => {
-  const { products, loading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
+  const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -115,6 +116,10 @@ const Admin = () => {
     }
   };
 
+  const handleReorderProducts = useCallback(async (reorderedProducts: ProductWithVariations[]) => {
+    await updateDisplayOrder(reorderedProducts);
+  }, [updateDisplayOrder]);
+
   const formatPrice = (price: number | undefined) => {
     if (!price) return 'Preço não definido';
     return new Intl.NumberFormat('pt-BR', {
@@ -198,7 +203,13 @@ const Admin = () => {
           {/* Products Tab */}
           <TabsContent value="products">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-heading text-white">Produtos</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-heading text-white">Produtos de Limpeza</h2>
+                <div className="flex items-center gap-1 text-xs text-blue-300/50 bg-blue-500/10 px-2 py-1 rounded">
+                  <GripVertical className="h-3 w-3" />
+                  <span>Arraste para reorganizar</span>
+                </div>
+              </div>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={() => setEditingProduct(null)} className="bg-blue-600 hover:bg-blue-500 text-white">
@@ -221,68 +232,19 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            {/* Products Grid - Apenas produtos de LIMPEZA */}
+            {/* Products Grid - Apenas produtos de LIMPEZA com Drag and Drop */}
             {(() => {
               const limpezaProducts = products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza');
               return limpezaProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {limpezaProducts.map((product) => (
-                  <Card key={product.id} className="bg-[#12121a] border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
-                    <div className="relative">
-                      {product.image_url ? (
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name}
-                          className="w-full h-48 object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-48 bg-blue-900/20 flex items-center justify-center text-4xl">
-                          📦
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 flex space-x-1">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          onClick={() => {
-                            setEditingProduct(product);
-                            setIsDialogOpen(true);
-                          }}
-                          className="bg-blue-600/80 hover:bg-blue-500 text-white border-0 backdrop-blur-sm"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="bg-red-600/80 hover:bg-red-500 text-white border-0 backdrop-blur-sm"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg text-white">{product.name}</CardTitle>
-                          <p className="text-sm text-blue-300/50">{product.category}</p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {product.description && (
-                        <p className="text-sm text-blue-300/50 mb-3 line-clamp-2">
-                          {product.description}
-                        </p>
-                      )}
-                      <p className="text-lg font-bold text-blue-400">
-                        {formatPrice(product.price)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                <DraggableAdminGrid
+                  products={limpezaProducts}
+                  onReorder={handleReorderProducts}
+                  onEdit={(product) => {
+                    setEditingProduct(product);
+                    setIsDialogOpen(true);
+                  }}
+                  onDelete={handleDeleteProduct}
+                />
             ) : (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">📦</div>

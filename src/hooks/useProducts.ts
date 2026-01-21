@@ -66,6 +66,7 @@ export const useProducts = () => {
         supabase
           .from('products')
           .select('*')
+          .order('display_order', { ascending: true })
           .order('priority', { ascending: false })
           .order('priority_order', { ascending: true })
           .order('created_at', { ascending: false }),
@@ -224,6 +225,42 @@ export const useProducts = () => {
     }
   };
 
+  const updateDisplayOrder = async (orderedProducts: ProductWithVariations[]) => {
+    try {
+      // Batch update display_order for all products
+      const updates = orderedProducts.map((product, index) => ({
+        id: product.id,
+        display_order: index + 1
+      }));
+
+      // Update each product's display_order
+      await Promise.all(
+        updates.map(({ id, display_order }) =>
+          supabase
+            .from('products')
+            .update({ display_order })
+            .eq('id', id)
+        )
+      );
+
+      // Update local state without refetching
+      setProducts(orderedProducts.map((p, i) => ({ ...p, display_order: i + 1 })));
+
+      toast({
+        title: "Ordem atualizada",
+        description: "A ordem dos produtos foi salva com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error updating display order:', error);
+      toast({
+        title: "Erro ao atualizar ordem",
+        description: "Não foi possível salvar a nova ordem dos produtos.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -234,6 +271,7 @@ export const useProducts = () => {
     createProduct,
     updateProduct,
     deleteProduct,
+    updateDisplayOrder,
     refetch: fetchProducts
   };
 };
