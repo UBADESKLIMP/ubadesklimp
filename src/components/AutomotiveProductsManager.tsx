@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Plus, Car, DollarSign, TrendingUp, ShoppingBag, Tags, X, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSalesStats } from '@/hooks/useSalesStats';
 import { useCategories } from '@/hooks/useCategories';
 import DraggableAdminGrid from './DraggableAdminGrid';
+import AdminProductFilters from './AdminProductFilters';
+
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
   const { stats: automotiveStats, loading: statsLoading } = useSalesStats('automotivo');
@@ -21,11 +23,32 @@ const AutomotiveProductsManager = () => {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [savingCategory, setSavingCategory] = useState(false);
+  
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Filtrar apenas produtos automotivos (por line_type ou fallback para category)
-  const automotiveProducts = products.filter(
-    (product) => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
+  const automotiveProducts = useMemo(() => 
+    products.filter(
+      (product) => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
+    ),
+    [products]
   );
+
+  // Aplicar filtros de busca e categoria
+  const filteredAutomotiveProducts = useMemo(() => {
+    return automotiveProducts.filter(product => {
+      const matchesSearch = 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = 
+        categoryFilter === 'all' || product.category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [automotiveProducts, searchTerm, categoryFilter]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -328,10 +351,21 @@ const AutomotiveProductsManager = () => {
         </Dialog>
       </div>
 
+      {/* Filtros */}
+      <AdminProductFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        categories={automotiveCategories}
+        resultCount={filteredAutomotiveProducts.length}
+        totalCount={automotiveProducts.length}
+      />
+
       {/* Products Grid with Drag and Drop */}
-      {automotiveProducts.length > 0 ? (
+      {filteredAutomotiveProducts.length > 0 ? (
         <DraggableAdminGrid
-          products={automotiveProducts}
+          products={filteredAutomotiveProducts}
           onReorder={handleReorderProducts}
           onEdit={(product) => {
             setEditingProduct(product);
@@ -339,6 +373,16 @@ const AutomotiveProductsManager = () => {
           }}
           onDelete={handleDeleteProduct}
         />
+      ) : automotiveProducts.length > 0 ? (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Nenhum produto encontrado
+          </h3>
+          <p className="text-blue-300/50 mb-6">
+            Tente ajustar os filtros de busca
+          </p>
+        </div>
       ) : (
         <div className="text-center py-20">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600/10 rounded-full mb-6 border border-blue-500/20">

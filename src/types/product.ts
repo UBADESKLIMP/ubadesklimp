@@ -46,6 +46,7 @@ export interface ProductWithVariations {
   action_type?: string | null;
   ph_level?: string | null;
   application_area?: string | null;
+  brand?: string | null;
   // Linha do produto (automotivo ou limpeza)
   line_type?: 'limpeza' | 'automotivo';
   out_of_stock?: boolean;

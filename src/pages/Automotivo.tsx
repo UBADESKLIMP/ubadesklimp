@@ -5,17 +5,20 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import ProductDetailModal from '@/components/ProductDetailModal';
+import BrandFilter from '@/components/BrandFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
 import { useImagePreload } from '@/hooks/useImagePreload';
+import { useBrands } from '@/hooks/useBrands';
 import { ProductWithVariations } from '@/types/product';
 import carHeroImage from '@/assets/carro-automotivo-hero.png';
 import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
 const Automotivo = () => {
   const { products, loading } = useProducts();
+  const { brands, loading: brandsLoading } = useBrands();
   
   // Preload das imagens prioritárias (produtos automotivos)
   const automotiveProductsForPreload = products.filter(
@@ -23,6 +26,7 @@ const Automotivo = () => {
   );
   useImagePreload(automotiveProductsForPreload, 8);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [parallaxY, setParallaxY] = useState(0);
@@ -86,15 +90,26 @@ const Automotivo = () => {
   }, []);
 
   // Filter only automotive products (by line_type or category fallback)
-  const automotiveProducts = products.filter(
-    product => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
+  const automotiveProducts = useMemo(() => 
+    products.filter(
+      product => product.line_type === 'automotivo' || product.category?.toLowerCase() === 'automotivo'
+    ),
+    [products]
   );
 
-  // Apply search filter
-  const filteredProducts = automotiveProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Apply search and brand filter
+  const filteredProducts = useMemo(() => {
+    return automotiveProducts.filter(product => {
+      const matchesSearch = 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesBrand = 
+        selectedBrand === null || product.brand === selectedBrand;
+      
+      return matchesSearch && matchesBrand;
+    });
+  }, [automotiveProducts, searchTerm, selectedBrand]);
 
   const handleShowDetails = (product: ProductWithVariations) => {
     setSelectedProduct(product);
@@ -472,6 +487,19 @@ const Automotivo = () => {
         {/* Products Section */}
         <section id="products" className="py-12 md:py-16 px-4 md:px-8" style={{ background: 'linear-gradient(180deg, #0a0a0f 0%, #0a1628 50%, #0f1f3d 100%)' }}>
           <div className="max-w-7xl mx-auto">
+            {/* Brand Filter */}
+            {brands.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-sm font-medium text-blue-300/70 mb-3">Filtrar por marca:</h3>
+                <BrandFilter
+                  brands={brands}
+                  selectedBrand={selectedBrand}
+                  onSelectBrand={setSelectedBrand}
+                  loading={brandsLoading}
+                />
+              </div>
+            )}
+
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
@@ -508,7 +536,22 @@ const Automotivo = () => {
                 <div className="flex items-center justify-between mb-8">
                   <p className="text-blue-300/60">
                     {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+                    {selectedBrand && ` • ${selectedBrand}`}
                   </p>
+                  {(searchTerm || selectedBrand) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedBrand(null);
+                      }}
+                      className="text-blue-300/70 hover:text-white hover:bg-blue-500/20"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Limpar filtros
+                    </Button>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

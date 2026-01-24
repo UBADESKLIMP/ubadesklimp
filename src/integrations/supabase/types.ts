@@ -167,6 +167,7 @@ export type Database = {
         Row: {
           action_type: string | null
           application_area: string | null
+          brand: string | null
           category: string
           created_at: string
           description: string | null
@@ -194,6 +195,7 @@ export type Database = {
         Insert: {
           action_type?: string | null
           application_area?: string | null
+          brand?: string | null
           category: string
           created_at?: string
           description?: string | null
@@ -221,6 +223,7 @@ export type Database = {
         Update: {
           action_type?: string | null
           application_area?: string | null
+          brand?: string | null
           category?: string
           created_at?: string
           description?: string | null
