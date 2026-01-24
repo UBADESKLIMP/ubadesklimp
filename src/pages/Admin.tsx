@@ -1,11 +1,12 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Edit3, Trash2, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard, Star, Package, Tags, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import CategoryManager from '@/components/CategoryManager';
@@ -15,11 +16,17 @@ import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
+import AdminProductFilters from '@/components/AdminProductFilters';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
+  const { categories: limpezaCategories } = useCategories('limpeza');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Atualizar editingProduct quando products mudar
   useEffect(() => {
@@ -128,6 +135,26 @@ const Admin = () => {
     }).format(price);
   };
 
+  // Filtrar produtos de limpeza
+  const limpezaProducts = useMemo(() => 
+    products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza'),
+    [products]
+  );
+
+  // Aplicar filtros de busca e categoria
+  const filteredLimpezaProducts = useMemo(() => {
+    return limpezaProducts.filter(product => {
+      const matchesSearch = 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = 
+        categoryFilter === 'all' || product.category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [limpezaProducts, searchTerm, categoryFilter]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -232,19 +259,36 @@ const Admin = () => {
               </Dialog>
             </div>
 
+            {/* Filtros */}
+            <AdminProductFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              categoryFilter={categoryFilter}
+              onCategoryChange={setCategoryFilter}
+              categories={limpezaCategories}
+              resultCount={filteredLimpezaProducts.length}
+              totalCount={limpezaProducts.length}
+            />
+
             {/* Products Grid - Apenas produtos de LIMPEZA com Drag and Drop */}
-            {(() => {
-              const limpezaProducts = products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza');
-              return limpezaProducts.length > 0 ? (
-                <DraggableAdminGrid
-                  products={limpezaProducts}
-                  onReorder={handleReorderProducts}
-                  onEdit={(product) => {
-                    setEditingProduct(product);
-                    setIsDialogOpen(true);
-                  }}
-                  onDelete={handleDeleteProduct}
-                />
+            {filteredLimpezaProducts.length > 0 ? (
+              <DraggableAdminGrid
+                products={filteredLimpezaProducts}
+                onReorder={handleReorderProducts}
+                onEdit={(product) => {
+                  setEditingProduct(product);
+                  setIsDialogOpen(true);
+                }}
+                onDelete={handleDeleteProduct}
+              />
+            ) : limpezaProducts.length > 0 ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold mb-2 text-white">Nenhum produto encontrado</h3>
+                <p className="text-blue-300/50 mb-6">
+                  Tente ajustar os filtros de busca
+                </p>
+              </div>
             ) : (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">📦</div>
@@ -257,8 +301,7 @@ const Admin = () => {
                   Adicionar Produto
                 </Button>
               </div>
-            );
-            })()}
+            )}
           </TabsContent>
 
           {/* Automotive Tab */}

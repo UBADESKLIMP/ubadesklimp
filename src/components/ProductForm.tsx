@@ -55,6 +55,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     action_type: string;
     ph_level: string;
     application_area: string;
+    brand: string;
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -77,6 +78,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     action_type: (product as any)?.action_type || '',
     ph_level: (product as any)?.ph_level || '',
     application_area: (product as any)?.application_area || '',
+    brand: (product as any)?.brand || '',
   });
 
   useEffect(() => {
@@ -115,6 +117,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         action_type: (product as any)?.action_type || '',
         ph_level: (product as any)?.ph_level || '',
         application_area: (product as any)?.application_area || '',
+        brand: (product as any)?.brand || '',
       });
     }
   }, [product]);
@@ -159,6 +162,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
         action_type: formData.action_type || null,
         ph_level: formData.ph_level || null,
         application_area: formData.application_area || null,
+        brand: formData.brand || null,
         line_type: lineType,
       };
 
@@ -431,41 +435,58 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   <span className="text-sm font-normal text-muted-foreground">(opcionais)</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="action_type" className="flex items-center gap-2">
-                    <Droplets className="h-4 w-4 text-blue-400" />
-                    Ação
-                  </Label>
-                  <Input
-                    id="action_type"
-                    value={formData.action_type}
-                    onChange={(e) => setFormData({...formData, action_type: e.target.value})}
-                    placeholder="Ex: Desengraxante, Limpador..."
-                  />
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="brand">Marca</Label>
+                    <Input
+                      id="brand"
+                      value={formData.brand}
+                      onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                      placeholder="Ex: Vonixx, Vintex..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Permite filtrar produtos por marca na página
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="action_type" className="flex items-center gap-2">
+                      <Droplets className="h-4 w-4 text-blue-400" />
+                      Ação
+                    </Label>
+                    <Input
+                      id="action_type"
+                      value={formData.action_type}
+                      onChange={(e) => setFormData({...formData, action_type: e.target.value})}
+                      placeholder="Ex: Desengraxante, Limpador..."
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="ph_level">PH</Label>
-                  <Input
-                    id="ph_level"
-                    value={formData.ph_level}
-                    onChange={(e) => setFormData({...formData, ph_level: e.target.value})}
-                    placeholder="Ex: Neutro, Ácido, 7.0..."
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="ph_level">PH</Label>
+                    <Input
+                      id="ph_level"
+                      value={formData.ph_level}
+                      onChange={(e) => setFormData({...formData, ph_level: e.target.value})}
+                      placeholder="Ex: Neutro, Ácido, 7.0..."
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="application_area" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-blue-400" />
-                    Local de Aplicação
-                  </Label>
-                  <Input
-                    id="application_area"
-                    value={formData.application_area}
-                    onChange={(e) => setFormData({...formData, application_area: e.target.value})}
-                    placeholder="Ex: Motor, Lataria, Rodas..."
-                  />
+                  <div>
+                    <Label htmlFor="application_area" className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-blue-400" />
+                      Local de Aplicação
+                    </Label>
+                    <Input
+                      id="application_area"
+                      value={formData.application_area}
+                      onChange={(e) => setFormData({...formData, application_area: e.target.value})}
+                      placeholder="Ex: Motor, Lataria, Rodas..."
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
