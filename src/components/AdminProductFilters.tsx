@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { Search, X, ArrowUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+export type SortOption = 'default' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'brand_asc';
+
 interface AdminProductFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -17,6 +19,9 @@ interface AdminProductFiltersProps {
   categories: { id: string; name: string }[];
   resultCount: number;
   totalCount: number;
+  sortOption?: SortOption;
+  onSortChange?: (value: SortOption) => void;
+  showBrandSort?: boolean;
 }
 
 const AdminProductFilters = ({
@@ -27,12 +32,16 @@ const AdminProductFilters = ({
   categories,
   resultCount,
   totalCount,
+  sortOption = 'default',
+  onSortChange,
+  showBrandSort = false,
 }: AdminProductFiltersProps) => {
-  const hasFilters = searchTerm || categoryFilter !== 'all';
+  const hasFilters = searchTerm || categoryFilter !== 'all' || sortOption !== 'default';
 
   const clearFilters = () => {
     onSearchChange('');
     onCategoryChange('all');
+    onSortChange?.('default');
   };
 
   return (
@@ -68,6 +77,38 @@ const AdminProductFilters = ({
           ))}
         </SelectContent>
       </Select>
+
+      {/* Sort Options */}
+      {onSortChange && (
+        <Select value={sortOption} onValueChange={(value) => onSortChange(value as SortOption)}>
+          <SelectTrigger className="w-[180px] bg-[#0a0a0f] border-blue-500/30 text-white">
+            <ArrowUpDown className="h-4 w-4 mr-2 text-blue-300/50" />
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#12121a] border-blue-500/30">
+            <SelectItem value="default" className="text-white hover:bg-blue-500/20">
+              Ordem padrão
+            </SelectItem>
+            <SelectItem value="price_asc" className="text-white hover:bg-blue-500/20">
+              Menor preço
+            </SelectItem>
+            <SelectItem value="price_desc" className="text-white hover:bg-blue-500/20">
+              Maior preço
+            </SelectItem>
+            <SelectItem value="name_asc" className="text-white hover:bg-blue-500/20">
+              A-Z
+            </SelectItem>
+            <SelectItem value="name_desc" className="text-white hover:bg-blue-500/20">
+              Z-A
+            </SelectItem>
+            {showBrandSort && (
+              <SelectItem value="brand_asc" className="text-white hover:bg-blue-500/20">
+                Por marca
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Clear Filters Button */}
       {hasFilters && (

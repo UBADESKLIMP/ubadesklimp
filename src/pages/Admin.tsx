@@ -16,7 +16,7 @@ import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
-import AdminProductFilters from '@/components/AdminProductFilters';
+import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -27,6 +27,7 @@ const Admin = () => {
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortOption, setSortOption] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'brand_asc'>('default');
 
   // Atualizar editingProduct quando products mudar
   useEffect(() => {
@@ -141,9 +142,9 @@ const Admin = () => {
     [products]
   );
 
-  // Aplicar filtros de busca e categoria
+  // Aplicar filtros de busca e categoria + ordenação
   const filteredLimpezaProducts = useMemo(() => {
-    return limpezaProducts.filter(product => {
+    let filtered = limpezaProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -153,7 +154,27 @@ const Admin = () => {
       
       return matchesSearch && matchesCategory;
     });
-  }, [limpezaProducts, searchTerm, categoryFilter]);
+
+    // Aplicar ordenação
+    if (sortOption !== 'default') {
+      filtered = [...filtered].sort((a, b) => {
+        switch (sortOption) {
+          case 'price_asc':
+            return (a.price || 0) - (b.price || 0);
+          case 'price_desc':
+            return (b.price || 0) - (a.price || 0);
+          case 'name_asc':
+            return a.name.localeCompare(b.name, 'pt-BR');
+          case 'name_desc':
+            return b.name.localeCompare(a.name, 'pt-BR');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filtered;
+  }, [limpezaProducts, searchTerm, categoryFilter, sortOption]);
 
   if (loading) {
     return (
@@ -268,6 +289,8 @@ const Admin = () => {
               categories={limpezaCategories}
               resultCount={filteredLimpezaProducts.length}
               totalCount={limpezaProducts.length}
+              sortOption={sortOption}
+              onSortChange={setSortOption}
             />
 
             {/* Products Grid - Apenas produtos de LIMPEZA com Drag and Drop */}
