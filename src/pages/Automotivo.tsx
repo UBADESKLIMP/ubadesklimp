@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import ProductDetailModal from '@/components/ProductDetailModal';
 import BrandFilter from '@/components/BrandFilter';
+import ProductSortSelect, { PublicSortOption } from '@/components/ProductSortSelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +28,7 @@ const Automotivo = () => {
   useImagePreload(automotiveProductsForPreload, 8);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<PublicSortOption>('default');
   const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [parallaxY, setParallaxY] = useState(0);
@@ -97,9 +99,9 @@ const Automotivo = () => {
     [products]
   );
 
-  // Apply search and brand filter
+  // Apply search, brand filter, and sorting
   const filteredProducts = useMemo(() => {
-    return automotiveProducts.filter(product => {
+    let filtered = automotiveProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -109,7 +111,36 @@ const Automotivo = () => {
       
       return matchesSearch && matchesBrand;
     });
-  }, [automotiveProducts, searchTerm, selectedBrand]);
+
+    // Apply sorting
+    if (sortOption !== 'default') {
+      filtered = [...filtered].sort((a, b) => {
+        const priceA = a.variations?.length > 0 
+          ? Math.min(...a.variations.map(v => v.price)) 
+          : (a.price || 0);
+        const priceB = b.variations?.length > 0 
+          ? Math.min(...b.variations.map(v => v.price)) 
+          : (b.price || 0);
+
+        switch (sortOption) {
+          case 'price_asc':
+            return priceA - priceB;
+          case 'price_desc':
+            return priceB - priceA;
+          case 'name_asc':
+            return a.name.localeCompare(b.name, 'pt-BR');
+          case 'name_desc':
+            return b.name.localeCompare(a.name, 'pt-BR');
+          case 'brand_asc':
+            return (a.brand || '').localeCompare(b.brand || '', 'pt-BR');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filtered;
+  }, [automotiveProducts, searchTerm, selectedBrand, sortOption]);
 
   const handleShowDetails = (product: ProductWithVariations) => {
     setSelectedProduct(product);
@@ -487,18 +518,30 @@ const Automotivo = () => {
         {/* Products Section */}
         <section id="products" className="py-12 md:py-16 px-4 md:px-8" style={{ background: 'linear-gradient(180deg, #0a0a0f 0%, #0a1628 50%, #0f1f3d 100%)' }}>
           <div className="max-w-7xl mx-auto">
-            {/* Brand Filter */}
-            {brands.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-blue-300/70 mb-3">Filtrar por marca:</h3>
-                <BrandFilter
-                  brands={brands}
-                  selectedBrand={selectedBrand}
-                  onSelectBrand={setSelectedBrand}
-                  loading={brandsLoading}
+            {/* Filters Row - Brand and Sort */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              {/* Brand Filter */}
+              {brands.length > 0 && (
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-blue-300/70 mb-3">Filtrar por marca:</h3>
+                  <BrandFilter
+                    brands={brands}
+                    selectedBrand={selectedBrand}
+                    onSelectBrand={setSelectedBrand}
+                    loading={brandsLoading}
+                  />
+                </div>
+              )}
+
+              {/* Sort Select */}
+              <div className="flex items-end">
+                <ProductSortSelect
+                  value={sortOption}
+                  onChange={setSortOption}
+                  showBrandSort={true}
                 />
               </div>
-            )}
+            </div>
 
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
