@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSalesStats } from '@/hooks/useSalesStats';
 import { useCategories } from '@/hooks/useCategories';
 import DraggableAdminGrid from './DraggableAdminGrid';
-import AdminProductFilters from './AdminProductFilters';
+import AdminProductFilters, { SortOption } from './AdminProductFilters';
 
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -27,6 +27,7 @@ const AutomotiveProductsManager = () => {
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortOption, setSortOption] = useState<SortOption>('default');
 
   // Filtrar apenas produtos automotivos (por line_type ou fallback para category)
   const automotiveProducts = useMemo(() => 
@@ -36,9 +37,9 @@ const AutomotiveProductsManager = () => {
     [products]
   );
 
-  // Aplicar filtros de busca e categoria
+  // Aplicar filtros de busca, categoria e ordenação
   const filteredAutomotiveProducts = useMemo(() => {
-    return automotiveProducts.filter(product => {
+    let filtered = automotiveProducts.filter(product => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -48,7 +49,29 @@ const AutomotiveProductsManager = () => {
       
       return matchesSearch && matchesCategory;
     });
-  }, [automotiveProducts, searchTerm, categoryFilter]);
+
+    // Aplicar ordenação
+    if (sortOption !== 'default') {
+      filtered = [...filtered].sort((a, b) => {
+        switch (sortOption) {
+          case 'price_asc':
+            return (a.price || 0) - (b.price || 0);
+          case 'price_desc':
+            return (b.price || 0) - (a.price || 0);
+          case 'name_asc':
+            return a.name.localeCompare(b.name, 'pt-BR');
+          case 'name_desc':
+            return b.name.localeCompare(a.name, 'pt-BR');
+          case 'brand_asc':
+            return (a.brand || '').localeCompare(b.brand || '', 'pt-BR');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filtered;
+  }, [automotiveProducts, searchTerm, categoryFilter, sortOption]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -360,6 +383,9 @@ const AutomotiveProductsManager = () => {
         categories={automotiveCategories}
         resultCount={filteredAutomotiveProducts.length}
         totalCount={automotiveProducts.length}
+        sortOption={sortOption}
+        onSortChange={setSortOption}
+        showBrandSort
       />
 
       {/* Products Grid with Drag and Drop */}
