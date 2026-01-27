@@ -45,7 +45,8 @@ export const useProducts = () => {
       'action_type',
       'ph_level',
       'application_area',
-      'line_type'
+      'line_type',
+      'brand'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -122,6 +123,7 @@ export const useProducts = () => {
           ph_level: product.ph_level || null,
           application_area: product.application_area || null,
           line_type: (product.line_type || 'limpeza') as 'limpeza' | 'automotivo',
+          brand: product.brand || null,
           created_at: product.created_at,
           updated_at: product.updated_at,
           variations: variations,
