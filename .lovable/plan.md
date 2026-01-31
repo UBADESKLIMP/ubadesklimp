@@ -1,62 +1,37 @@
 
-
-## Correção: Filtro por Marca não Funcionando
-
----
-
-### Problema Identificado
-
-O campo `brand` existe no banco de dados e alguns produtos já têm valores de marca definidos, mas o hook `useProducts.ts` não está incluindo esse campo em dois lugares críticos:
-
-1. **`sanitizeProductPayload`** - O campo `brand` não está na lista de campos permitidos, então quando você salva/atualiza um produto, a marca é ignorada
-2. **Mapeamento do retorno** - O campo `brand` não está sendo mapeado quando os produtos são retornados do banco
+## Ajuste: Posição de Compra Sempre Abaixo da Foto
 
 ---
 
-### Solução
+### O que será feito
 
-Modificar o arquivo `src/hooks/useProducts.ts` para incluir o campo `brand`:
-
-#### 1. Adicionar `brand` na lista `allowedKeys`:
-
-```typescript
-const allowedKeys = [
-  'name',
-  'description',
-  // ... outros campos ...
-  'line_type',
-  'brand'  // ← ADICIONAR
-];
-```
-
-#### 2. Adicionar `brand` no mapeamento do produto:
-
-```typescript
-return {
-  id: product.id,
-  name: product.name,
-  // ... outros campos ...
-  line_type: (product.line_type || 'limpeza') as 'limpeza' | 'automotivo',
-  brand: product.brand || null,  // ← ADICIONAR
-  created_at: product.created_at,
-  // ...
-};
-```
+A posição do botão "Comprar Agora", preço e seleções de variação/fragrância será **sempre abaixo da foto do produto** no modal de detalhes, eliminando a configuração manual `price_position`.
 
 ---
 
-### Arquivo a Modificar
+### Alterações
 
-| Arquivo | Modificação |
-|---------|-------------|
-| `src/hooks/useProducts.ts` | Adicionar `brand` em `allowedKeys` (linha ~48) e no mapeamento do produto (linha ~124) |
+#### 1. `src/components/ProductDetailModal.tsx`
+
+| Linha | Alteração |
+|-------|-----------|
+| 23 | Remover a variável `showButtonBelowImage` |
+| 279-371 | Manter esta seção (abaixo da imagem) |
+| 450-544 | Remover esta seção duplicada (abaixo do texto) |
+
+A seção de compra ficará **sempre abaixo da imagem**, sem condicionais.
 
 ---
 
-### Resultado Esperado
+#### 2. `src/components/ProductForm.tsx` (Opcional - Limpeza)
 
-Após a correção:
-- Os produtos automotivos terão o campo `brand` disponível na aplicação
-- O filtro por marca na página Automotivo funcionará corretamente
-- Ao editar um produto no Admin, a marca será salva corretamente
+Remover o campo `price_position` do formulário de administração, já que não será mais necessário:
+- Remover o select de "Posição do Preço/Botão" (aba Detalhes)
+- Manter o campo `price_position` nos dados por compatibilidade, mas não exibi-lo
 
+---
+
+### Resultado
+
+- **Antes**: Configuração manual onde o admin escolhia entre "Abaixo da imagem" ou "Abaixo do texto"
+- **Depois**: Botão de compra, preço e variações **sempre** aparecem abaixo da foto, sem configuração necessária
