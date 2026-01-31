@@ -229,7 +229,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0 data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out">
         {/* Botão fechar sticky no mobile */}
         <div className="md:hidden sticky top-0 z-10 flex justify-end p-3 bg-background border-b border-border">
           <Button 
