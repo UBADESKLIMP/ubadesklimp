@@ -14,6 +14,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useImagePreload } from '@/hooks/useImagePreload';
 import { useBrands } from '@/hooks/useBrands';
 import { ProductWithVariations } from '@/types/product';
+import { normalizeText } from '@/lib/utils';
 import carHeroImage from '@/assets/carro-automotivo-hero.png';
 import carNeonLogo from '@/assets/teste_carro_gpt_2.0.png';
 
@@ -99,12 +100,13 @@ const Automotivo = () => {
     [products]
   );
 
-  // Apply search, brand filter, and sorting
+  // Apply search, brand filter, and sorting (ignoring accents)
   const filteredProducts = useMemo(() => {
+    const normalizedSearch = normalizeText(searchTerm);
     let filtered = automotiveProducts.filter(product => {
       const matchesSearch = 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        normalizeText(product.name).includes(normalizedSearch) ||
+        normalizeText(product.description || '').includes(normalizedSearch);
       
       const matchesBrand = 
         selectedBrand === null || product.brand === selectedBrand;

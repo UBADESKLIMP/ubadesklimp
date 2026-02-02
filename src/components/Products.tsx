@@ -9,6 +9,7 @@ import { useImagePreload } from '@/hooks/useImagePreload';
 import { ProductWithVariations } from '@/types/product';
 import ProductCard from './ProductCard';
 import ProductDetailModal from './ProductDetailModal';
+import { normalizeText } from '@/lib/utils';
 
 const Products = () => {
   const { products, loading } = useProducts();
@@ -26,10 +27,11 @@ const Products = () => {
   // Get unique categories from limpeza products only
   const categories = Array.from(new Set(limpezaProducts.map(product => product.category))).sort();
 
-  // Filter products based on search and category
+  // Filter products based on search and category (ignoring accents)
   const filteredProducts = limpezaProducts.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+    const normalizedSearch = normalizeText(searchTerm);
+    const matchesSearch = normalizeText(product.name).includes(normalizedSearch) ||
+                         (normalizeText(product.description || '').includes(normalizedSearch));
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

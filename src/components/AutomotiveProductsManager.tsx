@@ -13,6 +13,7 @@ import { useSalesStats } from '@/hooks/useSalesStats';
 import { useCategories } from '@/hooks/useCategories';
 import DraggableAdminGrid from './DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from './AdminProductFilters';
+import { normalizeText } from '@/lib/utils';
 
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -37,12 +38,13 @@ const AutomotiveProductsManager = () => {
     [products]
   );
 
-  // Aplicar filtros de busca, categoria e ordenação
+  // Aplicar filtros de busca, categoria e ordenação (ignorando acentos)
   const filteredAutomotiveProducts = useMemo(() => {
+    const normalizedSearch = normalizeText(searchTerm);
     let filtered = automotiveProducts.filter(product => {
       const matchesSearch = 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        normalizeText(product.name).includes(normalizedSearch) ||
+        normalizeText(product.description || '').includes(normalizedSearch);
       
       const matchesCategory = 
         categoryFilter === 'all' || product.category === categoryFilter;

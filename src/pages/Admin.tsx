@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Edit3, Trash2, ArrowLeft, Wand2, ClipboardList, Car, LayoutDashboard, Star, Package, Tags, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
+import { normalizeText } from '@/lib/utils';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -142,12 +142,13 @@ const Admin = () => {
     [products]
   );
 
-  // Aplicar filtros de busca e categoria + ordenação
+  // Aplicar filtros de busca e categoria + ordenação (ignorando acentos)
   const filteredLimpezaProducts = useMemo(() => {
+    const normalizedSearch = normalizeText(searchTerm);
     let filtered = limpezaProducts.filter(product => {
       const matchesSearch = 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        normalizeText(product.name).includes(normalizedSearch) ||
+        normalizeText(product.description || '').includes(normalizedSearch);
       
       const matchesCategory = 
         categoryFilter === 'all' || product.category === categoryFilter;
