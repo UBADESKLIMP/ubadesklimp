@@ -1,65 +1,63 @@
 
 
-## Busca Ignorando Acentos
+## Remoção da Ferramenta de Remoção de Fundo
 
 ---
 
-### O que será feito
+### O que será removido
 
-Criar uma função utilitária que remove acentos dos textos e aplicá-la em todos os filtros de busca do sistema, permitindo que "plastico" encontre "plástico".
-
----
-
-### Solução Técnica
-
-Usar a função JavaScript `normalize('NFD')` combinada com regex para remover marcas diacríticas (acentos):
-
-```typescript
-const normalizeText = (text: string): string => {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-};
-```
-
-**Como funciona:**
-- `normalize('NFD')` - Separa a letra base do acento (ex: "é" vira "e" + "´")
-- `replace(/[\u0300-\u036f]/g, '')` - Remove os caracteres de acento
-- `toLowerCase()` - Converte para minúsculas
+A ferramenta de remoção de fundo com IA que estava na aba "Ferramentas" do painel administrativo.
 
 ---
 
-### Arquivos a Modificar
+### Arquivos a Excluir
+
+| Arquivo | Motivo |
+|---------|--------|
+| `src/lib/backgroundRemoval.ts` | Lógica da funcionalidade |
+| `src/components/BackgroundRemover.tsx` | Componente da interface |
+
+---
+
+### Arquivo a Modificar
 
 | Arquivo | Modificação |
 |---------|-------------|
-| `src/lib/utils.ts` | Adicionar função `normalizeText` |
-| `src/components/Products.tsx` | Usar `normalizeText` no filtro de busca |
-| `src/pages/Automotivo.tsx` | Usar `normalizeText` no filtro de busca |
-| `src/pages/Admin.tsx` | Usar `normalizeText` no filtro de busca |
-| `src/components/AutomotiveProductsManager.tsx` | Usar `normalizeText` no filtro de busca |
+| `src/pages/Admin.tsx` | Remover import do `BackgroundRemover`, remover a aba "Ferramentas" e remover o `TabsContent` correspondente |
 
 ---
 
-### Exemplo de Uso
+### Detalhes da Modificação em Admin.tsx
 
-**Antes:**
-```typescript
-product.name.toLowerCase().includes(searchTerm.toLowerCase())
-```
+1. Remover a linha de import:
+   ```typescript
+   import BackgroundRemover from '@/components/BackgroundRemover';
+   ```
 
-**Depois:**
-```typescript
-normalizeText(product.name).includes(normalizeText(searchTerm))
-```
+2. Remover a aba "Ferramentas":
+   ```tsx
+   <TabsTrigger value="tools" ...>
+     <Wand2 className="h-4 w-4" />
+     <span>Ferramentas</span>
+   </TabsTrigger>
+   ```
+
+3. Remover o conteúdo da aba:
+   ```tsx
+   <TabsContent value="tools">
+     <div className="max-w-2xl mx-auto">
+       <BackgroundRemover />
+     </div>
+   </TabsContent>
+   ```
+
+4. Remover o import do ícone `Wand2` se não for usado em outro lugar
 
 ---
 
-### Resultado Esperado
+### Resultado
 
-- "plastico" encontra "Plástico"
-- "açao" encontra "Ação"  
-- "limão" é encontrado pesquisando "limao"
-- Funciona em todos os campos de busca do sistema (produtos de limpeza, automotivos e admin)
+- A aba "Ferramentas" será removida do painel admin
+- Os arquivos da funcionalidade serão excluídos
+- A dependência `@huggingface/transformers` pode ser removida do `package.json` se desejar (opcional)
 
