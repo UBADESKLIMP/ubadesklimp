@@ -1,37 +1,65 @@
 
-## Ajuste: Posição de Compra Sempre Abaixo da Foto
+
+## Busca Ignorando Acentos
 
 ---
 
 ### O que será feito
 
-A posição do botão "Comprar Agora", preço e seleções de variação/fragrância será **sempre abaixo da foto do produto** no modal de detalhes, eliminando a configuração manual `price_position`.
+Criar uma função utilitária que remove acentos dos textos e aplicá-la em todos os filtros de busca do sistema, permitindo que "plastico" encontre "plástico".
 
 ---
 
-### Alterações
+### Solução Técnica
 
-#### 1. `src/components/ProductDetailModal.tsx`
+Usar a função JavaScript `normalize('NFD')` combinada com regex para remover marcas diacríticas (acentos):
 
-| Linha | Alteração |
-|-------|-----------|
-| 23 | Remover a variável `showButtonBelowImage` |
-| 279-371 | Manter esta seção (abaixo da imagem) |
-| 450-544 | Remover esta seção duplicada (abaixo do texto) |
+```typescript
+const normalizeText = (text: string): string => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+};
+```
 
-A seção de compra ficará **sempre abaixo da imagem**, sem condicionais.
-
----
-
-#### 2. `src/components/ProductForm.tsx` (Opcional - Limpeza)
-
-Remover o campo `price_position` do formulário de administração, já que não será mais necessário:
-- Remover o select de "Posição do Preço/Botão" (aba Detalhes)
-- Manter o campo `price_position` nos dados por compatibilidade, mas não exibi-lo
+**Como funciona:**
+- `normalize('NFD')` - Separa a letra base do acento (ex: "é" vira "e" + "´")
+- `replace(/[\u0300-\u036f]/g, '')` - Remove os caracteres de acento
+- `toLowerCase()` - Converte para minúsculas
 
 ---
 
-### Resultado
+### Arquivos a Modificar
 
-- **Antes**: Configuração manual onde o admin escolhia entre "Abaixo da imagem" ou "Abaixo do texto"
-- **Depois**: Botão de compra, preço e variações **sempre** aparecem abaixo da foto, sem configuração necessária
+| Arquivo | Modificação |
+|---------|-------------|
+| `src/lib/utils.ts` | Adicionar função `normalizeText` |
+| `src/components/Products.tsx` | Usar `normalizeText` no filtro de busca |
+| `src/pages/Automotivo.tsx` | Usar `normalizeText` no filtro de busca |
+| `src/pages/Admin.tsx` | Usar `normalizeText` no filtro de busca |
+| `src/components/AutomotiveProductsManager.tsx` | Usar `normalizeText` no filtro de busca |
+
+---
+
+### Exemplo de Uso
+
+**Antes:**
+```typescript
+product.name.toLowerCase().includes(searchTerm.toLowerCase())
+```
+
+**Depois:**
+```typescript
+normalizeText(product.name).includes(normalizeText(searchTerm))
+```
+
+---
+
+### Resultado Esperado
+
+- "plastico" encontra "Plástico"
+- "açao" encontra "Ação"  
+- "limão" é encontrado pesquisando "limao"
+- Funciona em todos os campos de busca do sistema (produtos de limpeza, automotivos e admin)
+
