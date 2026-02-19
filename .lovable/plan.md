@@ -1,63 +1,42 @@
 
 
-## Remoção da Ferramenta de Remoção de Fundo
+## Adicionar "Acao" e "Uso Indicado" nos Produtos de Limpeza
 
 ---
 
-### O que será removido
+### O que sera feito
 
-A ferramenta de remoção de fundo com IA que estava na aba "Ferramentas" do painel administrativo.
-
----
-
-### Arquivos a Excluir
-
-| Arquivo | Motivo |
-|---------|--------|
-| `src/lib/backgroundRemoval.ts` | Lógica da funcionalidade |
-| `src/components/BackgroundRemover.tsx` | Componente da interface |
+Os campos **Acao** e **Uso Indicado** (que ja existem no banco de dados como `action_type` e `application_area`) serao disponibilizados tambem para produtos de limpeza, com labels adaptados ao contexto.
 
 ---
 
-### Arquivo a Modificar
+### Alteracoes
 
-| Arquivo | Modificação |
-|---------|-------------|
-| `src/pages/Admin.tsx` | Remover import do `BackgroundRemover`, remover a aba "Ferramentas" e remover o `TabsContent` correspondente |
+#### 1. `src/components/ProductForm.tsx`
 
----
+Mover os campos "Acao" e "Local de Aplicacao" para **fora** do bloco condicional `lineType === 'automotivo'`, criando uma secao de detalhes tecnicos que aparece para ambas as linhas:
 
-### Detalhes da Modificação em Admin.tsx
+- **Para limpeza**: mostrar "Acao" (ex: Desengordurante, Bactericida) e "Uso Indicado" (ex: Cozinha, Banheiro, Pisos)
+- **Para automotivo**: manter como esta (Acao, PH, Local de Aplicacao, Marca)
+- Os campos de Marca e PH continuam exclusivos para automotivo
 
-1. Remover a linha de import:
-   ```typescript
-   import BackgroundRemover from '@/components/BackgroundRemover';
-   ```
+#### 2. `src/components/ProductCard.tsx`
 
-2. Remover a aba "Ferramentas":
-   ```tsx
-   <TabsTrigger value="tools" ...>
-     <Wand2 className="h-4 w-4" />
-     <span>Ferramentas</span>
-   </TabsTrigger>
-   ```
+Os badges de acao/uso indicado ja sao renderizados para qualquer produto que tenha esses campos preenchidos (linha 226-244). **Nenhuma alteracao necessaria** - ja funciona automaticamente.
 
-3. Remover o conteúdo da aba:
-   ```tsx
-   <TabsContent value="tools">
-     <div className="max-w-2xl mx-auto">
-       <BackgroundRemover />
-     </div>
-   </TabsContent>
-   ```
+#### 3. `src/components/ProductDetailModal.tsx`
 
-4. Remover o import do ícone `Wand2` se não for usado em outro lugar
+A secao "Detalhes Tecnicos" (linha 417-441) ja exibe para qualquer produto com esses campos. Ajustar o label:
+- Renomear de "Detalhes Tecnicos" (generico) ao inves de manter "Detalhes Tecnicos Automotivos"
+- Renomear "Local de Aplicacao" para "Uso Indicado" quando for produto de limpeza
 
 ---
 
 ### Resultado
 
-- A aba "Ferramentas" será removida do painel admin
-- Os arquivos da funcionalidade serão excluídos
-- A dependência `@huggingface/transformers` pode ser removida do `package.json` se desejar (opcional)
+| Antes | Depois |
+|-------|--------|
+| Campos de Acao/Uso so apareciam no formulario de produtos automotivos | Aparecem para ambas as linhas |
+| Cards de limpeza nao mostravam badges tecnicos | Mostram badges de Acao e Uso Indicado quando preenchidos |
+| Modal mostrava "Detalhes Tecnicos Automotivos" | Mostra "Detalhes Tecnicos" de forma generica |
 
