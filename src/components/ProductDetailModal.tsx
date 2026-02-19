@@ -413,7 +413,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                 </div>
               )}
               
-              {/* Detalhes Técnicos Automotivos */}
+              {/* Detalhes Técnicos */}
               {(product.action_type || product.ph_level || product.application_area) && (
                 <div className="mt-4 pt-4 border-t border-border/50">
                   <h5 className="font-medium text-sm mb-3 text-blue-400">Detalhes Técnicos</h5>
@@ -432,7 +432,7 @@ const ProductDetailModal = ({ product, isOpen, onClose }: ProductDetailModalProp
                     )}
                     {product.application_area && (
                       <div className="flex justify-between">
-                        <span className="font-medium">Local de Aplicação:</span>
+                        <span className="font-medium">{product.line_type === 'limpeza' ? 'Uso Indicado:' : 'Local de Aplicação:'}</span>
                         <span className="text-muted-foreground">{product.application_area}</span>
                       </div>
                     )}

@@ -425,18 +425,22 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             </CardContent>
           </Card>
 
-          {/* Campos Técnicos Automotivos - Opcionais */}
-          {lineType === 'automotivo' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+          {/* Campos Técnicos - Ação e Uso Indicado (ambas as linhas) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {lineType === 'automotivo' ? (
                   <Car className="h-5 w-5 text-blue-400" />
-                  Detalhes Técnicos Automotivos
-                  <span className="text-sm font-normal text-muted-foreground">(opcionais)</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ) : (
+                  <Droplets className="h-5 w-5 text-cyan-500" />
+                )}
+                {lineType === 'automotivo' ? 'Detalhes Técnicos Automotivos' : 'Detalhes Técnicos'}
+                <span className="text-sm font-normal text-muted-foreground">(opcionais)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {lineType === 'automotivo' && (
                   <div>
                     <Label htmlFor="brand">Marca</Label>
                     <Input
@@ -449,22 +453,24 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                       Permite filtrar produtos por marca na página
                     </p>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="action_type" className="flex items-center gap-2">
-                      <Droplets className="h-4 w-4 text-blue-400" />
-                      Ação
-                    </Label>
-                    <Input
-                      id="action_type"
-                      value={formData.action_type}
-                      onChange={(e) => setFormData({...formData, action_type: e.target.value})}
-                      placeholder="Ex: Desengraxante, Limpador..."
-                    />
-                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="action_type" className="flex items-center gap-2">
+                    <Droplets className="h-4 w-4 text-blue-400" />
+                    Ação
+                  </Label>
+                  <Input
+                    id="action_type"
+                    value={formData.action_type}
+                    onChange={(e) => setFormData({...formData, action_type: e.target.value})}
+                    placeholder={lineType === 'automotivo' ? 'Ex: Desengraxante, Limpador...' : 'Ex: Desengordurante, Bactericida...'}
+                  />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {lineType === 'automotivo' && (
                   <div>
                     <Label htmlFor="ph_level">PH</Label>
                     <Input
@@ -474,23 +480,23 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                       placeholder="Ex: Neutro, Ácido, 7.0..."
                     />
                   </div>
+                )}
 
-                  <div>
-                    <Label htmlFor="application_area" className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-blue-400" />
-                      Local de Aplicação
-                    </Label>
-                    <Input
-                      id="application_area"
-                      value={formData.application_area}
-                      onChange={(e) => setFormData({...formData, application_area: e.target.value})}
-                      placeholder="Ex: Motor, Lataria, Rodas..."
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="application_area" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-400" />
+                    {lineType === 'automotivo' ? 'Local de Aplicação' : 'Uso Indicado'}
+                  </Label>
+                  <Input
+                    id="application_area"
+                    value={formData.application_area}
+                    onChange={(e) => setFormData({...formData, application_area: e.target.value})}
+                    placeholder={lineType === 'automotivo' ? 'Ex: Motor, Lataria, Rodas...' : 'Ex: Cozinha, Banheiro, Pisos...'}
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
