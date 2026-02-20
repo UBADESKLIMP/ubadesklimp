@@ -1,42 +1,40 @@
 
 
-## Adicionar "Acao" e "Uso Indicado" nos Produtos de Limpeza
+## Corrigir Cores dos Badges de Acao e Uso Indicado
 
----
+### Problema
 
-### O que sera feito
+Os badges de "Acao" (azul) e "Uso Indicado" (verde) usam cores claras (`text-blue-400`, `text-green-400`) que foram pensadas para fundo escuro (automotivo). No fundo branco dos produtos de limpeza, ficam quase invisiveis.
 
-Os campos **Acao** e **Uso Indicado** (que ja existem no banco de dados como `action_type` e `application_area`) serao disponibilizados tambem para produtos de limpeza, com labels adaptados ao contexto.
+### Solucao
 
----
+Ajustar as cores dos badges para serem condicionais ao `variant` do card:
 
-### Alteracoes
+| Badge | Fundo Escuro (automotivo) | Fundo Claro (limpeza) |
+|-------|---------------------------|----------------------|
+| Acao | `bg-blue-500/20 text-blue-400` | `bg-blue-100 text-blue-700` |
+| Uso Indicado | `bg-green-500/20 text-green-400` | `bg-green-100 text-green-700` |
+| PH | `bg-purple-500/20 text-purple-400` | `bg-purple-100 text-purple-700` |
 
-#### 1. `src/components/ProductForm.tsx`
+### Arquivo a Modificar
 
-Mover os campos "Acao" e "Local de Aplicacao" para **fora** do bloco condicional `lineType === 'automotivo'`, criando uma secao de detalhes tecnicos que aparece para ambas as linhas:
+`src/components/ProductCard.tsx` - linhas 226-244
 
-- **Para limpeza**: mostrar "Acao" (ex: Desengordurante, Bactericida) e "Uso Indicado" (ex: Cozinha, Banheiro, Pisos)
-- **Para automotivo**: manter como esta (Acao, PH, Local de Aplicacao, Marca)
-- Os campos de Marca e PH continuam exclusivos para automotivo
+### Detalhe Tecnico
 
-#### 2. `src/components/ProductCard.tsx`
+Usar o prop `variant` que ja existe no componente para alternar as classes:
 
-Os badges de acao/uso indicado ja sao renderizados para qualquer produto que tenha esses campos preenchidos (linha 226-244). **Nenhuma alteracao necessaria** - ja funciona automaticamente.
+```tsx
+// Antes (sempre claro)
+<span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
 
-#### 3. `src/components/ProductDetailModal.tsx`
+// Depois (condicional)
+<span className={`text-xs px-2 py-0.5 rounded-full ${
+  variant === 'automotive'
+    ? 'bg-blue-500/20 text-blue-400'
+    : 'bg-blue-100 text-blue-700'
+}`}>
+```
 
-A secao "Detalhes Tecnicos" (linha 417-441) ja exibe para qualquer produto com esses campos. Ajustar o label:
-- Renomear de "Detalhes Tecnicos" (generico) ao inves de manter "Detalhes Tecnicos Automotivos"
-- Renomear "Local de Aplicacao" para "Uso Indicado" quando for produto de limpeza
-
----
-
-### Resultado
-
-| Antes | Depois |
-|-------|--------|
-| Campos de Acao/Uso so apareciam no formulario de produtos automotivos | Aparecem para ambas as linhas |
-| Cards de limpeza nao mostravam badges tecnicos | Mostram badges de Acao e Uso Indicado quando preenchidos |
-| Modal mostrava "Detalhes Tecnicos Automotivos" | Mostra "Detalhes Tecnicos" de forma generica |
+O mesmo padrao sera aplicado aos tres badges (azul, verde e roxo), garantindo boa legibilidade em ambos os fundos.
 
