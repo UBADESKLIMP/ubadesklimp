@@ -226,17 +226,29 @@ const ProductCard = ({
           {(product.action_type || product.ph_level || product.application_area) && (
             <div className="mb-3 flex flex-wrap gap-1.5">
               {product.action_type && (
-                <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  variant === 'automotive'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
                   {product.action_type}
                 </span>
               )}
               {product.application_area && (
-                <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  variant === 'automotive'
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-green-100 text-green-700'
+                }`}>
                   {product.application_area}
                 </span>
               )}
               {product.ph_level && (
-                <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  variant === 'automotive'
+                    ? 'bg-purple-500/20 text-purple-400'
+                    : 'bg-purple-100 text-purple-700'
+                }`}>
                   PH: {product.ph_level}
                 </span>
               )}
