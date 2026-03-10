@@ -1,7 +1,9 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dclgv77ji/image/upload';
+const UPLOAD_PRESET = 'ubadesklimp';
 
 export const useImageUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -9,7 +11,6 @@ export const useImageUpload = () => {
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!file) return null;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Tipo de arquivo inválido",
@@ -19,7 +20,6 @@ export const useImageUpload = () => {
       return null;
     }
 
-    // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
@@ -31,21 +31,21 @@ export const useImageUpload = () => {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
+      const response = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData
+      });
 
-      if (uploadError) throw uploadError;
+      if (!response.ok) {
+        throw new Error('Falha no upload para Cloudinary');
+      }
 
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
+      const data = await response.json();
+      return data.secure_url;
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
