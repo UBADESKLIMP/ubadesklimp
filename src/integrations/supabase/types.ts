@@ -38,6 +38,30 @@ export type Database = {
         }
         Relationships: []
       }
+      image_urls_backup: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          source_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
