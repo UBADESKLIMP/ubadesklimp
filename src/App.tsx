@@ -13,8 +13,14 @@ import Profile from "./pages/Profile";
 import OrderHistory from "./pages/OrderHistory";
 import Automotivo from "./pages/Automotivo";
 import NotFound from "./pages/NotFound";
+import { useStorageCleanup } from "./hooks/useStorageCleanup";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  useStorageCleanup();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
