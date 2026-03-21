@@ -18,26 +18,34 @@ Deno.serve(async (req) => {
 
     const bucket = "product-images";
     let totalDeleted = 0;
+    const batchSize = 100;
+
+    // Collect all file paths first
+    const allPaths: string[] = [];
+    let offset = 0;
     let hasMore = true;
 
     while (hasMore) {
       const { data: files, error: listError } = await supabase.storage
         .from(bucket)
-        .list("", { limit: 100 });
+        .list("", { limit: batchSize, offset });
 
       if (listError) throw listError;
-      if (!files || files.length === 0) {
-        hasMore = false;
-        break;
-      }
+      if (!files || files.length === 0) break;
 
-      const paths = files.map((f) => f.name);
+      allPaths.push(...files.map((f) => f.name));
+      offset += files.length;
+      if (files.length < batchSize) hasMore = false;
+    }
+
+    // Delete in batches
+    for (let i = 0; i < allPaths.length; i += batchSize) {
+      const batch = allPaths.slice(i, i + batchSize);
       const { error: removeError } = await supabase.storage
         .from(bucket)
-        .remove(paths);
-
+        .remove(batch);
       if (removeError) throw removeError;
-      totalDeleted += paths.length;
+      totalDeleted += batch.length;
     }
 
     return new Response(
