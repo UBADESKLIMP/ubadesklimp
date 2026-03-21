@@ -1,59 +1,31 @@
 
 
-## Reduzir Bandwidth: Remover URLs de Imagens Pesadas do Banco
+## Migrar Imagens do Supabase para Cloudinary
 
-### Estratégia
-Criar uma tabela de backup com todas as URLs de imagens e depois limpar (null) os campos `image_url` dos produtos mais pesados. Assim, quando o bandwidth resetar em abril, essas imagens não serão mais servidas.
+### Situação atual
+- **25 produtos**, **20 variações** e **6 fragrâncias** ainda com URLs apontando para o Supabase Storage
+- Cada acesso a essas imagens consome bandwidth do Supabase
 
-### Passo 1: Criar tabela de backup via migration
-```sql
-CREATE TABLE public.image_urls_backup (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  source_table text NOT NULL,
-  source_id uuid NOT NULL,
-  image_url text NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
+### Plano: Edge Function de migração
 
--- Backup de TODAS as URLs de imagens (produtos, variações, fragrâncias)
-INSERT INTO image_urls_backup (source_table, source_id, image_url)
-SELECT 'products', id, image_url FROM products WHERE image_url IS NOT NULL;
+Criar uma nova Edge Function `migrate-images-to-cloudinary` que:
 
-INSERT INTO image_urls_backup (source_table, source_id, image_url)
-SELECT 'product_variations', id, image_url FROM product_variations WHERE image_url IS NOT NULL;
+1. Busca todos os registros com `image_url LIKE '%supabase%'` nas 3 tabelas
+2. Para cada imagem: faz download do Supabase Storage e upload para o Cloudinary via API REST
+3. Atualiza o `image_url` no banco com a nova URL do Cloudinary
+4. Processa em lotes pequenos para não estourar o tempo de execução
 
-INSERT INTO image_urls_backup (source_table, source_id, image_url)
-SELECT 'product_fragrances', id, image_url FROM product_fragrances WHERE image_url IS NOT NULL;
-```
+### Detalhes técnicos
 
-### Passo 2: Limpar URLs dos produtos mais pesados via migration
-```sql
--- Limpar fragrâncias do Coala (25 imagens) e Casa Perfume (6 imagens)
-UPDATE product_fragrances SET image_url = NULL
-WHERE product_id IN (
-  SELECT id FROM products WHERE name ILIKE '%coala%' OR name ILIKE '%casa perfume%'
-);
+- **Cloud name**: `dclgv77ji` / **Upload preset**: `ubadesklimp` (já configurados no frontend)
+- O Cloudinary aceita upload via URL direta (`url` param no upload), evitando download + re-upload — mais rápido e eficiente
+- A Edge Function usará `SUPABASE_SERVICE_ROLE_KEY` para acessar o banco e atualizar URLs
+- Processará as 3 tabelas sequencialmente: products → product_variations → product_fragrances
+- Timeout safety: processa no máximo 20 imagens por execução; o frontend pode chamar múltiplas vezes
 
--- Limpar imagem principal desses produtos
-UPDATE products SET image_url = NULL
-WHERE name ILIKE '%coala%' OR name ILIKE '%casa perfume%';
+### Arquivo criado/modificado
+- `supabase/functions/migrate-images-to-cloudinary/index.ts` (novo)
 
--- Limpar variações dos automotivos mais pesados (Blend, Sintra, etc)
-UPDATE product_variations SET image_url = NULL
-WHERE product_id IN (
-  SELECT id FROM products WHERE line_type = 'automotivo'
-);
-
--- Limpar imagem principal dos automotivos
-UPDATE products SET image_url = NULL WHERE line_type = 'automotivo';
-```
-
-### Resultado esperado
-- ~80+ URLs de imagens removidas do banco
-- Site mostrará produtos sem foto temporariamente (placeholder)
-- Quando bandwidth resetar em abril: executar cleanup-storage, depois re-upload via admin (Cloudinary)
-- Tabela `image_urls_backup` preserva todas as URLs originais caso precise consultar
-
-### Risco
-Se o Supabase bloquear também as migrations (não apenas storage), nada disso funcionará até abril. Mas vale tentar pois geralmente o bloqueio é apenas no storage/egress.
+### Como usar
+Após deploy, chamar a função pelo admin ou console. Pode ser necessário executar 3x (51 imagens / 20 por vez).
 
