@@ -1,30 +1,55 @@
 
 
-## Limpar Tudo e Recomeçar do Zero
+## Análise do Egress e Plano de Redução
 
-### Plano
+### Por que o egress não zerou em 1º de abril?
 
-**Passo 1: Zerar todas as URLs de imagem no banco** (migration)
-```sql
-UPDATE products SET image_url = NULL;
-UPDATE product_variations SET image_url = NULL;
-UPDATE product_fragrances SET image_url = NULL;
-```
+O ciclo de faturamento do Supabase Free Plan **não reseta no dia 1 do mês**. Ele reseta na data de aniversário da criação do projeto. Ou seja, se o projeto foi criado dia 19, o ciclo reseta dia 19 de cada mês. O contador de 8.40 GB é cumulativo dentro desse ciclo.
 
-**Passo 2: Esvaziar o bucket do Supabase**
-- Executar a Edge Function `cleanup-storage` já existente para deletar todos os arquivos do bucket `product-images`
+### De onde vem o egress atual (sem imagens)?
 
-**Passo 3: Re-upload manual pelo admin**
-- Você sobe todas as imagens novamente pelo painel `/admin`
-- Todas irão direto para o Cloudinary (já configurado no frontend)
-- Zero dependência do Supabase Storage daqui pra frente
+O código não usa mais Supabase Storage. Todo o egress agora é de:
 
-### Resultado
-- Banco limpo, sem URLs apontando para lugar nenhum
-- Bucket vazio = zero consumo de storage/egress
-- Após re-upload, tudo servido pelo Cloudinary CDN gratuitamente
-- A tabela `image_urls_backup` continua existindo caso precise consultar URLs antigas
+1. **API (PostgREST)** — cada page load faz 3 queries paralelas: `products`, `product_variations`, `product_fragrances` (+ categories, auth checks). Cada visitante gera tráfego.
+2. **Auth** — verificação de sessão, login, etc.
+3. **Realtime** — conexão WebSocket mantida aberta pelo cliente Supabase (mesmo sem uso explícito).
+4. **Preview do Lovable** — cada vez que você edita/visualiza o preview, o app carrega e faz todas essas queries novamente.
 
-### Observação
-A Edge Function `migrate-images-to-cloudinary` não será mais necessária após isso, mas pode ficar como referência.
+### O que ainda pode ser removido
+
+| Item | Ação | Impacto |
+|------|-------|---------|
+| Bucket `product-images` | Deletar via dashboard (Storage → Buckets) | Mínimo, mas elimina overhead |
+| Políticas RLS do bucket | Já são inúteis, ficam nas migrations antigas | Zero impacto (não executam) |
+| Edge Functions restantes | Não há mais nenhuma — já limpamos tudo | Nada a fazer |
+
+### Como reduzir o egress de API real
+
+**Passo 1: Deletar o bucket vazio**
+- Ir no dashboard Supabase → Storage → deletar `product-images`
+
+**Passo 2: Reduzir queries desnecessárias com cache**
+- Configurar o `QueryClient` do React Query com `staleTime` de 5-10 minutos para que as queries de produtos não sejam refeitas a cada navegação
+- Isso reduz drasticamente o número de chamadas ao Supabase
+
+**Passo 3: Selecionar apenas colunas necessárias**
+- Trocar `.select('*')` por `.select('id,name,price,image_url,...')` nas queries públicas
+- Menos dados transferidos = menos egress
+
+**Passo 4: Desabilitar Realtime (se não usa)**
+- O cliente Supabase mantém conexão WebSocket ativa por padrão
+- Pode ser desabilitado na criação do cliente para economizar
+
+### Sobre a cobrança
+
+O Free Plan inclui 5 GB de egress por ciclo. Você está em 8.40 GB (3.40 GB de overage). O Supabase pode pausar o projeto quando o limite é excedido. A única forma de zerar é **esperar o próximo ciclo** (data de criação do projeto, não dia 1 do mês).
+
+### Resumo das ações
+
+1. Deletar bucket `product-images` manualmente no dashboard
+2. Adicionar cache (staleTime) no React Query — reduz re-fetches
+3. Usar `.select()` com colunas específicas em vez de `*`
+4. Desabilitar Realtime no cliente Supabase
+
+Isso não zera o contador atual, mas reduz drasticamente o consumo futuro para caber nos 5 GB do plano gratuito.
 
