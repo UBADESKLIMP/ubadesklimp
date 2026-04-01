@@ -19,7 +19,7 @@ export const useCategories = (filterType?: 'limpeza' | 'automotivo') => {
     try {
       let query = supabase
         .from('categories')
-        .select('*')
+        .select('id,name,type,created_at,updated_at')
         .order('name');
 
       if (filterType) {
