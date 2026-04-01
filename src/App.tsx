@@ -14,7 +14,16 @@ import OrderHistory from "./pages/OrderHistory";
 import Automotivo from "./pages/Automotivo";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 10 * 60 * 1000, // 10 minutos — evita re-fetches desnecessários
+      gcTime: 15 * 60 * 1000, // 15 minutos no cache
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

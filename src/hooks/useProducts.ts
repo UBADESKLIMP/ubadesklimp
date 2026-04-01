@@ -66,18 +66,18 @@ export const useProducts = () => {
       const [productsResult, variationsResult, fragrancesResult] = await Promise.all([
         supabase
           .from('products')
-          .select('*')
+          .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,display_order,created_at,updated_at')
           .order('display_order', { ascending: true })
           .order('priority', { ascending: false })
           .order('priority_order', { ascending: true })
           .order('created_at', { ascending: false }),
         supabase
           .from('product_variations')
-          .select('*')
+          .select('id,product_id,literage,price,image_url,is_primary,display_order,created_at,updated_at')
           .order('created_at', { ascending: true }),
         supabase
           .from('product_fragrances')
-          .select('*')
+          .select('id,product_id,name,description,image_url,available_literages,order_index')
           .order('order_index', { ascending: true })
       ]);
 
