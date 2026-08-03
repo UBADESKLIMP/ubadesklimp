@@ -85,7 +85,7 @@ const Auth = () => {
         <div className="mb-6">
           <Link
             to="/"
-            className="inline-flex items-center text-white hover:text-white/80 transition-colors"
+            className="inline-flex items-center bg-slate-900/90 hover:bg-slate-900 text-blue-300 hover:text-blue-200 transition-colors px-4 py-2 rounded-lg shadow-soft"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar ao site
