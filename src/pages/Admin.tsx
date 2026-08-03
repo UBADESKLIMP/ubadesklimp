@@ -204,7 +204,7 @@ const Admin = () => {
           <Button 
             variant="outline" 
             onClick={() => window.location.href = '/'}
-            className="flex items-center space-x-2 border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
+            className="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-900 text-blue-300 hover:text-blue-200 border-slate-800 shadow-lg shadow-black/20"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Voltar para o Site</span>
