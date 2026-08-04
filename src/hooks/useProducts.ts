@@ -2,29 +2,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { ProductWithVariations } from '@/types/product';
-
-export interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  category: string;
-  image_url: string | null;
-  priority: boolean;
-  highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
-  created_at: string;
-  updated_at: string;
-}
+import { ProductRow, ProductWithVariations } from '@/types/product';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<ProductWithVariations[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Sanitize payload to only include columns that exist in 'products' table
+  type ProductInsertable = Omit<ProductRow, 'id' | 'created_at' | 'updated_at'>;
+
+  // Sanitize payload to only include columns that exist in 'products' table.
+  // Tipar allowedKeys contra ProductInsertable faz um nome de coluna errado
+  // virar erro de compilação em vez de falha silenciosa em runtime.
   const sanitizeProductPayload = (data: any) => {
     if (!data) return {};
-    const allowedKeys = [
+    const allowedKeys: (keyof ProductInsertable)[] = [
       'name',
       'description',
       'price',
@@ -46,7 +37,8 @@ export const useProducts = () => {
       'ph_level',
       'application_area',
       'line_type',
-      'brand'
+      'brand',
+      'display_order',
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -124,6 +116,7 @@ export const useProducts = () => {
           application_area: product.application_area || null,
           line_type: (product.line_type || 'limpeza') as 'limpeza' | 'automotivo',
           brand: product.brand || null,
+          display_order: product.display_order || 0,
           created_at: product.created_at,
           updated_at: product.updated_at,
           variations: variations,
@@ -145,7 +138,7 @@ export const useProducts = () => {
     }
   };
 
-  const createProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
+  const createProduct = async (productData: ProductInsertable) => {
     try {
       const payload = sanitizeProductPayload(productData) as any;
       const { data, error } = await supabase
@@ -173,7 +166,7 @@ export const useProducts = () => {
     }
   };
 
-  const updateProduct = async (id: string, productData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>) => {
+  const updateProduct = async (id: string, productData: Partial<ProductInsertable>) => {
     try {
       const payload = sanitizeProductPayload(productData) as any;
       const { data, error } = await supabase
