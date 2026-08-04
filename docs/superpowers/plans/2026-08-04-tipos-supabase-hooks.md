@@ -12,7 +12,7 @@
 
 - Não criar nenhuma migration de banco nem alterar RLS — isto é uma refatoração só de tipos/código.
 - Não adicionar nenhuma dependência nova (Zod, react-hook-form, etc. já estão no projeto).
-- Não existe suíte de testes automatizados neste repositório — a verificação de cada tarefa é `npm run build` (roda `tsc` via Vite) e, na tarefa final, um smoke test manual no navegador.
+- Não existe suíte de testes automatizados neste repositório — a verificação de cada tarefa é `npm run typecheck` (roda `tsc --noEmit -p tsconfig.app.json`, script novo adicionado na Task 1) e, na tarefa final, um smoke test manual no navegador. **Importante:** `npm run build` (Vite/SWC) NÃO faz checagem de tipo nenhuma — só transpila — então não serve como verificação aqui, apesar do nome sugestivo. Note também que este projeto tem `strict: false` e `strictNullChecks: false` no `tsconfig.app.json`, então incompatibilidades de nulidade (`string | null` vs. `string | undefined`) não necessariamente viram erro de compilação — mas incompatibilidades estruturais (ex.: passar um objeto onde `ReactNode`/`string`/`number` é esperado) continuam sendo pegas normalmente.
 - Strings visíveis ao usuário (toasts, labels) continuam em português, seguindo o padrão já usado em todo o repositório.
 - Cada tarefa termina com commit próprio.
 
@@ -60,7 +60,7 @@ export interface ProductWithVariations extends ProductRow {
 
 - [ ] **Step 2: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: o build ainda vai FALHAR neste ponto (outros arquivos ainda usam o `ProductWithVariations` antigo com campos opcionais que agora são `| null`, e `useProducts.ts` ainda declara sua própria `Product` local) — isso é esperado, as próximas tarefas corrigem cada consumidor. Confira que os erros reportados são só em `src/hooks/useProducts.ts`, `src/hooks/usePriorityProducts.ts` e possivelmente componentes de produto — não deve haver erro de sintaxe dentro do próprio `src/types/product.ts`.
 
 - [ ] **Step 3: Commit**
@@ -165,7 +165,7 @@ por:
 
 - [ ] **Step 4: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: erros relacionados a `useProducts.ts` desaparecem. Podem sobrar erros em outros consumidores de `ProductWithVariations` (componentes) — não corrija esses aqui, ficam para a Task 13.
 
 - [ ] **Step 5: Commit**
@@ -204,7 +204,7 @@ O resto do arquivo (`fetchCategories`, `createCategory`, `updateCategory`, `dele
 
 - [ ] **Step 2: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `useCategories.ts`.
 
 - [ ] **Step 3: Commit**
@@ -274,7 +274,7 @@ por:
 
 - [ ] **Step 4: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `usePriorityProducts.ts`.
 
 - [ ] **Step 5: Commit**
@@ -312,7 +312,7 @@ export type Profile = Omit<Tables<'profiles'>, 'person_type'> & {
 
 - [ ] **Step 2: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `useProfile.ts`. Se `src/pages/Profile.tsx` ou `src/components/OrderForm.tsx` quebrarem por causa de `person_type` agora aceitar `null`, isso fica registrado para a Task 13 (não corrija aqui).
 
 - [ ] **Step 3: Commit**
@@ -373,7 +373,7 @@ export type CartItem = z.infer<typeof cartItemSchema>;
 
 - [ ] **Step 4: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: build passa sem novo erro (este arquivo só ganhou exports novos, nada foi removido).
 
 - [ ] **Step 5: Commit**
@@ -427,7 +427,7 @@ const isValidCartItem = (item: unknown): item is CartItem => {
 
 - [ ] **Step 3: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `CartContext.tsx`.
 
 - [ ] **Step 4: Smoke test manual rápido**
@@ -475,7 +475,7 @@ por:
 
 - [ ] **Step 3: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `Cart.tsx`.
 
 - [ ] **Step 4: Smoke test manual**
@@ -565,7 +565,7 @@ export const parseOrderItems = (raw: Json, orderId: string): OrderItem[] => {
 
 - [ ] **Step 2: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem erro — este arquivo ainda não é importado por ninguém, então só precisa compilar sozinho.
 
 - [ ] **Step 3: Commit**
@@ -626,7 +626,7 @@ por:
 
 - [ ] **Step 3: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `useAdminOrders.ts`. Deve aparecer erro em `src/components/OrdersManager.tsx` (esperado — corrigido na Task 11).
 
 - [ ] **Step 4: Commit**
@@ -711,7 +711,7 @@ por:
 
 - [ ] **Step 3: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `OrdersManager.tsx`.
 
 - [ ] **Step 4: Smoke test manual — o caso que motivou a correção**
@@ -864,7 +864,7 @@ por:
 
 - [ ] **Step 4: Verificar**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: sem novos erros originados em `useSalesStats.ts`.
 
 - [ ] **Step 5: Smoke test manual**
@@ -889,7 +889,7 @@ Agora que todos os hooks/tipos-fonte foram trocados, esta tarefa fecha o build i
 
 - [ ] **Step 1: Build limpo**
 
-Run: `npm run build`
+Run: `npm run typecheck`
 Expected: exit code 0, zero erros de TypeScript. Se aparecer erro num componente não coberto pelas tarefas 1–12, ajuste esse componente pontualmente (o padrão é sempre o mesmo: campo que era `string | undefined` agora é `string | null`, então troque a checagem/fallback pra aceitar `null` também) e rode `npm run build` de novo até zerar.
 
 - [ ] **Step 2: Smoke test — fluxo de cliente**
