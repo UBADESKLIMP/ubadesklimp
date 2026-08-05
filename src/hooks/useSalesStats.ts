@@ -1,23 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { type OrderRow, type OrderItem, parseOrderItems } from '@/types/order';
 
-interface OrderItem {
-  id: string;
-  name: string;
-  category: string;
-  price: string | number;
-  quantity: number;
-  productId: string;
-  image_url?: string;
-}
-
-interface Order {
-  id: string;
+type Order = Pick<OrderRow, 'id' | 'total_amount' | 'status' | 'created_at'> & {
   items: OrderItem[];
-  total_amount: number;
-  status: string;
-  created_at: string;
-}
+};
 
 interface ProductSales {
   productId: string;
@@ -77,10 +64,9 @@ export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate
         return;
       }
 
-      // Parse items JSON
       const parsedOrders = (data || []).map((order) => ({
         ...order,
-        items: (order.items as unknown as OrderItem[]) || []
+        items: parseOrderItems(order.items, order.id),
       }));
 
       setOrders(parsedOrders);
@@ -106,11 +92,14 @@ export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate
     validOrders.forEach((order) => {
       order.items.forEach((item) => {
         // Apply category filter if specified
-        if (categoryFilter && item.category?.toLowerCase() !== categoryFilter.toLowerCase()) {
+        if (categoryFilter && item.category.toLowerCase() !== categoryFilter.toLowerCase()) {
           return;
         }
 
-        const existing = productSalesMap.get(item.productId);
+        // productId pode faltar (itens antigos de carrinho identificavam o
+        // produto só pelo nome) — cai pro id do próprio item do pedido nesse caso.
+        const productKey = item.productId ?? item.id;
+        const existing = productSalesMap.get(productKey);
         const itemPrice = parsePrice(item.price);
         const itemRevenue = itemPrice * item.quantity;
 
@@ -118,8 +107,8 @@ export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate
           existing.totalQuantity += item.quantity;
           existing.totalRevenue += itemRevenue;
         } else {
-          productSalesMap.set(item.productId, {
-            productId: item.productId,
+          productSalesMap.set(productKey, {
+            productId: productKey,
             name: item.name,
             category: item.category,
             image_url: item.image_url,
@@ -191,7 +180,7 @@ export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate
       filteredRevenue = 0;
       validOrders.forEach((order) => {
         order.items.forEach((item) => {
-          if (item.category?.toLowerCase() === categoryFilter.toLowerCase()) {
+          if (item.category.toLowerCase() === categoryFilter.toLowerCase()) {
             filteredRevenue += parsePrice(item.price) * item.quantity;
           }
         });

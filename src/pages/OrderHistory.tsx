@@ -10,20 +10,11 @@ import { ShoppingBag, Calendar, Phone, ArrowLeft, Package, Clock, CheckCircle, C
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { type OrderRow, type OrderItem, parseOrderItems } from '@/types/order';
 
 const ORDERS_PER_PAGE = 5;
 
-interface Order {
-  id: string;
-  items: any[];
-  total_amount: number;
-  customer_name?: string;
-  customer_phone?: string;
-  notes?: string;
-  status: string;
-  created_at: string;
-  whatsapp_sent_at?: string;
-}
+type Order = Omit<OrderRow, 'items'> & { items: OrderItem[] };
 
 const OrderHistory = () => {
   const { user } = useAuth();
@@ -61,7 +52,10 @@ const OrderHistory = () => {
           .range(from, to);
 
         if (error) throw error;
-        setOrders((data || []) as Order[]);
+        setOrders((data || []).map((order) => ({
+          ...order,
+          items: parseOrderItems(order.items, order.id),
+        })));
       } catch (error) {
         console.error('Erro ao buscar pedidos:', error);
       } finally {
@@ -194,18 +188,18 @@ const OrderHistory = () => {
                       <h4 className="font-semibold mb-3">Produtos:</h4>
                       <ScrollArea className="max-h-48">
                         <div className="space-y-2">
-                          {order.items.map((item: any, index: number) => (
+                          {order.items.map((item, index) => (
                             <div key={index} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
                               <div className="flex-1">
                                 <div className="font-medium">{item.name}</div>
                                 {item.fragrance && (
                                   <div className="text-sm text-muted-foreground">
-                                    Fragrância: {item.fragrance}
+                                    Fragrância: {item.fragrance.name}
                                   </div>
                                 )}
-                                {item.literage && (
+                                {item.variation && (
                                   <div className="text-sm text-muted-foreground">
-                                    Litragem: {item.literage}
+                                    Litragem: {item.variation.literage}
                                   </div>
                                 )}
                               </div>
