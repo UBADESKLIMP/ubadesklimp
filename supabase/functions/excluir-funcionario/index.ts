@@ -78,12 +78,27 @@ Deno.serve(async (req: Request) => {
     // uma conta de cliente por engano, de forma irreversível.
     const { data: targetStaff } = await adminClient
       .from("staff_members")
-      .select("user_id")
+      .select("user_id, is_admin")
       .eq("user_id", targetUserId)
       .maybeSingle();
 
     if (!targetStaff) {
       return jsonResponse({ error: "Usuário não é um funcionário." }, 404);
+    }
+
+    // Nunca deixar zero admins: se o alvo é admin, exige que sobre pelo menos
+    // um outro. Sem isso, dois admins se excluindo em paralelo (ou um só
+    // restando) esvaziaria staff_members, e o próximo cadastro público
+    // qualquer viraria admin sozinho via promote_first_user_to_admin().
+    if (targetStaff.is_admin) {
+      const { count: adminCount } = await adminClient
+        .from("staff_members")
+        .select("user_id", { count: "exact", head: true })
+        .eq("is_admin", true);
+
+      if ((adminCount ?? 0) <= 1) {
+        return jsonResponse({ error: "Não é possível excluir o último administrador." }, 400);
+      }
     }
 
     // staff_members/staff_permissions têm ON DELETE CASCADE a partir de

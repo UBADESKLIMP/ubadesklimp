@@ -131,5 +131,11 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Registro mínimo de auditoria — criar um funcionário (às vezes um admin
+  // novo) roda com service_role, então isso é o único rastro de quem fez o quê.
+  console.log(
+    `Funcionário criado: ${newUserId} (${username}, admin=${isAdminFlag}) por admin ${caller.id}`,
+  );
+
   return jsonResponse({ userId: newUserId, username, displayName }, 200);
 });
