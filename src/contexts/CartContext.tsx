@@ -1,17 +1,8 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ProductVariation, ProductFragrance } from '@/types/product';
+import { cartItemSchema, type CartItem } from '@/lib/validations';
 
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  category: string;
-  variation?: ProductVariation;
-  fragrance?: ProductFragrance;
-  productId?: string; // Para poder buscar outras variações
-  image_url?: string; // Imagem principal do produto
-}
+export type { CartItem };
 
 interface CartState {
   items: CartItem[];
@@ -196,22 +187,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
 // Validar se um item do carrinho tem todos os campos obrigatórios
 const isValidCartItem = (item: unknown): item is CartItem => {
-  if (!item || typeof item !== 'object') return false;
-  
-  const obj = item as Record<string, unknown>;
-  
-  // Campos obrigatórios
-  if (typeof obj.id !== 'string' || !obj.id.trim()) return false;
-  if (typeof obj.name !== 'string' || !obj.name.trim()) return false;
-  if (typeof obj.category !== 'string' || !obj.category.trim()) return false;
-  if (typeof obj.quantity !== 'number' || obj.quantity < 1 || !Number.isFinite(obj.quantity)) return false;
-  
-  // Preço pode ser number (novo) ou string (antigo) - ambos são válidos
-  if (typeof obj.price !== 'number' && typeof obj.price !== 'string') return false;
-  if (typeof obj.price === 'number' && (!Number.isFinite(obj.price) || obj.price < 0)) return false;
-  if (typeof obj.price === 'string' && !obj.price.trim()) return false;
-  
-  return true;
+  return cartItemSchema.safeParse(item).success;
 };
 
 // Validar e limpar estado do carrinho
@@ -289,11 +265,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'CLEAR_CART' });
   };
 
-  const formatPrice = (price: number): string => {
+  const formatPrice = (price: number | string): string => {
+    let numPrice: number;
+    if (typeof price === 'number') {
+      numPrice = price;
+    } else {
+      const parsed = parseFloat(
+        price
+          .replace('R$', '')
+          .replace(/\s/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      );
+      numPrice = isNaN(parsed) ? 0 : parsed;
+    }
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(price);
+    }).format(numPrice);
   };
 
   const getWhatsAppLink = () => {
