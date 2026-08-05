@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Edit3, Trash2, ArrowLeft, ClipboardList, Car, LayoutDashboard, Star, Package, Tags, GripVertical } from 'lucide-react';
+import { Plus, Edit3, Trash2, ArrowLeft, ClipboardList, Car, LayoutDashboard, Star, Package, Tags, GripVertical, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,6 +14,8 @@ import OrdersManager from '@/components/OrdersManager';
 import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
+import StaffManager from '@/components/StaffManager';
+import { useStaffAccess, StaffPermission } from '@/hooks/useStaffAccess';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
 import { normalizeText } from '@/lib/utils';
@@ -21,6 +23,30 @@ import { normalizeText } from '@/lib/utils';
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
   const { categories: limpezaCategories } = useCategories('limpeza');
+  const staffAccess = useStaffAccess();
+
+  type TabKey = 'dashboard' | 'products' | 'automotive' | 'highlights' | 'orders' | 'categories' | 'staff';
+
+  const TAB_PERMISSION: Partial<Record<TabKey, StaffPermission>> = {
+    dashboard: 'financeiro',
+    orders: 'financeiro',
+    products: 'produtos',
+    automotive: 'produtos',
+    highlights: 'produtos',
+    categories: 'produtos',
+  };
+
+  const canSeeTab = (tab: TabKey): boolean => {
+    if (staffAccess.isAdmin) return true;
+    if (tab === 'staff') return false;
+    const permission = TAB_PERMISSION[tab];
+    return permission ? staffAccess.permissions.has(permission) : false;
+  };
+
+  const visibleTabs = (
+    ['dashboard', 'products', 'automotive', 'highlights', 'orders', 'categories'] as TabKey[]
+  ).filter(canSeeTab);
+  if (staffAccess.isAdmin) visibleTabs.push('staff');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
@@ -177,7 +203,7 @@ const Admin = () => {
     return filtered;
   }, [limpezaProducts, searchTerm, categoryFilter, sortOption]);
 
-  if (loading) {
+  if (loading || staffAccess.loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
@@ -212,32 +238,53 @@ const Admin = () => {
         </div>
 
         {/* Tabs for Products and Categories */}
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8 bg-[#12121a] border border-blue-500/20">
-            <TabsTrigger value="dashboard" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
-              <LayoutDashboard className="h-4 w-4" />
-              <span>Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
-              <Package className="h-4 w-4" />
-              <span>Produtos</span>
-            </TabsTrigger>
-            <TabsTrigger value="automotive" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-300/70">
-              <Car className="h-4 w-4" />
-              <span>Automotivo</span>
-            </TabsTrigger>
-            <TabsTrigger value="highlights" className="flex items-center space-x-2 data-[state=active]:bg-yellow-600/30 data-[state=active]:text-yellow-300 text-blue-300/70">
-              <Star className="h-4 w-4" />
-              <span>Destaques</span>
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
-              <ClipboardList className="h-4 w-4" />
-              <span>Pedidos</span>
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
-              <Tags className="h-4 w-4" />
-              <span>Categorias</span>
-            </TabsTrigger>
+        <Tabs defaultValue={visibleTabs[0] ?? 'dashboard'} className="w-full">
+          <TabsList
+            className="grid w-full mb-8 bg-[#12121a] border border-blue-500/20"
+            style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+          >
+            {visibleTabs.includes('dashboard') && (
+              <TabsTrigger value="dashboard" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Dashboard</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('products') && (
+              <TabsTrigger value="products" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
+                <Package className="h-4 w-4" />
+                <span>Produtos</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('automotive') && (
+              <TabsTrigger value="automotive" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-300/70">
+                <Car className="h-4 w-4" />
+                <span>Automotivo</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('highlights') && (
+              <TabsTrigger value="highlights" className="flex items-center space-x-2 data-[state=active]:bg-yellow-600/30 data-[state=active]:text-yellow-300 text-blue-300/70">
+                <Star className="h-4 w-4" />
+                <span>Destaques</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('orders') && (
+              <TabsTrigger value="orders" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
+                <ClipboardList className="h-4 w-4" />
+                <span>Pedidos</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('categories') && (
+              <TabsTrigger value="categories" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
+                <Tags className="h-4 w-4" />
+                <span>Categorias</span>
+              </TabsTrigger>
+            )}
+            {visibleTabs.includes('staff') && (
+              <TabsTrigger value="staff" className="flex items-center space-x-2 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-blue-300/70">
+                <Shield className="h-4 w-4" />
+                <span>Funcionários</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -351,6 +398,13 @@ const Admin = () => {
           <TabsContent value="categories">
             <CategoryManager />
           </TabsContent>
+
+          {/* Staff Tab */}
+          {visibleTabs.includes('staff') && (
+            <TabsContent value="staff">
+              <StaffManager />
+            </TabsContent>
+          )}
 
         </Tabs>
       </div>
