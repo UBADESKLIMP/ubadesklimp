@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { authSchema, signUpSchema } from '@/lib/validations';
+import { loginSchema, signUpSchema } from '@/lib/validations';
 import { z } from 'zod';
 
 const Auth = () => {
@@ -17,6 +17,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
+    identifier: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -34,7 +35,7 @@ const Auth = () => {
     // Validar inputs
     try {
       if (type === 'signin') {
-        authSchema.parse({ email: formData.email, password: formData.password });
+        loginSchema.parse({ identifier: formData.identifier, password: formData.password });
       } else {
         signUpSchema.parse(formData);
       }
@@ -55,7 +56,7 @@ const Auth = () => {
     
     try {
       if (type === 'signin') {
-        await signIn(formData.email, formData.password);
+        await signIn(formData.identifier, formData.password);
       } else {
         await signUp(formData.email, formData.password);
       }
@@ -121,18 +122,18 @@ const Auth = () => {
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="identifier">E-mail ou usuário</Label>
                     <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={formData.email}
+                      id="identifier"
+                      name="identifier"
+                      type="text"
+                      placeholder="seu@email.com ou usuário"
+                      value={formData.identifier}
                       onChange={handleInputChange}
                       required
                     />
-                    {validationErrors.email && (
-                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    {validationErrors.identifier && (
+                      <p className="text-sm text-destructive">{validationErrors.identifier}</p>
                     )}
                   </div>
                   

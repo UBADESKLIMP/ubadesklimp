@@ -139,7 +139,15 @@ export const profileSchema = z.discriminatedUnion('person_type', [
   profilePJSchema,
 ]);
 
+// Login aceita e-mail (cliente) ou nome de usuário (funcionário) no mesmo
+// campo — por isso não usa .email() aqui como authSchema usa pro cadastro.
+export const loginSchema = z.object({
+  identifier: z.string().trim().min(1, 'Informe seu e-mail ou usuário').max(255, 'Muito longo'),
+  password: z.string().min(1, 'Senha é obrigatória').max(100, 'Senha muito longa'),
+});
+
 export type AuthInput = z.infer<typeof authSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type OrderInput = z.infer<typeof orderSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
