@@ -1,20 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { type OrderRow, type OrderItem, parseOrderItems } from '@/types/order';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 
-export interface Order {
-  id: string;
-  customer_name: string | null;
-  customer_phone: string;
-  customer_email: string | null;
-  items: any;
-  total_amount: number;
-  status: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+export type Order = Omit<OrderRow, 'items'> & { items: OrderItem[] };
 
 const ORDERS_PER_PAGE = 10;
 
@@ -61,7 +51,10 @@ export const useAdminOrders = () => {
 
       if (fetchError) throw fetchError;
 
-      setOrders(data || []);
+      setOrders((data || []).map((order) => ({
+        ...order,
+        items: parseOrderItems(order.items, order.id),
+      })));
     } catch (err: any) {
       console.error('Error fetching orders:', err);
       setError(err.message);
