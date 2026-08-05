@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { ProductRow } from '@/types/product';
 
-export interface PriorityProduct {
-  id: string;
-  name: string;
-  image_url: string | null;
-  priority_order: number;
-  highlight_type: string | null;
-  line_type: string | null;
-  category: string;
-  price: number;
-}
+export type PriorityProduct = Pick<
+  ProductRow,
+  'id' | 'name' | 'image_url' | 'priority_order' | 'highlight_type' | 'line_type' | 'category' | 'price'
+>;
 
 export const usePriorityProducts = (lineTypeFilter?: 'limpeza' | 'automotivo' | 'all') => {
   const [priorityProducts, setPriorityProducts] = useState<PriorityProduct[]>([]);
@@ -36,7 +31,7 @@ export const usePriorityProducts = (lineTypeFilter?: 'limpeza' | 'automotivo' | 
         return;
       }
 
-      setPriorityProducts(data || []);
+      setPriorityProducts((data || []) as PriorityProduct[]);
     } catch (error) {
       console.error('Error in fetchPriorityProducts:', error);
     } finally {
@@ -119,18 +114,18 @@ export const usePriorityProducts = (lineTypeFilter?: 'limpeza' | 'automotivo' | 
   const getOccupiedPositions = (excludeProductId?: string): number[] => {
     return priorityProducts
       .filter(p => p.id !== excludeProductId)
-      .map(p => p.priority_order);
+      .map(p => p.priority_order ?? 0);
   };
 
   // Get next available position (for adding new priority products at the end)
   const getNextAvailablePosition = (lineType?: 'limpeza' | 'automotivo'): number => {
-    const filtered = lineType 
+    const filtered = lineType
       ? priorityProducts.filter(p => p.line_type === lineType)
       : priorityProducts;
-    
+
     if (filtered.length === 0) return 1;
-    
-    const maxOrder = Math.max(...filtered.map(p => p.priority_order));
+
+    const maxOrder = Math.max(...filtered.map(p => p.priority_order ?? 0));
     return Math.min(maxOrder + 1, 10);
   };
 
