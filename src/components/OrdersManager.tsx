@@ -183,8 +183,8 @@ const OrdersManager = () => {
                 <TableBody>
                   {orders.map((order) => {
                     const isExpanded = expandedOrderId === order.id;
-                    const items = Array.isArray(order.items) ? order.items : [];
-                    
+                    const items = order.items;
+
                     return (
                       <Collapsible
                         key={order.id}
@@ -254,7 +254,7 @@ const OrdersManager = () => {
                                   <h4 className="font-semibold text-sm">Itens do Pedido</h4>
                                   <div className="space-y-2">
                                     {items.length > 0 ? (
-                                      items.map((item: any, index: number) => (
+                                      items.map((item, index) => (
                                         <div 
                                           key={index}
                                           className="flex items-center justify-between p-3 bg-background rounded-lg border"
@@ -271,12 +271,12 @@ const OrdersManager = () => {
                                               <p className="font-medium">{item.name}</p>
                                               {item.variation && (
                                                 <p className="text-xs text-muted-foreground">
-                                                  {item.variation}
+                                                  {item.variation.literage}
                                                 </p>
                                               )}
                                               {item.fragrance && (
                                                 <p className="text-xs text-muted-foreground">
-                                                  Fragrância: {item.fragrance}
+                                                  Fragrância: {item.fragrance.name}
                                                 </p>
                                               )}
                                             </div>
