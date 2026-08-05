@@ -38,12 +38,20 @@ const Cart = () => {
     
     try {
       // Preparar dados do pedido
+      const parsedItems = cartItemSchema.array().safeParse(state.items);
+      if (!parsedItems.success) {
+        console.warn('Itens do carrinho não bateram com cartItemSchema, salvando sem validação estrita:', parsedItems.error.flatten());
+      }
+      const orderItems = parsedItems.success
+        ? parsedItems.data
+        : JSON.parse(JSON.stringify(state.items));
+
       const orderPayload = {
         user_id: user?.id || null,
         customer_name: orderData.name,
         customer_phone: profile?.phone || profile?.contact_phone || 'Não informado',
         customer_email: user?.email || null,
-        items: cartItemSchema.array().parse(state.items) as unknown as Json,
+        items: orderItems as unknown as Json,
         total_amount: getTotalPrice(),
         notes: orderData.notes || null,
         whatsapp_sent_at: new Date().toISOString()

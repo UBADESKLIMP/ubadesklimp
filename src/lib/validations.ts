@@ -144,6 +144,12 @@ export const profileSchema = z.discriminatedUnion('person_type', [
 // isValidCartItem já aplicava em CartContext.tsx antes desta unificação,
 // incluindo a tolerância a price como string (carrinhos antigos salvos no
 // localStorage antes do preço virar number).
+const isPlausibleVariation = (value: unknown): value is ProductVariation =>
+  typeof value === 'object' && value !== null && typeof (value as Record<string, unknown>).literage === 'string';
+
+const isPlausibleFragrance = (value: unknown): value is ProductFragrance =>
+  typeof value === 'object' && value !== null && typeof (value as Record<string, unknown>).name === 'string';
+
 export const cartItemSchema = z.object({
   id: z.string().trim().min(1),
   name: z.string().trim().min(1),
@@ -152,8 +158,8 @@ export const cartItemSchema = z.object({
   price: z.union([z.number().finite().min(0), z.string().trim().min(1)]),
   productId: z.string().optional(),
   image_url: z.string().optional(),
-  variation: z.custom<ProductVariation>().optional(),
-  fragrance: z.custom<ProductFragrance>().optional(),
+  variation: z.custom<ProductVariation>(isPlausibleVariation, { message: 'variation deve ser um objeto com literage' }).optional(),
+  fragrance: z.custom<ProductFragrance>(isPlausibleFragrance, { message: 'fragrance deve ser um objeto com name' }).optional(),
 });
 
 export type AuthInput = z.infer<typeof authSchema>;
