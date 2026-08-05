@@ -214,6 +214,26 @@ const Admin = () => {
     );
   }
 
+  // Sem isso, um funcionário sem nenhuma aba visível (ex.: só permissão
+  // faltantes/fornecedores, que ainda não têm tela própria) cairia no
+  // fallback "dashboard" do defaultValue abaixo — e como o TabsContent do
+  // dashboard não é condicionado a visibleTabs, ele renderizaria mesmo sem
+  // o TabsTrigger correspondente aparecer, vazando dado financeiro pra
+  // quem não tem a permissão financeiro.
+  if (visibleTabs.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white">
+        <div className="text-center max-w-md px-4">
+          <h3 className="text-xl font-semibold mb-2">Nenhuma seção disponível</h3>
+          <p className="text-blue-300/60">
+            Sua conta ainda não tem permissão pra nenhuma seção do painel administrativo.
+            Fale com um administrador.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
