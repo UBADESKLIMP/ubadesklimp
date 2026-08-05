@@ -5,17 +5,18 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useStaffAccess } from '@/hooks/useStaffAccess';
 import { Link, useLocation } from 'react-router-dom';
 import Cart from './Cart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, signOut, loading, isAdmin } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { profile } = useProfile();
   const location = useLocation();
   const isAutomotivoPage = location.pathname === '/automotivo';
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const { isStaff } = useStaffAccess();
 
   // Track scroll position
   useEffect(() => {
@@ -34,24 +35,6 @@ const Header = () => {
     if (profile?.trade_name) return profile.trade_name;
     return user?.email?.split('@')[0] || 'Usuário';
   };
-
-  // Check if user is admin when component mounts and user changes
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (user && isAdmin) {
-        try {
-          const adminStatus = await isAdmin();
-          setIsUserAdmin(adminStatus);
-        } catch (error) {
-          setIsUserAdmin(false);
-        }
-      } else {
-        setIsUserAdmin(false);
-      }
-    };
-
-    checkAdmin();
-  }, [user, isAdmin]);
 
   const navigation = [
     { name: 'Início', href: '#home' },
@@ -142,7 +125,7 @@ const Header = () => {
                         Histórico de Pedidos
                       </Link>
                     </DropdownMenuItem>
-                    {isUserAdmin && (
+                    {isStaff && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
@@ -236,7 +219,7 @@ const Header = () => {
                       Histórico de Pedidos
                     </Link>
                   </Button>
-                  {isUserAdmin && (
+                  {isStaff && (
                     <Button variant="ghost" className="w-full justify-start py-3 hover:translate-x-1 transition-all duration-200" asChild>
                       <Link to="/admin">
                         <Shield className="h-4 w-4 mr-3" />
