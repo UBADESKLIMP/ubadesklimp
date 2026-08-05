@@ -1,6 +1,11 @@
 -- Papéis/permissões de equipe, construídos do zero (independente do projeto Compras).
 -- staff_members: quem é da equipe e se é admin (admin sempre tem acesso total).
 -- staff_permissions: permissões extras por seção, só relevantes pra quem não é admin.
+--
+-- Migration inteira roda numa transação: se qualquer passo falhar (ex.: DROP
+-- POLICY em storage.objects, que pertence a outro owner), tudo desfaz — nunca
+-- fica um estado pela metade com política antiga derrubada e nova ausente.
+begin;
 
 create table public.staff_members (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -108,6 +113,18 @@ left join public.profiles p on p.user_id = ur.user_id
 where ur.role = 'admin'
 on conflict (user_id) do nothing;
 
+-- Trava de segurança: se nenhum admin migrou (ex.: user_roles não tinha
+-- 'admin' por algum motivo), aborta a transação inteira em vez de deixar
+-- staff_members vazia — o que travaria todo mundo pra fora das telas
+-- administrativas e faria o próximo cadastro público virar admin sozinho
+-- (via promote_first_user_to_admin).
+do $$
+begin
+  if not exists (select 1 from public.staff_members where is_admin) then
+    raise exception 'Nenhum admin migrado para staff_members — abortando migration';
+  end if;
+end $$;
+
 -- Troca has_role(uid,'admin') por is_staff_admin()/has_staff_permission(...)
 -- nas policies que existem hoje. Nomes de policy mantidos onde possível.
 
@@ -158,3 +175,5 @@ create policy "Admins podem atualizar imagens de produtos" on storage.objects
 drop policy "Admins podem deletar imagens de produtos" on storage.objects;
 create policy "Admins podem deletar imagens de produtos" on storage.objects
   for delete using (bucket_id = 'product-images' and public.has_staff_permission('produtos'));
+
+commit;
