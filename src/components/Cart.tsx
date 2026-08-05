@@ -21,6 +21,8 @@ import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { cartItemSchema } from '@/lib/validations';
+import type { Json } from '@/integrations/supabase/types';
 import { useState } from 'react';
 
 const Cart = () => {
@@ -41,7 +43,7 @@ const Cart = () => {
         customer_name: orderData.name,
         customer_phone: profile?.phone || profile?.contact_phone || 'Não informado',
         customer_email: user?.email || null,
-        items: JSON.parse(JSON.stringify(state.items)) as any,
+        items: cartItemSchema.array().parse(state.items) as unknown as Json,
         total_amount: getTotalPrice(),
         notes: orderData.notes || null,
         whatsapp_sent_at: new Date().toISOString()
