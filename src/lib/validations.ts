@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { ProductVariation, ProductFragrance } from '@/types/product';
 
 // Validação de autenticação
 export const authSchema = z.object({
@@ -139,7 +140,24 @@ export const profileSchema = z.discriminatedUnion('person_type', [
   profilePJSchema,
 ]);
 
+// Validação de item do carrinho / pedido — espelha exatamente as regras que
+// isValidCartItem já aplicava em CartContext.tsx antes desta unificação,
+// incluindo a tolerância a price como string (carrinhos antigos salvos no
+// localStorage antes do preço virar number).
+export const cartItemSchema = z.object({
+  id: z.string().trim().min(1),
+  name: z.string().trim().min(1),
+  category: z.string().trim().min(1),
+  quantity: z.number().finite().min(1),
+  price: z.union([z.number().finite().min(0), z.string().trim().min(1)]),
+  productId: z.string().optional(),
+  image_url: z.string().optional(),
+  variation: z.custom<ProductVariation>().optional(),
+  fragrance: z.custom<ProductFragrance>().optional(),
+});
+
 export type AuthInput = z.infer<typeof authSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type OrderInput = z.infer<typeof orderSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
+export type CartItem = z.infer<typeof cartItemSchema>;
