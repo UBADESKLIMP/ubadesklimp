@@ -310,6 +310,53 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          is_admin: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          is_admin?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          is_admin?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_permissions: {
+        Row: {
+          permission: Database["public"]["Enums"]["staff_permission"]
+          user_id: string
+        }
+        Insert: {
+          permission: Database["public"]["Enums"]["staff_permission"]
+          user_id: string
+        }
+        Update: {
+          permission?: Database["public"]["Enums"]["staff_permission"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -343,9 +390,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_staff_permission: {
+        Args: { perm: Database["public"]["Enums"]["staff_permission"] }
+        Returns: boolean
+      }
+      is_staff_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -474,6 +527,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
     },
   },
 } as const
