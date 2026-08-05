@@ -2,26 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
-export interface Profile {
-  id: string;
-  user_id: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  person_type: 'pf' | 'pj';
-  cpf?: string;
-  company_name?: string;
-  trade_name?: string;
-  cnpj?: string;
-  state_registration?: string;
-  delivery_address?: string;
-  billing_email?: string;
-  contact_phone?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
+export type Profile = Omit<Tables<'profiles'>, 'person_type'> & {
+  person_type: 'pf' | 'pj' | null;
+};
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
