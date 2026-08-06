@@ -3,6 +3,15 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+const STAFF_EMAIL_DOMAIN = 'equipe.ubadesklimp.internal';
+
+// Login de funcionário usa um "usuário" (ex. "leticia"), sem e-mail de verdade.
+// Resolve pra um e-mail sintético determinístico, sem round-trip ao banco.
+const resolveLoginEmail = (identifier: string): string => {
+  const trimmed = identifier.trim();
+  return trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@${STAFF_EMAIL_DOMAIN}`;
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -78,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: resolveLoginEmail(email),
       password,
     });
 
@@ -108,15 +117,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAdmin = async (): Promise<boolean> => {
     if (!user) return false;
-    
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
 
-    return !error && !!data;
+    const { data, error } = await supabase
+      .from('staff_members')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return !error && !!data?.is_admin;
   };
 
   const value = {
