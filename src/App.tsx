@@ -53,13 +53,13 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/admin" 
+              <Route
+                path="/admin"
                 element={
-                  <ProtectedRoute requireAdmin>
+                  <ProtectedRoute requireStaff>
                     <Admin />
                   </ProtectedRoute>
-                } 
+                }
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
