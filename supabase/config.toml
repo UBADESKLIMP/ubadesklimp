@@ -1,1 +1,12 @@
 project_id = "ccrucholgsffichvzbpz"
+
+# verify_jwt=false: sem isso, o gateway rejeita o preflight OPTIONS não
+# autenticado antes de chegar no código da função, o que já quebrou
+# silenciosamente a criação de funcionários uma vez. O gate real é a checagem
+# de auth dentro da própria função (Authorization ausente/inválido -> 401,
+# autenticado mas não-admin -> 403).
+[functions.criar-funcionario]
+verify_jwt = false
+
+[functions.excluir-funcionario]
+verify_jwt = false

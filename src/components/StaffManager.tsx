@@ -44,6 +44,7 @@ const emptyForm = (): StaffFormState => ({
 
 const StaffManager = () => {
   const { staffMembers, loading, createStaffMember, updatePermissions, deleteStaffMember } = useStaffMembers();
+  const adminCount = staffMembers.filter((m) => m.is_admin).length;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<StaffFormState>(emptyForm());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -211,7 +212,13 @@ const StaffManager = () => {
                     <Button variant="outline" size="icon" onClick={() => startEditing(member)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleDelete(member)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDelete(member)}
+                      disabled={member.is_admin && adminCount <= 1}
+                      title={member.is_admin && adminCount <= 1 ? 'Não é possível excluir o último administrador' : undefined}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -223,10 +230,16 @@ const StaffManager = () => {
                       <Checkbox
                         id={`edit-is-admin-${member.user_id}`}
                         checked={editIsAdmin}
+                        disabled={member.is_admin && adminCount <= 1}
                         onCheckedChange={(checked) => setEditIsAdmin(checked === true)}
                       />
                       <Label htmlFor={`edit-is-admin-${member.user_id}`}>É administrador (acesso total)</Label>
                     </div>
+                    {member.is_admin && adminCount <= 1 && (
+                      <p className="text-sm text-muted-foreground">
+                        Este é o único administrador — não é possível remover a permissão de admin dele por aqui.
+                      </p>
+                    )}
                     {!editIsAdmin && (
                       <div className="space-y-2">
                         {ALL_PERMISSIONS.map((permission) => (

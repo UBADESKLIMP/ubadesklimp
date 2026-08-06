@@ -37,11 +37,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
+  // Cada prop exigida precisa ser satisfeita (AND), não basta satisfazer
+  // qualquer uma delas — um admin sempre passa, mas combinar por exemplo
+  // requireAdmin + requirePermission não deve liberar acesso pra um
+  // funcionário não-admin só porque ele tem a permissão.
   const hasAccess =
     !needsStaffCheck ||
     staffAccess.isAdmin ||
-    (requireStaff && staffAccess.isStaff) ||
-    (requirePermission !== undefined && staffAccess.permissions.has(requirePermission));
+    (!requireAdmin &&
+      (!requireStaff || staffAccess.isStaff) &&
+      (requirePermission === undefined || staffAccess.permissions.has(requirePermission)));
 
   if (needsStaffCheck && !hasAccess) {
     return (
