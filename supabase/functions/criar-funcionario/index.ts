@@ -4,30 +4,37 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const STAFF_EMAIL_DOMAIN = "equipe.ubadesklimp.internal";
 const VALID_PERMISSIONS = ["faltantes", "produtos", "fornecedores", "financeiro"];
 
-const CORS_HEADERS = {
+// Reflete de volta exatamente os cabeçalhos que o navegador pediu no
+// preflight, em vez de uma lista fixa — se o cliente supabase-js manda um
+// cabeçalho que não está numa lista hardcoded, o navegador cancela a
+// requisição real silenciosamente (nem chega a sair, só o OPTIONS aparece
+// nos logs), então refletir é o padrão robusto recomendado pelo Supabase.
+const corsHeadersFor = (req: Request) => ({
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    req.headers.get("Access-Control-Request-Headers") ??
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+});
 
-const jsonResponse = (body: unknown, status: number) =>
+const jsonResponse = (req: Request, body: unknown, status: number) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS_HEADERS });
+    return new Response("ok", { headers: corsHeadersFor(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse(req, { error: "Method not allowed" }, 405);
   }
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    return jsonResponse(req, { error: "Não autenticado" }, 401);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -40,7 +47,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
   if (callerError || !caller) {
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    return jsonResponse(req, { error: "Não autenticado" }, 401);
   }
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
@@ -52,7 +59,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   if (!callerStaff?.is_admin) {
-    return jsonResponse({ error: "Apenas administradores podem criar funcionários" }, 403);
+    return jsonResponse(req, { error: "Apenas administradores podem criar funcionários" }, 403);
   }
 
   const body = await req.json().catch(() => null);
@@ -66,6 +73,7 @@ Deno.serve(async (req: Request) => {
 
   if (!/^[a-z0-9]([a-z0-9._-]{1,30})[a-z0-9]$/.test(username)) {
     return jsonResponse(
+      req,
       {
         error:
           "Nome de usuário precisa ter 3-32 caracteres (letras, números, ponto, traço), sem começar ou terminar com ponto/traço.",
@@ -78,7 +86,7 @@ Deno.serve(async (req: Request) => {
   // true, então o mínimo de senha precisa ser mais forte que um cadastro
   // comum de cliente.
   if (!password || password.length < 8) {
-    return jsonResponse({ error: "Senha precisa ter pelo menos 8 caracteres." }, 400);
+    return jsonResponse(req, { error: "Senha precisa ter pelo menos 8 caracteres." }, 400);
   }
 
   const syntheticEmail = `${username}@${STAFF_EMAIL_DOMAIN}`;
@@ -93,7 +101,7 @@ Deno.serve(async (req: Request) => {
     const message = createError?.message?.includes("already been registered")
       ? "Esse nome de usuário já está em uso."
       : createError?.message ?? "Não foi possível criar o funcionário.";
-    return jsonResponse({ error: message }, 400);
+    return jsonResponse(req, { error: message }, 400);
   }
 
   const newUserId = created.user.id;
@@ -109,7 +117,7 @@ Deno.serve(async (req: Request) => {
     if (cleanupError) {
       console.error(`Falha ao limpar usuário órfão ${newUserId} após erro em staff_members:`, cleanupError);
     }
-    return jsonResponse({ error: `Não foi possível salvar o funcionário: ${staffError.message}` }, 500);
+    return jsonResponse(req, { error: `Não foi possível salvar o funcionário: ${staffError.message}` }, 500);
   }
 
   if (!isAdminFlag && permissions.length > 0) {
@@ -126,7 +134,7 @@ Deno.serve(async (req: Request) => {
         if (cleanupError) {
           console.error(`Falha ao limpar usuário órfão ${newUserId} após erro em staff_permissions:`, cleanupError);
         }
-        return jsonResponse({ error: `Não foi possível salvar as permissões: ${permError.message}` }, 500);
+        return jsonResponse(req, { error: `Não foi possível salvar as permissões: ${permError.message}` }, 500);
       }
     }
   }
@@ -137,5 +145,5 @@ Deno.serve(async (req: Request) => {
     `Funcionário criado: ${newUserId} (${username}, admin=${isAdminFlag}) por admin ${caller.id}`,
   );
 
-  return jsonResponse({ userId: newUserId, username, displayName }, 200);
+  return jsonResponse(req, { userId: newUserId, username, displayName }, 200);
 });
