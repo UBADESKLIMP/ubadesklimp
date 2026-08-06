@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export type StaffPermission = 'faltantes' | 'produtos' | 'fornecedores' | 'financeiro';
 
-interface StaffAccess {
+export interface StaffAccess {
   loading: boolean;
   isStaff: boolean;
   isAdmin: boolean;
