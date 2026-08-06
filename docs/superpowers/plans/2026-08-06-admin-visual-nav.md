@@ -845,7 +845,7 @@ const ShortcutCard = ({ icon: Icon, title, description, onClick }: ShortcutCardP
     onClick={onClick}
     className="flex items-center gap-4 p-4 rounded-xl bg-[#12121a] border border-blue-500/20 hover:border-blue-500/40 hover:bg-[#16161f] transition-colors text-left"
   >
-    <div className="p-2.5 bg-blue-600/20 rounded-xl border border-blue-500/30 text-blue-400 shrink-0">
+    <div className="p-2.5 bg-blue-600/20 rounded-xl border border-blue-500/20 text-blue-400 shrink-0">
       <Icon className="h-5 w-5" />
     </div>
     <div className="flex-1 min-w-0">
