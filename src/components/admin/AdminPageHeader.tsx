@@ -13,7 +13,7 @@ const AdminPageHeader = ({ icon: Icon, title, description, action }: AdminPageHe
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div className="flex items-center gap-3">
         {Icon && (
-          <div className="p-2.5 bg-blue-600/20 rounded-xl border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+          <div className="p-2.5 bg-blue-600/20 rounded-xl border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
             <Icon className="h-5 w-5" />
           </div>
         )}
