@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Plus, Car, DollarSign, TrendingUp, ShoppingBag, Tags, X, GripVertical } from 'lucide-react';
+import { Plus, Car, DollarSign, TrendingUp, ShoppingBag, Tags, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,6 +14,9 @@ import { useCategories } from '@/hooks/useCategories';
 import DraggableAdminGrid from './DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from './AdminProductFilters';
 import { normalizeText } from '@/lib/utils';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminEmptyState from './admin/AdminEmptyState';
+import AdminPageHeader from './admin/AdminPageHeader';
 
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -161,11 +164,8 @@ const AutomotiveProductsManager = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[400px] bg-[#0a0a0f] rounded-xl flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-pulse">🚗</div>
-          <h3 className="text-xl font-semibold text-white mb-2">Carregando produtos automotivos...</h3>
-        </div>
+      <div className="min-h-[400px] bg-[#0a0a0f] rounded-xl p-6 border border-blue-500/20">
+        <AdminLoadingState label="Carregando produtos automotivos..." rows={5} />
       </div>
     );
   }
@@ -326,55 +326,37 @@ const AutomotiveProductsManager = () => {
         </Card>
       </div>
 
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-600/20 rounded-xl border border-blue-500/30">
-            <Car className="h-8 w-8 text-blue-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-heading text-white flex items-center gap-2">
-              Produtos Automotivos
-              <Badge className="bg-blue-600/30 text-blue-400 border-blue-500/50 hover:bg-blue-600/40">
-                {automotiveProducts.length} itens
-              </Badge>
-            </h2>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-blue-300/60 text-sm">
-                Gerencie sua linha de produtos para veículos
-              </p>
-              <div className="flex items-center gap-1 text-xs text-blue-300/50 bg-blue-500/10 px-2 py-0.5 rounded">
-                <GripVertical className="h-3 w-3" />
-                <span>Arraste para reorganizar</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => setEditingProduct(null)}
-              className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/25"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Produto
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
-                <Car className="h-5 w-5 text-blue-400" />
-                {editingProduct ? 'Editar Produto Automotivo' : 'Novo Produto Automotivo'}
-              </DialogTitle>
-            </DialogHeader>
-            <ProductForm
-              product={editingProduct}
-              onSave={handleSaveProduct}
-              onCancel={() => setIsDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+      <AdminPageHeader
+        icon={Car}
+        title="Produtos Automotivos"
+        description={`${automotiveProducts.length} itens · arraste para reorganizar`}
+        action={
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => setEditingProduct(null)}
+                className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/25"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Produto
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-white flex items-center gap-2">
+                  <Car className="h-5 w-5 text-blue-400" />
+                  {editingProduct ? 'Editar Produto Automotivo' : 'Novo Produto Automotivo'}
+                </DialogTitle>
+              </DialogHeader>
+              <ProductForm
+                product={editingProduct}
+                onSave={handleSaveProduct}
+                onCancel={() => setIsDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {/* Filtros */}
       <AdminProductFilters
@@ -402,34 +384,26 @@ const AutomotiveProductsManager = () => {
           onDelete={handleDeleteProduct}
         />
       ) : automotiveProducts.length > 0 ? (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Nenhum produto encontrado
-          </h3>
-          <p className="text-blue-300/50 mb-6">
-            Tente ajustar os filtros de busca
-          </p>
-        </div>
+        <AdminEmptyState
+          icon={Search}
+          title="Nenhum produto encontrado"
+          description="Tente ajustar os filtros de busca"
+        />
       ) : (
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600/10 rounded-full mb-6 border border-blue-500/20">
-            <Car className="h-10 w-10 text-blue-500/60" />
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Nenhum produto automotivo
-          </h3>
-          <p className="text-blue-300/50 mb-6 max-w-md mx-auto">
-            Comece adicionando seu primeiro produto da linha automotiva
-          </p>
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Produto Automotivo
-          </Button>
-        </div>
+        <AdminEmptyState
+          icon={Car}
+          title="Nenhum produto automotivo"
+          description="Comece adicionando seu primeiro produto da linha automotiva"
+          action={
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Produto Automotivo
+            </Button>
+          }
+        />
       )}
     </div>
   );
