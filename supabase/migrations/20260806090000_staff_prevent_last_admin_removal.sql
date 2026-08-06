@@ -12,9 +12,14 @@ begin;
 -- É um trigger BEFORE ... FOR EACH ROW porque tanto o client (via RLS)
 -- quanto a edge function excluir-funcionario (via service_role, que
 -- ignora RLS) passam pela tabela — só um trigger no banco cobre os dois
--- casos e serializa corretamente duas remoções concorrentes do "penúltimo"
--- admin (o padrão READ COMMITTED do Postgres bloqueia a segunda linha até
--- a primeira commitar).
+-- casos. Cobre o cenário do Critical original (uma linha sendo
+-- demovida/excluída) e o caso de duas transações mexendo na MESMA linha
+-- concorrentemente (o lock de linha do UPDATE/DELETE serializa isso).
+-- Não cobre o caso mais raro de dois admins DIFERENTES sendo removidos em
+-- paralelo no mesmo instante (cada transação vê count=2 antes da outra
+-- commitar) — para fechar esse caso também seria necessário um lock
+-- explícito (ex.: `select 1 from staff_members where is_admin for update`
+-- antes da contagem, já que agregados não aceitam FOR UPDATE direto).
 create or replace function public.prevent_last_admin_removal()
 returns trigger
 language plpgsql
