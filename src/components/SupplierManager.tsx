@@ -43,7 +43,8 @@ const emptyForm = (): SupplierFormState => ({
 // frente mantemos, senão prefixamos — sem isso o link abre "número inválido".
 const buildWhatsAppLink = (phone: string): string => {
   const digits = phone.replace(/\D/g, '');
-  const withCountryCode = digits.startsWith('55') ? digits : `55${digits}`;
+  const hasCountryCode = digits.length === 12 || digits.length === 13;
+  const withCountryCode = hasCountryCode ? digits : `55${digits}`;
   return `https://wa.me/${withCountryCode}`;
 };
 
