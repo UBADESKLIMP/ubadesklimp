@@ -42,11 +42,11 @@ const CategoryList = ({
   type
 }: CategoryListProps) => {
   if (loading) {
-    return <AdminLoadingState rows={3} />;
+    return <AdminLoadingState rows={3} tone="light" />;
   }
 
   if (categories.length === 0) {
-    return <AdminEmptyState icon={Tags} title={emptyMessage} />;
+    return <AdminEmptyState icon={Tags} title={emptyMessage} tone="light" />;
   }
 
   return (

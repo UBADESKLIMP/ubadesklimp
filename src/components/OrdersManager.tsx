@@ -155,6 +155,7 @@ const OrdersManager = () => {
                 ? 'Nenhum pedido encontrado'
                 : `Nenhum pedido ${statusLabels[statusFilter]?.toLowerCase()}`
             }
+            tone="light"
           />
         ) : (
           <>

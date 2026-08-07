@@ -190,9 +190,9 @@ const StaffManager = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <AdminLoadingState rows={3} />
+          <AdminLoadingState rows={3} tone="light" />
         ) : staffMembers.length === 0 ? (
-          <AdminEmptyState icon={Shield} title="Nenhum funcionário cadastrado ainda." />
+          <AdminEmptyState icon={Shield} title="Nenhum funcionário cadastrado ainda." tone="light" />
         ) : (
           <div className="space-y-3">
             {staffMembers.map((member) => (

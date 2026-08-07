@@ -788,7 +788,7 @@ const AdminDashboard = () => {
               ))}
             </div>
           ) : (
-            <AdminEmptyState icon={Package} title="Nenhuma venda registrada ainda" />
+            <AdminEmptyState icon={Package} title="Nenhuma venda registrada ainda" tone="light" />
           )}
         </CardContent>
       </Card>
