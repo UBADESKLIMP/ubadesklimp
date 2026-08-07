@@ -196,8 +196,8 @@ const CategoryManager = () => {
   };
 
   return (
-    <Card className="bg-[#12121a] border-blue-500/20">
-      <CardHeader>
+    <Card>
+      <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg">
         <AdminPageHeader
           icon={Tags}
           title="Categorias"
