@@ -1,12 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
 import { DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
-import { useStaffAccess } from '@/hooks/useStaffAccess';
+import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminPageHeader from './AdminPageHeader';
 import AdminComingSoon from './AdminComingSoon';
+import AdminLoadingState from './AdminLoadingState';
 import ProductsHomeSummary from './ProductsHomeSummary';
 import { AdminSection } from './adminNav';
 
 interface AdminHomeProps {
+  staffAccess: StaffAccess;
   onNavigate: (section: AdminSection) => void;
 }
 
@@ -34,11 +36,19 @@ const ShortcutCard = ({ icon: Icon, title, description, onClick }: ShortcutCardP
   </button>
 );
 
-const AdminHome = ({ onNavigate }: AdminHomeProps) => {
-  const staffAccess = useStaffAccess();
+const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
   const showFinanceiro = staffAccess.isAdmin || staffAccess.permissions.has('financeiro');
   const showProdutos = staffAccess.isAdmin || staffAccess.permissions.has('produtos');
   const hasNothing = !showFinanceiro && !showProdutos;
+
+  if (staffAccess.loading) {
+    return (
+      <div>
+        <AdminPageHeader title="Início" description="Visão geral do que você pode fazer por aqui." />
+        <AdminLoadingState rows={2} />
+      </div>
+    );
+  }
 
   return (
     <div>
