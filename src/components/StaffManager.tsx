@@ -100,7 +100,7 @@ const StaffManager = () => {
   };
 
   return (
-    <Card>
+    <Card className="bg-[#12121a] border-blue-500/20">
       <CardHeader>
         <AdminPageHeader
           icon={Shield}
