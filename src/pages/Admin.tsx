@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Package, Search, Loader2, Truck, ClipboardCheck } from 'lucide-react';
+import { Plus, Package, Search, Loader2, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useProducts } from '@/hooks/useProducts';
@@ -12,6 +12,7 @@ import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
 import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
 import StaffManager from '@/components/StaffManager';
+import SupplierManager from '@/components/SupplierManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
@@ -281,13 +282,7 @@ const Admin = () => {
         return <CategoryManager />;
 
       case 'suppliers':
-        return (
-          <AdminComingSoon
-            icon={Truck}
-            title="Fornecedores"
-            description="Em breve você vai poder cadastrar fornecedores e enviar cotações direto por aqui."
-          />
-        );
+        return <SupplierManager />;
 
       case 'missing':
         return (
