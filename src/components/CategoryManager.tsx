@@ -7,6 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useCategories, Category } from '@/hooks/useCategories';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminEmptyState from './admin/AdminEmptyState';
+import AdminPageHeader from './admin/AdminPageHeader';
+import { Tags } from 'lucide-react';
 
 interface CategoryListProps {
   categories: Category[];
@@ -38,11 +42,11 @@ const CategoryList = ({
   type
 }: CategoryListProps) => {
   if (loading) {
-    return <p className="text-muted-foreground text-center py-8">Carregando...</p>;
+    return <AdminLoadingState rows={3} tone="light" />;
   }
 
   if (categories.length === 0) {
-    return <p className="text-muted-foreground text-center py-8">{emptyMessage}</p>;
+    return <AdminEmptyState icon={Tags} title={emptyMessage} tone="light" />;
   }
 
   return (
@@ -193,9 +197,13 @@ const CategoryManager = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Gerenciar Categorias</CardTitle>
+      <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg">
+        <AdminPageHeader
+          icon={Tags}
+          title="Categorias"
+          description="Organize as categorias de limpeza e automotivo."
+        />
+        <div className="flex justify-end items-center -mt-4">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className={activeTab === 'automotivo' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-primary'}>

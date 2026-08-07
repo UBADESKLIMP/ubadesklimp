@@ -16,6 +16,9 @@ import {
 } from '@/components/ui/dialog';
 import { useStaffMembers, StaffMember } from '@/hooks/useStaffMembers';
 import { StaffPermission } from '@/hooks/useStaffAccess';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminEmptyState from './admin/AdminEmptyState';
+import AdminPageHeader from './admin/AdminPageHeader';
 
 const PERMISSION_LABELS: Record<StaffPermission, string> = {
   faltantes: 'Faltantes',
@@ -98,12 +101,13 @@ const StaffManager = () => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Funcionários
-        </CardTitle>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg">
+        <AdminPageHeader
+          icon={Shield}
+          title="Funcionários"
+          description="Crie contas de funcionário e defina o que cada um pode acessar."
+          action={
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setCreateForm(emptyForm())}>
               <Plus className="h-4 w-4 mr-2" />
@@ -180,13 +184,15 @@ const StaffManager = () => {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+            </Dialog>
+          }
+        />
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-muted-foreground">Carregando...</p>
+          <AdminLoadingState rows={3} tone="light" />
         ) : staffMembers.length === 0 ? (
-          <p className="text-muted-foreground">Nenhum funcionário cadastrado ainda.</p>
+          <AdminEmptyState icon={Shield} title="Nenhum funcionário cadastrado ainda." tone="light" />
         ) : (
           <div className="space-y-3">
             {staffMembers.map((member) => (

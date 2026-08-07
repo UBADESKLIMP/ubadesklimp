@@ -25,6 +25,9 @@ import {
 } from '@/components/ui/collapsible';
 import { useAdminOrders, OrderStatus } from '@/hooks/useAdminOrders';
 import { toast } from 'sonner';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminEmptyState from './admin/AdminEmptyState';
+import AdminPageHeader from './admin/AdminPageHeader';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendente',
@@ -90,30 +93,18 @@ const OrdersManager = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-muted-foreground">Carregando pedidos...</p>
-        </div>
-      </div>
-    );
+    return <AdminLoadingState label="Carregando pedidos..." rows={5} />;
   }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg">
+        <AdminPageHeader
+          icon={ClipboardList}
+          title="Pedidos"
+          description={`${totalCount} pedido${totalCount !== 1 ? 's' : ''} no total`}
+        />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <ClipboardList className="h-6 w-6 text-primary" />
-            <div>
-              <CardTitle>Gerenciar Pedidos</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {totalCount} pedido{totalCount !== 1 ? 's' : ''} no total
-              </p>
-            </div>
-          </div>
-
           {/* Status Filter */}
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -157,14 +148,15 @@ const OrdersManager = () => {
 
       <CardContent>
         {orders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">📋</div>
-            <p className="text-muted-foreground">
-              {statusFilter === 'all'
+          <AdminEmptyState
+            icon={ClipboardList}
+            title={
+              statusFilter === 'all'
                 ? 'Nenhum pedido encontrado'
-                : `Nenhum pedido ${statusLabels[statusFilter]?.toLowerCase()}`}
-            </p>
-          </div>
+                : `Nenhum pedido ${statusLabels[statusFilter]?.toLowerCase()}`
+            }
+            tone="light"
+          />
         ) : (
           <>
             <div className="overflow-x-auto">

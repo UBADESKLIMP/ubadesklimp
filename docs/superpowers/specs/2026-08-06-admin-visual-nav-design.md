@@ -26,7 +26,8 @@ Sidebar fixa à esquerda, substituindo as abas horizontais atuais (`Tabs`/`TabsL
 
 ```
 Início            (visível pra todo mundo — conteúdo varia por papel, ver seção 3)
-Financeiro         (permissão: financeiro)
+Financeiro         (permissão: financeiro — é o Dashboard atual, só renomeado)
+Pedidos            (permissão: financeiro)
 ─── Catálogo ───
 Produtos           (permissão: produtos)
 Automotivo         (permissão: produtos)
@@ -59,17 +60,16 @@ Alvos de toque grandes (mínimo 44×44px), consistente com o uso real no chão d
 
 ## 3. Início — conteúdo por papel
 
-Hoje `AdminDashboard.tsx` (gráficos de venda, faturamento, produtos mais vendidos) só é acessível por quem tem permissão `financeiro`. Quem não tem cai direto na primeira seção permitida, sem tela de entrada.
+Hoje `AdminDashboard.tsx` (gráficos de venda, faturamento, produtos mais vendidos) só é acessível por quem tem permissão `financeiro`, ocupando o lugar da própria tela de entrada — quem não tem essa permissão cai direto na primeira seção liberada, sem tela de entrada nenhuma.
 
-Novo comportamento: **todo mundo tem um Início**, mas o conteúdo muda por papel:
+Novo comportamento: **Início vira uma tela própria, leve, visível pra todo mundo que é staff** — não é mais o dashboard pesado de gráficos (isso passa a viver só no item de nav "Financeiro", ver seção 1). Início mostra um resumo/atalhos, montado de forma aditiva conforme as permissões da pessoa:
 
-- **Admin / financeiro**: o dashboard atual (`AdminDashboard.tsx`), sem mudança de dados ou lógica — só entra dentro da nova casca visual (sidebar, cabeçalho padronizado).
-- **Produtos** (sem `financeiro`): tela nova e simples — não reaproveita `AdminDashboard`. Mostra:
-  - Contagem de produtos ativos, e quantos por categoria.
-  - Quantos produtos estão incompletos (sem imagem, ou campos essenciais em branco) — ajuda no trabalho de cadastro do dia a dia.
-  - Atalho rápido pra "Novo produto".
-  - Nenhum dado de venda/faturamento (sem permissão `financeiro` pra ver isso).
-- **Faltantes / Fornecedores apenas** (interino, até Partes C/D existirem): tela "em breve", com o mesmo tratamento visual dos itens de nav desabilitados — não é uma funcionalidade nova, é a mesma tela vazia que já existe hoje (`visibleTabs.length === 0` em `Admin.tsx`), só re-estilizada pra combinar com o resto.
+- Quem tem `financeiro` (ou é admin): cartões de atalho pra "Financeiro" e "Pedidos".
+- Quem tem `produtos` (ou é admin): contagem de produtos ativos, quantos estão incompletos (sem imagem ou sem descrição), e atalho pra ir pra Produtos.
+- Quem só tem `faltantes`/`fornecedores` (interino, até Partes C/D existirem): nenhum dos blocos acima se aplica, então cai no mesmo tratamento visual "em breve" usado nos itens de nav desabilitados (não é funcionalidade nova, é o componente compartilhado de "em breve" descrito na seção 4).
+- Admin vê todos os blocos aplicáveis (bypassa as checagens de permissão, como já acontece hoje em `canSeeTab`).
+
+O item de nav **Financeiro** (seção 1) é o `AdminDashboard.tsx` de hoje, sem nenhuma mudança de dados ou lógica — só renomeado de "Dashboard" pra "Financeiro" e reencaixado na nova casca visual.
 
 ## 4. Sistema visual consistente
 

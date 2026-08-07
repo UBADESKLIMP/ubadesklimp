@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import SortablePriorityItem from './SortablePriorityItem';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminPageHeader from './admin/AdminPageHeader';
 
 interface PriorityProductsManagerProps {
   onEditProduct?: (productId: string) => void;
@@ -204,8 +206,8 @@ const PriorityProductsManager = ({ onEditProduct, onAddProduct }: PriorityProduc
   if (loading) {
     return (
       <Card className="bg-[#12121a] border-blue-500/20">
-        <CardContent className="flex items-center justify-center py-12">
-          <div className="text-blue-300/60">Carregando produtos prioritários...</div>
+        <CardContent className="py-6">
+          <AdminLoadingState label="Carregando produtos prioritários..." rows={3} />
         </CardContent>
       </Card>
     );
@@ -214,15 +216,11 @@ const PriorityProductsManager = ({ onEditProduct, onAddProduct }: PriorityProduc
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-heading text-white flex items-center gap-2">
-          <Star className="h-6 w-6 text-yellow-400" />
-          Produtos em Destaque
-        </h2>
-        <p className="text-blue-300/60 mt-1">
-          Gerencie os produtos que aparecem em destaque na vitrine. Arraste para reordenar.
-        </p>
-      </div>
+      <AdminPageHeader
+        icon={Star}
+        title="Produtos em Destaque"
+        description="Gerencie os produtos que aparecem em destaque na vitrine. Arraste para reordenar."
+      />
 
       {/* Two columns for each line */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

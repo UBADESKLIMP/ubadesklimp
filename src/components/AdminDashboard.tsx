@@ -34,6 +34,8 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import AdminLoadingState from './admin/AdminLoadingState';
+import AdminEmptyState from './admin/AdminEmptyState';
 
 const AdminDashboard = () => {
   // Default to current month
@@ -102,14 +104,7 @@ const AdminDashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-pulse">📊</div>
-          <h3 className="text-xl font-semibold mb-2">Carregando estatísticas...</h3>
-        </div>
-      </div>
-    );
+    return <AdminLoadingState label="Carregando estatísticas..." rows={5} />;
   }
 
   return (
@@ -793,10 +788,7 @@ const AdminDashboard = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma venda registrada ainda</p>
-            </div>
+            <AdminEmptyState icon={Package} title="Nenhuma venda registrada ainda" tone="light" />
           )}
         </CardContent>
       </Card>
