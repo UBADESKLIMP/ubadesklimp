@@ -157,6 +157,8 @@ const SupplierManager = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<SupplierFormState>(emptyForm());
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredSuppliers = suppliers.filter((supplier) => {
     const normalizedSearch = normalizeText(searchTerm);
@@ -194,14 +196,29 @@ const SupplierManager = () => {
   };
 
   const saveEditing = async () => {
-    if (!editingId || !isFormValid(editForm)) return;
-    await updateSupplier(editingId, formToInput(editForm));
-    setEditingId(null);
+    if (!editingId || !isFormValid(editForm) || isSavingEdit) return;
+    setIsSavingEdit(true);
+    try {
+      await updateSupplier(editingId, formToInput(editForm));
+      setEditingId(null);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setIsSavingEdit(false);
+    }
   };
 
   const handleDelete = async (supplier: Supplier) => {
+    if (deletingId) return;
     if (!window.confirm(`Excluir o fornecedor "${supplier.contact_name}" (${supplier.company_name})? Essa ação não pode ser desfeita.`)) return;
-    await deleteSupplier(supplier.id);
+    setDeletingId(supplier.id);
+    try {
+      await deleteSupplier(supplier.id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -255,6 +272,14 @@ const SupplierManager = () => {
                   <div>
                     <p className="font-medium">{supplier.contact_name}</p>
                     <p className="text-sm text-muted-foreground">{supplier.company_name}</p>
+                    <p className="text-sm text-muted-foreground">{supplier.phone}</p>
+                    {(supplier.avg_delivery_days != null || supplier.max_installments != null) && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {supplier.avg_delivery_days != null && `Entrega em ~${supplier.avg_delivery_days} dias`}
+                        {supplier.avg_delivery_days != null && supplier.max_installments != null && ' · '}
+                        {supplier.max_installments != null && `Até ${supplier.max_installments}x`}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <Button variant="outline" size="icon" asChild>
@@ -262,10 +287,21 @@ const SupplierManager = () => {
                         <MessageCircle className="h-4 w-4 text-green-600" />
                       </a>
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => startEditing(supplier)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label="Editar fornecedor"
+                      onClick={() => startEditing(supplier)}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleDelete(supplier)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label="Excluir fornecedor"
+                      disabled={deletingId === supplier.id}
+                      onClick={() => handleDelete(supplier)}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -275,10 +311,10 @@ const SupplierManager = () => {
                   <div className="border-t pt-3 space-y-3">
                     <SupplierFormFields form={editForm} onChange={setEditForm} idPrefix={`edit-${supplier.id}`} />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={saveEditing}>
-                        Salvar
+                      <Button size="sm" onClick={saveEditing} disabled={isSavingEdit || !isFormValid(editForm)}>
+                        {isSavingEdit ? 'Salvando...' : 'Salvar'}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)} disabled={isSavingEdit}>
                         Cancelar
                       </Button>
                     </div>
