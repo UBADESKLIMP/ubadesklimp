@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
+import { DollarSign, ClipboardList, ChevronRight, Truck } from 'lucide-react';
 import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminPageHeader from './AdminPageHeader';
 import AdminComingSoon from './AdminComingSoon';
@@ -39,7 +39,8 @@ const ShortcutCard = ({ icon: Icon, title, description, onClick }: ShortcutCardP
 const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
   const showFinanceiro = staffAccess.isAdmin || staffAccess.permissions.has('financeiro');
   const showProdutos = staffAccess.isAdmin || staffAccess.permissions.has('produtos');
-  const hasNothing = !showFinanceiro && !showProdutos;
+  const showFornecedores = staffAccess.isAdmin || staffAccess.permissions.has('fornecedores');
+  const hasNothing = !showFinanceiro && !showProdutos && !showFornecedores;
 
   if (staffAccess.loading) {
     return (
@@ -57,7 +58,7 @@ const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
       {hasNothing ? (
         <AdminComingSoon
           title="Ainda sem seções liberadas"
-          description="Sua conta ainda não tem nenhuma seção com conteúdo pronto. As próximas etapas do painel (Fornecedores e Faltantes) estão a caminho."
+          description="Sua conta ainda não tem nenhuma seção com conteúdo pronto. A próxima etapa do painel (Faltantes) está a caminho."
         />
       ) : (
         <div className="space-y-8">
@@ -79,6 +80,17 @@ const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
           )}
 
           {showProdutos && <ProductsHomeSummary onNavigate={onNavigate} />}
+
+          {showFornecedores && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ShortcutCard
+                icon={Truck}
+                title="Fornecedores"
+                description="Cadastre fornecedores e abra o WhatsApp deles"
+                onClick={() => onNavigate('suppliers')}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
