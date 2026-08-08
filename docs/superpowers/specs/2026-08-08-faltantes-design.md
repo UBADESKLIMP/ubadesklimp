@@ -21,7 +21,8 @@ Tabela nova `missing_products`. Cada linha representa **um produto pendente** �
 | `stock_remaining` | inteiro | não | "Quantos ainda tem" — o funcionário que reporta só sabe o estoque atual, não decide quanto comprar |
 | `report_count` | inteiro, default 1 | — | Quantas vezes esse produto foi reportado enquanto pendente. Sobe 1 a cada novo report do mesmo produto (em vez de criar linha duplicada) |
 | `status` | texto/enum, default `'pendente'` | — | `pendente` \| `resolvido`. A Parte D2 vai estender esse conjunto com `em_cotacao` — não implementado aqui |
-| `reported_by` | uuid (FK → `staff_members.user_id`) | sim | Quem reportou por último. Sobrescrito a cada novo report do mesmo produto (mostra sempre o relato mais recente) |
+| `reported_by` | uuid (FK → `staff_members.user_id`) | sim | Quem reportou por último |
+| `reported_by_name` | texto | sim | Nome (`display_name`) de quem reportou por último, guardado direto na linha — RLS de `staff_members` só deixa cada funcionário ver a própria linha, então não dá pra resolver `reported_by` num nome via join pra quem não é admin; guardar o nome já pronto na hora do report resolve isso sem tocar na RLS de `staff_members`. Sobrescrito junto com `reported_by` a cada novo report do mesmo produto |
 | `resolved_by` | uuid (FK → `staff_members.user_id`) | não | Preenchido ao marcar como resolvido |
 | `resolved_at` | timestamptz | não | Preenchido ao marcar como resolvido |
 | `created_at` / `updated_at` | timestamptz | — | Automáticos |
@@ -32,8 +33,10 @@ Tabela nova `missing_products`. Cada linha representa **um produto pendente** �
 
 Reaproveitando os helpers já existentes (`is_staff_admin()`, `has_staff_permission(perm)`):
 
-- **Select e Insert** (ver a lista, reportar): `is_staff_admin() or has_staff_permission('faltantes')`
-- **Update** (marcar como resolvido): `is_staff_admin() or (has_staff_permission('faltantes') and has_staff_permission('fornecedores'))` — só quem tem as duas permissões (perfil "administrativo") pode resolver. Um funcionário só com `faltantes` ("simples") consegue ver a lista e reportar, mas não resolver.
+- **Select** (ver a lista): `has_staff_permission('faltantes')` (já cobre admin, que a função trata internamente).
+- **Insert** (reportar produto novo): `has_staff_permission('faltantes') and reported_by = auth.uid()` — impede reportar em nome de outro usuário.
+- **Update, primeira policy** (reportar de novo um produto já pendente — incrementar contador): `has_staff_permission('faltantes')`, com `with check` exigindo que a linha resultante continue com `status = 'pendente'`. Isso deixa qualquer um com `faltantes` reportar de novo (incrementando), mas **não** deixa esse mesmo caminho ser usado pra mudar o status pra `resolvido`.
+- **Update, segunda policy** (resolver): `has_staff_permission('faltantes') and has_staff_permission('fornecedores')`, sem restrição de status no `with check` — só essa policy permite a transição pra `resolvido`. Como policies do tipo `update` são combinadas com OR (tanto no `using` quanto no `with check`), um funcionário só com `faltantes` nunca consegue satisfazer o `with check` de nenhuma das duas policies ao tentar setar `status = 'resolvido'` — a policy 1 barra por causa do status, a policy 2 barra por causa da permissão.
 - **Delete**: não previsto nesta parte — resolver é sempre uma mudança de status, nunca exclusão.
 
 Nenhuma migration de permissão nova é necessária — `faltantes` já existe no enum desde a Parte A.
@@ -66,7 +69,7 @@ Se alguma linha do lote falhar (rede, RLS etc.), as linhas que já foram salvas 
 ### Lista de pendentes
 
 - Ordenada por `report_count` decrescente (mais pedido primeiro).
-- Cada linha mostra: nome do produto, "quantos ainda tem" (se informado), badge com o contador (ex: "pedido 3x"), nome de quem reportou por último (`display_name` do `staff_members`, via `reported_by = staff_members.user_id`).
+- Cada linha mostra: nome do produto (via `product_id`, produtos já vêm carregados na página admin — sem fetch novo), "quantos ainda tem" (se informado), badge com o contador (ex: "pedido 3x"), nome de quem reportou por último (`reported_by_name`, direto na linha).
 - Botão "Marcar como resolvido": visível/habilitado só para quem tem também a permissão `fornecedores` (checagem client-side usando o `staffAccess` já carregado — a RLS é a barreira real, a UI só evita mostrar um botão que vai falhar pra quem não tem a segunda permissão). Ao clicar, sem confirmação extra (não é uma exclusão), atualiza `status = 'resolvido'`, `resolved_by`, `resolved_at`, e a linha some da lista de pendentes.
 - Sem paginação nem busca — volume esperado é baixo (mesmo raciocínio de Fornecedores).
 - Estado vazio (nenhum item pendente) e estado de carregamento seguindo o padrão `AdminEmptyState`/`AdminLoadingState` com `tone="light"`.
