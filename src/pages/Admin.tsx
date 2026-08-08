@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Package, Search, Loader2, ClipboardCheck } from 'lucide-react';
+import { Plus, Package, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useProducts } from '@/hooks/useProducts';
@@ -13,6 +13,7 @@ import AdminDashboard from '@/components/AdminDashboard';
 import PriorityProductsManager from '@/components/PriorityProductsManager';
 import StaffManager from '@/components/StaffManager';
 import SupplierManager from '@/components/SupplierManager';
+import MissingProductsManager from '@/components/MissingProductsManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
@@ -21,7 +22,6 @@ import AdminShell from '@/components/admin/AdminShell';
 import AdminHome from '@/components/admin/AdminHome';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
-import AdminComingSoon from '@/components/admin/AdminComingSoon';
 import { AdminSection, getVisibleNavItems } from '@/components/admin/adminNav';
 
 const Admin = () => {
@@ -285,13 +285,7 @@ const Admin = () => {
         return <SupplierManager />;
 
       case 'missing':
-        return (
-          <AdminComingSoon
-            icon={ClipboardCheck}
-            title="Faltantes"
-            description="Em breve você vai poder registrar produtos faltantes e gerar cotações automaticamente."
-          />
-        );
+        return <MissingProductsManager products={products} staffAccess={staffAccess} />;
 
       case 'staff':
         return <StaffManager />;
