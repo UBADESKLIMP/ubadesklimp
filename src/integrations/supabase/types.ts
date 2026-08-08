@@ -38,6 +38,70 @@ export type Database = {
         }
         Relationships: []
       }
+      missing_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          report_count: number
+          reported_by: string | null
+          reported_by_name: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          stock_remaining: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          report_count?: number
+          reported_by?: string | null
+          reported_by_name: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          stock_remaining?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          report_count?: number
+          reported_by?: string | null
+          reported_by_name?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          stock_remaining?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missing_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missing_products_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "missing_products_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
