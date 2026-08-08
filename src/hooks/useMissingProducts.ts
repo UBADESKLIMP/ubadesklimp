@@ -9,7 +9,7 @@ export interface MissingProduct {
   stock_remaining: number | null;
   report_count: number;
   status: 'pendente' | 'resolvido';
-  reported_by: string;
+  reported_by: string | null;
   reported_by_name: string;
   resolved_by: string | null;
   resolved_at: string | null;
