@@ -357,6 +357,45 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          avg_delivery_days: number | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          max_installments: number | null
+          notes: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          avg_delivery_days?: number | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          max_installments?: number | null
+          notes?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          avg_delivery_days?: number | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          max_installments?: number | null
+          notes?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

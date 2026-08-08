@@ -53,7 +53,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'automotive', label: 'Automotivo', icon: Car, permission: 'produtos', group: 'catalogo' },
   { key: 'highlights', label: 'Destaques', icon: Star, permission: 'produtos', group: 'catalogo' },
   { key: 'categories', label: 'Categorias', icon: Tags, permission: 'produtos', group: 'catalogo' },
-  { key: 'suppliers', label: 'Fornecedores', icon: Truck, comingSoon: true, group: 'operacao' },
+  { key: 'suppliers', label: 'Fornecedores', icon: Truck, permission: 'fornecedores', group: 'operacao' },
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, comingSoon: true, group: 'operacao' },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
 ];
