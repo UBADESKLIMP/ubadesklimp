@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMissingProducts, MissingProductReportItem } from '@/hooks/useMissingProducts';
 import { ProductWithVariations } from '@/types/product';
 import { StaffAccess } from '@/hooks/useStaffAccess';
@@ -25,12 +26,16 @@ import { cn } from '@/lib/utils';
 interface ReportRow {
   key: string;
   productId: string | null;
+  fragranceId: string | null;
+  variationId: string | null;
   stockRemaining: string;
 }
 
 const emptyRow = (): ReportRow => ({
   key: crypto.randomUUID(),
   productId: null,
+  fragranceId: null,
+  variationId: null,
   stockRemaining: '',
 });
 
@@ -43,18 +48,18 @@ const toNullableInt = (value: string): number | null => {
 
 interface ProductPickerProps {
   products: ProductWithVariations[];
-  excludeIds: string[];
   value: string | null;
   onChange: (productId: string) => void;
 }
 
-// Combobox pesquisável — padrão shadcn (Popover + Command). excludeIds tira
-// da lista os produtos já escolhidos em OUTRAS linhas do lote atual, pra não
-// deixar reportar o mesmo produto duas vezes na mesma leva.
-const ProductPicker = ({ products, excludeIds, value, onChange }: ProductPickerProps) => {
+// Combobox pesquisável — padrão shadcn (Popover + Command). Não tem mais
+// exclusão de produto já escolhido em outra linha: com fragrância/tamanho,
+// o mesmo produto pode legitimamente aparecer duas vezes no lote (ex: "Ypê
+// Rosa" e "Ypê Azul"). Duplicata exata do mesmo combo é resolvida pelo
+// índice único do banco (vira incremento, não erro — ver useMissingProducts).
+const ProductPicker = ({ products, value, onChange }: ProductPickerProps) => {
   const [open, setOpen] = useState(false);
   const selected = products.find((p) => p.id === value);
-  const available = products.filter((p) => p.id === value || !excludeIds.includes(p.id));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -76,7 +81,7 @@ const ProductPicker = ({ products, excludeIds, value, onChange }: ProductPickerP
           <CommandList>
             <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
             <CommandGroup>
-              {available.map((product) => (
+              {products.map((product) => (
                 <CommandItem
                   key={product.id}
                   value={product.name}
@@ -97,10 +102,97 @@ const ProductPicker = ({ products, excludeIds, value, onChange }: ProductPickerP
   );
 };
 
+interface FragranceVariationFieldsProps {
+  product: ProductWithVariations | undefined;
+  fragranceId: string | null;
+  variationId: string | null;
+  onFragranceChange: (fragranceId: string) => void;
+  onVariationChange: (variationId: string) => void;
+}
+
+// Só renderiza os seletores que fazem sentido pro produto escolhido. Quando
+// uma fragrância tem available_literages preenchido, o seletor de Tamanho
+// mostra só as variações daquela fragrância; sem fragrância escolhida (ou
+// produto sem fragrância), mostra todas as variações do produto.
+const FragranceVariationFields = ({
+  product,
+  fragranceId,
+  variationId,
+  onFragranceChange,
+  onVariationChange,
+}: FragranceVariationFieldsProps) => {
+  if (!product) return null;
+
+  const fragrances = product.fragrances ?? [];
+  const hasFragrances = fragrances.length > 0;
+
+  const allVariations = product.variations ?? [];
+  const selectedFragrance = fragrances.find((f) => f.id === fragranceId);
+  const filteredVariations = selectedFragrance?.available_literages?.length
+    ? allVariations.filter((v) => selectedFragrance.available_literages!.includes(v.literage))
+    : allVariations;
+  const availableVariations = filteredVariations.length > 0 ? filteredVariations : allVariations;
+  const hasVariations = allVariations.length > 0;
+
+  if (!hasFragrances && !hasVariations) return null;
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {hasFragrances && (
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Fragrância</Label>
+          <Select value={fragranceId ?? undefined} onValueChange={onFragranceChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Escolher..." />
+            </SelectTrigger>
+            <SelectContent>
+              {fragrances.map((fragrance) => (
+                <SelectItem key={fragrance.id} value={fragrance.id}>
+                  {fragrance.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {hasVariations && (
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Tamanho</Label>
+          <Select value={variationId ?? undefined} onValueChange={onVariationChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Escolher..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableVariations.map((variation) => (
+                <SelectItem key={variation.id} value={variation.id}>
+                  {variation.literage}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface MissingProductsManagerProps {
   products: ProductWithVariations[];
   staffAccess: StaffAccess;
 }
+
+// Uma linha com produto escolhido só está "completa" se as fragrâncias/
+// tamanhos obrigatórios (quando o produto tem) também foram escolhidos.
+const isRowComplete = (row: ReportRow, productById: Map<string, ProductWithVariations>): boolean => {
+  if (!row.productId) return false;
+  const product = productById.get(row.productId);
+  if (!product) return false;
+  const needsFragrance = (product.fragrances?.length ?? 0) > 0;
+  const needsVariation = (product.variations?.length ?? 0) > 0;
+  if (needsFragrance && !row.fragranceId) return false;
+  if (needsVariation && !row.variationId) return false;
+  return true;
+};
 
 const MissingProductsManager = ({ products, staffAccess }: MissingProductsManagerProps) => {
   const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, displayNameStatus } =
@@ -113,8 +205,8 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
   const canResolve =
     staffAccess.isAdmin || (staffAccess.permissions.has('faltantes') && staffAccess.permissions.has('fornecedores'));
   const productById = new Map(products.map((p) => [p.id, p]));
-  const chosenProductIds = rows.map((r) => r.productId).filter((id): id is string => id !== null);
-  const hasChosenProduct = chosenProductIds.length > 0;
+  const hasChosenProduct = rows.some((row) => row.productId !== null);
+  const hasIncompleteRow = rows.some((row) => row.productId !== null && !isRowComplete(row, productById));
 
   const updateRow = (key: string, updater: (row: ReportRow) => ReportRow) => {
     setRows((prev) => prev.map((row) => (row.key === key ? updater(row) : row)));
@@ -133,14 +225,20 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
   const handleSubmit = async () => {
     const items: MissingProductReportItem[] = rows
       .filter((row) => row.productId !== null)
-      .map((row) => ({ productId: row.productId as string, stockRemaining: toNullableInt(row.stockRemaining) }));
+      .map((row) => ({
+        key: row.key,
+        productId: row.productId as string,
+        fragranceId: row.fragranceId,
+        variationId: row.variationId,
+        stockRemaining: toNullableInt(row.stockRemaining),
+      }));
 
     if (items.length === 0) return;
 
     setIsSubmitting(true);
     try {
       const { succeeded } = await reportMissingProducts(items);
-      const stillPending = rows.filter((row) => row.productId !== null && !succeeded.includes(row.productId));
+      const stillPending = rows.filter((row) => row.productId !== null && !succeeded.includes(row.key));
 
       if (stillPending.length === 0) {
         setRows([emptyRow()]);
@@ -193,9 +291,19 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                       <div className="flex-1 space-y-2">
                         <ProductPicker
                           products={products}
-                          excludeIds={chosenProductIds.filter((id) => id !== row.productId)}
                           value={row.productId}
-                          onChange={(productId) => updateRow(row.key, (r) => ({ ...r, productId }))}
+                          onChange={(productId) =>
+                            updateRow(row.key, (r) => ({ ...r, productId, fragranceId: null, variationId: null }))
+                          }
+                        />
+                        <FragranceVariationFields
+                          product={row.productId ? productById.get(row.productId) : undefined}
+                          fragranceId={row.fragranceId}
+                          variationId={row.variationId}
+                          onFragranceChange={(fragranceId) =>
+                            updateRow(row.key, (r) => ({ ...r, fragranceId, variationId: null }))
+                          }
+                          onVariationChange={(variationId) => updateRow(row.key, (r) => ({ ...r, variationId }))}
                         />
                         <div className="space-y-1">
                           <Label htmlFor={`stock-${row.key}`} className="text-xs text-muted-foreground">
@@ -233,7 +341,7 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                 <DialogFooter>
                   <Button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !hasChosenProduct || displayNameStatus !== 'ready'}
+                    disabled={isSubmitting || !hasChosenProduct || hasIncompleteRow || displayNameStatus !== 'ready'}
                   >
                     {isSubmitting ? 'Enviando...' : 'Enviar'}
                   </Button>
@@ -252,10 +360,17 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
           <div className="space-y-3">
             {missingProducts.map((item) => {
               const product = productById.get(item.product_id);
+              const fragranceName = product?.fragrances?.find((f) => f.id === item.fragrance_id)?.name;
+              const variationLabel = product?.variations?.find((v) => v.id === item.variation_id)?.literage;
+              const detailParts = [fragranceName, variationLabel].filter((part): part is string => Boolean(part));
+              const displayName =
+                detailParts.length > 0
+                  ? `${product?.name ?? 'Produto removido'} — ${detailParts.join(' — ')}`
+                  : product?.name || 'Produto removido';
               return (
                 <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
                   <div>
-                    <p className="font-medium">{product?.name || 'Produto removido'}</p>
+                    <p className="font-medium">{displayName}</p>
                     <p className="text-sm text-muted-foreground">
                       {item.stock_remaining !== null ? `${item.stock_remaining} restando` : 'Quantidade não informada'}
                       {' · '}

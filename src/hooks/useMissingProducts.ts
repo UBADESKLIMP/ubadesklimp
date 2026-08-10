@@ -6,6 +6,8 @@ import { toast } from '@/hooks/use-toast';
 export interface MissingProduct {
   id: string;
   product_id: string;
+  fragrance_id: string | null;
+  variation_id: string | null;
   stock_remaining: number | null;
   report_count: number;
   status: 'pendente' | 'resolvido';
@@ -18,7 +20,10 @@ export interface MissingProduct {
 }
 
 export interface MissingProductReportItem {
+  key: string;
   productId: string;
+  fragranceId: string | null;
+  variationId: string | null;
   stockRemaining: number | null;
 }
 
@@ -84,6 +89,22 @@ export const useMissingProducts = () => {
     }
   }, []);
 
+  // Busca a linha pendente pro combo exato (produto + fragrância + tamanho).
+  // .is() é obrigatório pra comparar com null — .eq('col', null) não funciona
+  // no Postgres (null = null nunca é true), então precisa dessa ramificação.
+  const findExistingPending = (productId: string, fragranceId: string | null, variationId: string | null) => {
+    let query = supabase
+      .from('missing_products')
+      .select('id, report_count')
+      .eq('product_id', productId)
+      .eq('status', 'pendente');
+
+    query = fragranceId ? query.eq('fragrance_id', fragranceId) : query.is('fragrance_id', null);
+    query = variationId ? query.eq('variation_id', variationId) : query.is('variation_id', null);
+
+    return query.maybeSingle();
+  };
+
   // Incrementa uma linha pendente já existente — usado tanto pro caminho
   // normal (já existia quando buscamos) quanto pra corrida (Postgres recusou
   // o insert por violar o índice único; buscamos a linha que apareceu nesse
@@ -129,12 +150,11 @@ export const useMissingProducts = () => {
 
     for (const item of items) {
       try {
-        const { data: existing, error: fetchError } = await supabase
-          .from('missing_products')
-          .select('id, report_count')
-          .eq('product_id', item.productId)
-          .eq('status', 'pendente')
-          .maybeSingle();
+        const { data: existing, error: fetchError } = await findExistingPending(
+          item.productId,
+          item.fragranceId,
+          item.variationId
+        );
 
         if (fetchError) throw fetchError;
 
@@ -146,6 +166,8 @@ export const useMissingProducts = () => {
             .insert([
               {
                 product_id: item.productId,
+                fragrance_id: item.fragranceId,
+                variation_id: item.variationId,
                 stock_remaining: item.stockRemaining,
                 reported_by: userId,
                 reported_by_name: reporterName,
@@ -154,16 +176,16 @@ export const useMissingProducts = () => {
 
           if (insertError) {
             // Código 23505 = violação de índice único: outra pessoa criou a
-            // linha pendente entre o select acima e este insert. Busca a
-            // linha que acabou de aparecer e trata como reporte de novo, em
-            // vez de mostrar erro pro usuário por causa de uma corrida.
+            // linha pendente entre o select acima e este insert (ou o próprio
+            // lote tinha duas linhas com o mesmo combo). Busca a linha que
+            // acabou de aparecer e trata como reporte de novo, em vez de
+            // mostrar erro pro usuário.
             if (insertError.code === '23505') {
-              const { data: justCreated, error: refetchError } = await supabase
-                .from('missing_products')
-                .select('id, report_count')
-                .eq('product_id', item.productId)
-                .eq('status', 'pendente')
-                .maybeSingle();
+              const { data: justCreated, error: refetchError } = await findExistingPending(
+                item.productId,
+                item.fragranceId,
+                item.variationId
+              );
 
               if (refetchError || !justCreated) throw insertError;
 
@@ -174,10 +196,10 @@ export const useMissingProducts = () => {
           }
         }
 
-        succeeded.push(item.productId);
+        succeeded.push(item.key);
       } catch (error) {
         console.error('Error reporting missing product:', error, item);
-        failed.push(item.productId);
+        failed.push(item.key);
       }
     }
 

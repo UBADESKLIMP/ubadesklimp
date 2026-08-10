@@ -17,6 +17,7 @@ import { normalizeText } from '@/lib/utils';
 import AdminLoadingState from './admin/AdminLoadingState';
 import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
+import { syncProductFragrances } from '@/lib/productFragrances';
 
 const AutomotiveProductsManager = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -94,26 +95,13 @@ const AutomotiveProductsManager = () => {
       if (editingProduct) {
         await updateProduct(editingProduct.id, productPayload);
 
-        if (fragrances && fragrances.length > 0) {
-          await supabase
-            .from('product_fragrances')
-            .delete()
-            .eq('product_id', editingProduct.id);
-
-          const fragrancesToInsert = fragrances.map((fragrance: any) => ({
-            product_id: editingProduct.id,
-            name: fragrance.name,
-            description: fragrance.description || null,
-            image_url: fragrance.image_url || null,
-            available_literages: fragrance.available_literages || [],
-            order_index: fragrance.order || 0
-          }));
-
-          await supabase.from('product_fragrances').insert(fragrancesToInsert);
-          await supabase
-            .from('products')
-            .update({ has_fragrances: fragrances.length > 0 })
-            .eq('id', editingProduct.id);
+        if (fragrances) {
+          await syncProductFragrances(
+            supabase,
+            editingProduct.id,
+            editingProduct.fragrances || [],
+            fragrances
+          );
         }
 
         await refetch();

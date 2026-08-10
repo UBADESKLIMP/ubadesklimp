@@ -23,6 +23,7 @@ import AdminHome from '@/components/admin/AdminHome';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { AdminSection, getVisibleNavItems } from '@/components/admin/adminNav';
+import { syncProductFragrances } from '@/lib/productFragrances';
 
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
@@ -58,31 +59,14 @@ const Admin = () => {
       if (editingProduct) {
         savedProduct = await updateProduct(editingProduct.id, productPayload);
 
-        if (fragrances && fragrances.length > 0) {
+        if (fragrances) {
           const { supabase } = await import('@/integrations/supabase/client');
-
-          await supabase
-            .from('product_fragrances')
-            .delete()
-            .eq('product_id', editingProduct.id);
-
-          const fragrancesToInsert = fragrances.map((fragrance: any) => ({
-            product_id: editingProduct.id,
-            name: fragrance.name,
-            description: fragrance.description || null,
-            image_url: fragrance.image_url || null,
-            available_literages: fragrance.available_literages || [],
-            order_index: fragrance.order || 0
-          }));
-
-          await supabase
-            .from('product_fragrances')
-            .insert(fragrancesToInsert);
-
-          await supabase
-            .from('products')
-            .update({ has_fragrances: fragrances.length > 0 })
-            .eq('id', editingProduct.id);
+          await syncProductFragrances(
+            supabase,
+            editingProduct.id,
+            editingProduct.fragrances || [],
+            fragrances
+          );
         }
 
         await refetch();
