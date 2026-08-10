@@ -128,9 +128,10 @@ const FragranceVariationFields = ({
 
   const allVariations = product.variations ?? [];
   const selectedFragrance = fragrances.find((f) => f.id === fragranceId);
-  const availableVariations = selectedFragrance?.available_literages?.length
+  const filteredVariations = selectedFragrance?.available_literages?.length
     ? allVariations.filter((v) => selectedFragrance.available_literages!.includes(v.literage))
     : allVariations;
+  const availableVariations = filteredVariations.length > 0 ? filteredVariations : allVariations;
   const hasVariations = allVariations.length > 0;
 
   if (!hasFragrances && !hasVariations) return null;
