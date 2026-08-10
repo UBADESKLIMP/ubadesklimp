@@ -32,6 +32,7 @@ export const useMissingProducts = () => {
   const [missingProducts, setMissingProducts] = useState<MissingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDisplayName, setCurrentDisplayName] = useState<string | null>(null);
+  const [displayNameStatus, setDisplayNameStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   // RLS de staff_members só deixa cada funcionário ver a própria linha, então
   // buscamos o display_name do usuário atual uma vez pra carimbar em
@@ -40,14 +41,24 @@ export const useMissingProducts = () => {
   useEffect(() => {
     if (!user) {
       setCurrentDisplayName(null);
+      setDisplayNameStatus('ready');
       return;
     }
+    setDisplayNameStatus('loading');
     supabase
       .from('staff_members')
       .select('display_name')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => setCurrentDisplayName(data?.display_name ?? null));
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error fetching current user display name:', error);
+          setDisplayNameStatus('error');
+          return;
+        }
+        setCurrentDisplayName(data?.display_name ?? null);
+        setDisplayNameStatus('ready');
+      });
   }, [user]);
 
   const fetchMissingProducts = useCallback(async () => {
@@ -92,15 +103,27 @@ export const useMissingProducts = () => {
     if (stockRemaining !== null) {
       updatePayload.stock_remaining = stockRemaining;
     }
-    const { error } = await supabase.from('missing_products').update(updatePayload).eq('id', existingId);
+    const { data, error } = await supabase
+      .from('missing_products')
+      .update(updatePayload)
+      .eq('id', existingId)
+      .eq('status', 'pendente')
+      .select('id');
     if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error('Não foi possível atualizar: o produto pode ter sido resolvido nesse meio-tempo.');
+    }
   };
 
   const reportMissingProducts = async (items: MissingProductReportItem[]): Promise<ReportBatchResult> => {
     if (!user) throw new Error('Usuário não autenticado');
 
+    if (!currentDisplayName) {
+      throw new Error('Não foi possível identificar seu nome de exibição. Recarregue a página e tente novamente.');
+    }
+
     const userId = user.id;
-    const reporterName = currentDisplayName || user.email || 'Funcionário';
+    const reporterName = currentDisplayName;
     const succeeded: string[] = [];
     const failed: string[] = [];
 
@@ -213,5 +236,12 @@ export const useMissingProducts = () => {
     fetchMissingProducts();
   }, [fetchMissingProducts]);
 
-  return { missingProducts, loading, reportMissingProducts, resolveMissingProduct, refetch: fetchMissingProducts };
+  return {
+    missingProducts,
+    loading,
+    reportMissingProducts,
+    resolveMissingProduct,
+    refetch: fetchMissingProducts,
+    displayNameStatus,
+  };
 };

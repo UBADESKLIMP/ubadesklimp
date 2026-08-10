@@ -103,13 +103,15 @@ interface MissingProductsManagerProps {
 }
 
 const MissingProductsManager = ({ products, staffAccess }: MissingProductsManagerProps) => {
-  const { missingProducts, loading, reportMissingProducts, resolveMissingProduct } = useMissingProducts();
+  const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, displayNameStatus } =
+    useMissingProducts();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
-  const canResolve = staffAccess.isAdmin || staffAccess.permissions.has('fornecedores');
+  const canResolve =
+    staffAccess.isAdmin || (staffAccess.permissions.has('faltantes') && staffAccess.permissions.has('fornecedores'));
   const productById = new Map(products.map((p) => [p.id, p]));
   const chosenProductIds = rows.map((r) => r.productId).filter((id): id is string => id !== null);
   const hasChosenProduct = chosenProductIds.length > 0;
@@ -146,6 +148,10 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
       } else {
         setRows(stillPending);
       }
+    } catch {
+      // erro já mostrado via toast dentro do hook, ou lançado antes do toast
+      // (ex: nome de exibição ainda não carregado) — nesse caso não há toast,
+      // mas o botão de enviar já fica desabilitado até o nome carregar.
     } finally {
       setIsSubmitting(false);
     }
@@ -225,7 +231,10 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                   </Button>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleSubmit} disabled={isSubmitting || !hasChosenProduct}>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !hasChosenProduct || displayNameStatus !== 'ready'}
+                  >
                     {isSubmitting ? 'Enviando...' : 'Enviar'}
                   </Button>
                 </DialogFooter>
