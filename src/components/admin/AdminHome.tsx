@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { DollarSign, ClipboardList, ChevronRight, Truck } from 'lucide-react';
+import { DollarSign, ClipboardList, ChevronRight, Truck, ClipboardCheck } from 'lucide-react';
 import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminPageHeader from './AdminPageHeader';
 import AdminComingSoon from './AdminComingSoon';
@@ -40,7 +40,8 @@ const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
   const showFinanceiro = staffAccess.isAdmin || staffAccess.permissions.has('financeiro');
   const showProdutos = staffAccess.isAdmin || staffAccess.permissions.has('produtos');
   const showFornecedores = staffAccess.isAdmin || staffAccess.permissions.has('fornecedores');
-  const hasNothing = !showFinanceiro && !showProdutos && !showFornecedores;
+  const showFaltantes = staffAccess.isAdmin || staffAccess.permissions.has('faltantes');
+  const hasNothing = !showFinanceiro && !showProdutos && !showFornecedores && !showFaltantes;
 
   if (staffAccess.loading) {
     return (
@@ -58,7 +59,7 @@ const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
       {hasNothing ? (
         <AdminComingSoon
           title="Ainda sem seções liberadas"
-          description="Sua conta ainda não tem nenhuma seção com conteúdo pronto. A próxima etapa do painel (Faltantes) está a caminho."
+          description="Sua conta ainda não tem nenhuma seção com conteúdo pronto. Peça para um administrador liberar alguma permissão pra você."
         />
       ) : (
         <div className="space-y-8">
@@ -88,6 +89,17 @@ const AdminHome = ({ staffAccess, onNavigate }: AdminHomeProps) => {
                 title="Fornecedores"
                 description="Cadastre fornecedores e abra o WhatsApp deles"
                 onClick={() => onNavigate('suppliers')}
+              />
+            </div>
+          )}
+
+          {showFaltantes && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ShortcutCard
+                icon={ClipboardCheck}
+                title="Faltantes"
+                description="Veja e registre produtos que estão acabando"
+                onClick={() => onNavigate('missing')}
               />
             </div>
           )}
