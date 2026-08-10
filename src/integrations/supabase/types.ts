@@ -41,6 +41,7 @@ export type Database = {
       missing_products: {
         Row: {
           created_at: string
+          fragrance_id: string | null
           id: string
           product_id: string
           report_count: number
@@ -51,9 +52,11 @@ export type Database = {
           status: string
           stock_remaining: number | null
           updated_at: string
+          variation_id: string | null
         }
         Insert: {
           created_at?: string
+          fragrance_id?: string | null
           id?: string
           product_id: string
           report_count?: number
@@ -64,9 +67,11 @@ export type Database = {
           status?: string
           stock_remaining?: number | null
           updated_at?: string
+          variation_id?: string | null
         }
         Update: {
           created_at?: string
+          fragrance_id?: string | null
           id?: string
           product_id?: string
           report_count?: number
@@ -77,8 +82,16 @@ export type Database = {
           status?: string
           stock_remaining?: number | null
           updated_at?: string
+          variation_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "missing_products_fragrance_id_fkey"
+            columns: ["fragrance_id"]
+            isOneToOne: false
+            referencedRelation: "product_fragrances"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "missing_products_product_id_fkey"
             columns: ["product_id"]
@@ -99,6 +112,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "missing_products_variation_id_fkey"
+            columns: ["variation_id"]
+            isOneToOne: false
+            referencedRelation: "product_variations"
+            referencedColumns: ["id"]
           },
         ]
       }
