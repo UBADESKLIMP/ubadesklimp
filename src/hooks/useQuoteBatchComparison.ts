@@ -244,7 +244,8 @@ export const useQuoteBatchComparison = (batchId: string) => {
           completed_by: user.id,
           completed_by_name: displayName,
         })
-        .eq('id', batchId);
+        .eq('id', batchId)
+        .eq('status', 'aberto');
       if (batchUpdateError) throw batchUpdateError;
 
       // `items` já tem missing_product_id carregado por fetchData — não

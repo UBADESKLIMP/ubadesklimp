@@ -233,7 +233,11 @@ Deno.serve(async (req: Request) => {
     let suggestions: ReassignSuggestion[];
     try {
       const jsonMatch = textPart.text.match(/\[[\s\S]*\]/);
-      suggestions = JSON.parse(jsonMatch ? jsonMatch[0] : textPart.text);
+      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : textPart.text);
+      if (!Array.isArray(parsed)) {
+        throw new Error("Resposta da IA não é um array.");
+      }
+      suggestions = parsed;
     } catch (parseError) {
       console.error("Falha ao interpretar resposta da IA:", parseError, textPart.text);
       return jsonResponse(req, { error: "A IA retornou um formato inesperado. Tente novamente." }, 502);
@@ -250,6 +254,7 @@ Deno.serve(async (req: Request) => {
       source: "ia";
       set_by: string;
       set_by_name: string;
+      set_at: string;
     }> = [];
 
     for (const suggestion of suggestions) {
@@ -266,6 +271,7 @@ Deno.serve(async (req: Request) => {
         source: "ia",
         set_by: caller.id,
         set_by_name: callerStaff.display_name,
+        set_at: new Date().toISOString(),
       });
       applied += 1;
     }

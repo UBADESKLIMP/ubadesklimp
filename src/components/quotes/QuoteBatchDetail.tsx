@@ -109,6 +109,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
         supplierName={supplier?.company_name ?? 'Fornecedor'}
         items={items}
         products={products}
+        batchStatus={batch.status}
         onBack={() => {
           setSelectedSupplierId(null);
           refetch();

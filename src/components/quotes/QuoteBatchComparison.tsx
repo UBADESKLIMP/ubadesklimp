@@ -68,7 +68,12 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * item.quantity);
   }
 
-  const allItemsHaveWinner = items.length > 0 && items.every((item) => winners.has(item.id));
+  const allItemsHaveWinner =
+    items.length > 0 &&
+    items.every((item) => {
+      const winnerId = winners.get(item.id);
+      return !!winnerId && getPrice(item.id, winnerId) !== null;
+    });
 
   const orderItemsBySupplier = new Map<string, PurchaseOrderItem[]>();
   for (const item of items) {
