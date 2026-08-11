@@ -9,6 +9,7 @@ export interface QuoteBatchDetailItem {
   fragrance_id: string | null;
   variation_id: string | null;
   stock_remaining: number | null;
+  quantity: number;
 }
 
 export interface QuoteBatchDetailSupplier {
@@ -22,7 +23,7 @@ export interface QuoteBatchDetailSupplier {
 
 export interface QuoteBatchDetail {
   id: string;
-  status: 'aberto' | 'cancelado';
+  status: 'aberto' | 'cancelado' | 'concluido';
   created_by_name: string;
   created_at: string;
 }
@@ -46,13 +47,14 @@ export const useQuoteBatchDetail = (batchId: string) => {
 
       const { data: itemRows, error: itemsError } = await supabase
         .from('quote_batch_items')
-        .select('id, missing_product_id, missing_products(product_id, fragrance_id, variation_id, stock_remaining)')
+        .select('id, missing_product_id, quantity, missing_products(product_id, fragrance_id, variation_id, stock_remaining)')
         .eq('quote_batch_id', batchId);
       if (itemsError) throw itemsError;
 
       const typedItemRows = (itemRows || []) as unknown as Array<{
         id: string;
         missing_product_id: string;
+        quantity: number;
         missing_products: {
           product_id: string;
           fragrance_id: string | null;
@@ -69,6 +71,7 @@ export const useQuoteBatchDetail = (batchId: string) => {
           fragrance_id: row.missing_products?.fragrance_id ?? null,
           variation_id: row.missing_products?.variation_id ?? null,
           stock_remaining: row.missing_products?.stock_remaining ?? null,
+          quantity: row.quantity,
         }))
       );
 

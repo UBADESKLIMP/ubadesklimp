@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,9 +91,10 @@ interface QuoteBatchDetailProps {
   batchId: string;
   products: ProductWithVariations[];
   onBack: () => void;
+  onCompare: (batchId: string) => void;
 }
 
-const QuoteBatchDetail = ({ batchId, products, onBack }: QuoteBatchDetailProps) => {
+const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDetailProps) => {
   const { batch, items, suppliers, loading, cancelBatch, addSupplier, refetch } = useQuoteBatchDetail(batchId);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -108,6 +109,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack }: QuoteBatchDetailProps) 
         supplierName={supplier?.company_name ?? 'Fornecedor'}
         items={items}
         products={products}
+        batchStatus={batch.status}
         onBack={() => {
           setSelectedSupplierId(null);
           refetch();
@@ -145,34 +147,43 @@ const QuoteBatchDetail = ({ batchId, products, onBack }: QuoteBatchDetailProps) 
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
-          {batch.status === 'aberto' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={isCancelling}>
-                  <X className="h-4 w-4 mr-2" />
-                  Cancelar lote
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancelar esta cotação?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Os itens voltam a ficar disponíveis pra entrar em um lote novo. O histórico deste lote continua
-                    salvo, só não aparece mais como aberto.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Voltar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleCancel}>Cancelar lote</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          <div className="flex items-center gap-2">
+            {batch.status !== 'cancelado' && (
+              <Button variant="secondary" size="sm" onClick={() => onCompare(batchId)}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" />
+                {batch.status === 'concluido' ? 'Ver comparação' : 'Comparar e gerar pedido'}
+              </Button>
+            )}
+            {batch.status === 'aberto' && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isCancelling}>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancelar lote
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancelar esta cotação?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Os itens voltam a ficar disponíveis pra entrar em um lote novo. O histórico deste lote continua
+                      salvo, só não aparece mais como aberto.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Voltar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancel}>Cancelar lote</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
         <div>
           <h2 className="text-2xl font-heading text-white">
             Lote de {batch.created_by_name}
             {batch.status === 'cancelado' && <Badge variant="outline" className="ml-2">Cancelado</Badge>}
+            {batch.status === 'concluido' && <Badge className="ml-2">Concluído</Badge>}
           </h2>
           <p className="text-sm text-blue-300/60 mt-1">
             Criado em{' '}
@@ -195,7 +206,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack }: QuoteBatchDetailProps) 
               const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
               return (
                 <p key={item.id} className="text-sm text-muted-foreground">
-                  {displayName}
+                  {item.quantity}x {displayName}
                 </p>
               );
             })}

@@ -6,12 +6,17 @@ import { useCurrentStaffName } from '@/hooks/useCurrentStaffName';
 
 export interface QuoteBatchSummary {
   id: string;
-  status: 'aberto' | 'cancelado';
+  status: 'aberto' | 'cancelado' | 'concluido';
   created_by_name: string;
   created_at: string;
   item_count: number;
   supplier_count: number;
   suppliers_reviewed_count: number;
+}
+
+export interface QuoteBatchItemInput {
+  missingProductId: string;
+  quantity: number;
 }
 
 // Marca o erro de revalidação (Fix 5 do review final) pra distinguir dos
@@ -39,7 +44,7 @@ export const useQuoteBatches = () => {
 
       const rows = (data || []) as unknown as Array<{
         id: string;
-        status: 'aberto' | 'cancelado';
+        status: 'aberto' | 'cancelado' | 'concluido';
         created_by_name: string;
         created_at: string;
         quote_batch_items: { count: number }[];
@@ -101,21 +106,17 @@ export const useQuoteBatches = () => {
   // então isso segue a mesma convenção já aceita). Se falhar no meio, o
   // pior caso é um lote com itens mas sem fornecedores (ou vice-versa) —
   // recuperável cancelando e criando de novo, não corrompe nada.
-  const createBatch = async (missingProductIds: string[], supplierIds: string[]): Promise<string | null> => {
+  const createBatch = async (items: QuoteBatchItemInput[], supplierIds: string[]): Promise<string | null> => {
     if (!user) throw new Error('Usuário não autenticado');
     if (!displayName) {
       throw new Error('Não foi possível identificar seu nome de exibição. Recarregue a página e tente novamente.');
     }
-    if (missingProductIds.length === 0 || supplierIds.length === 0) {
+    if (items.length === 0 || supplierIds.length === 0) {
       throw new Error('Escolha pelo menos 1 item e 1 fornecedor.');
     }
 
     try {
-      // Revalida "já em lote aberto" contra o estado atual do banco, não só
-      // contra o openItemIds que foi buscado quando o diálogo abriu — evita
-      // duas pessoas colocando o mesmo item em dois lotes abertos ao mesmo
-      // tempo (não há trava de banco pra essa regra, é uma decisão de
-      // produto, não de integridade referencial — ver spec).
+      const missingProductIds = items.map((item) => item.missingProductId);
       const { data: stillOpenItems, error: openItemsError } = await supabase
         .from('quote_batch_items')
         .select('missing_product_id, quote_batches!inner(status)')
@@ -139,7 +140,13 @@ export const useQuoteBatches = () => {
 
       const { data: itemRows, error: itemsError } = await supabase
         .from('quote_batch_items')
-        .insert(missingProductIds.map((missingProductId) => ({ quote_batch_id: batchId, missing_product_id: missingProductId })))
+        .insert(
+          items.map((item) => ({
+            quote_batch_id: batchId,
+            missing_product_id: item.missingProductId,
+            quantity: item.quantity,
+          }))
+        )
         .select('id');
       if (itemsError) throw itemsError;
 

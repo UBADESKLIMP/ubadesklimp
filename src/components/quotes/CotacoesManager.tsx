@@ -3,6 +3,7 @@ import { Plus, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import AdminLoadingState from '../admin/AdminLoadingState';
 import AdminEmptyState from '../admin/AdminEmptyState';
 import AdminPageHeader from '../admin/AdminPageHeader';
 import QuoteBatchDetail from './QuoteBatchDetail';
+import QuoteBatchComparison from './QuoteBatchComparison';
 
 interface CreateQuoteBatchDialogProps {
   products: ProductWithVariations[];
@@ -33,17 +35,26 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
   const { missingProducts, loading: loadingMissing } = useMissingProducts();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const { openItemIds, createBatch } = useQuoteBatches();
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Map<string, number>>(new Map());
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const productById = new Map(products.map((p) => [p.id, p]));
 
   const toggleItem = (id: string) => {
-    setSelectedItemIds((prev) => {
-      const next = new Set(prev);
+    setSelectedItems((prev) => {
+      const next = new Map(prev);
       if (next.has(id)) next.delete(id);
-      else next.add(id);
+      else next.set(id, 1);
+      return next;
+    });
+  };
+
+  const setItemQuantity = (id: string, quantity: number) => {
+    setSelectedItems((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Map(prev);
+      next.set(id, quantity);
       return next;
     });
   };
@@ -60,9 +71,13 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
   const handleCreate = async () => {
     setIsSubmitting(true);
     try {
-      const batchId = await createBatch(Array.from(selectedItemIds), Array.from(selectedSupplierIds));
+      const items = Array.from(selectedItems.entries()).map(([missingProductId, quantity]) => ({
+        missingProductId,
+        quantity,
+      }));
+      const batchId = await createBatch(items, Array.from(selectedSupplierIds));
       if (batchId) {
-        setSelectedItemIds(new Set());
+        setSelectedItems(new Map());
         setSelectedSupplierIds(new Set());
         onOpenChange(false);
         onCreated(batchId);
@@ -99,20 +114,26 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
                   const product = productById.get(item.product_id);
                   const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                   const alreadyInQuote = openItemIds.has(item.id);
+                  const isSelected = selectedItems.has(item.id);
                   return (
                     <label
                       key={item.id}
                       className={`flex items-center gap-2 p-1.5 rounded ${alreadyInQuote ? 'opacity-50' : 'cursor-pointer hover:bg-muted/50'}`}
                     >
-                      <Checkbox
-                        checked={selectedItemIds.has(item.id)}
-                        disabled={alreadyInQuote}
-                        onCheckedChange={() => toggleItem(item.id)}
-                      />
-                      <span className="text-sm">{displayName}</span>
-                      {alreadyInQuote && (
-                        <Badge variant="secondary" className="text-xs">já em cotação</Badge>
+                      <Checkbox checked={isSelected} disabled={alreadyInQuote} onCheckedChange={() => toggleItem(item.id)} />
+                      <span className="text-sm flex-1">{displayName}</span>
+                      {isSelected && (
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1"
+                          className="w-16 h-7 text-xs"
+                          value={selectedItems.get(item.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setItemQuantity(item.id, Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        />
                       )}
+                      {alreadyInQuote && <Badge variant="secondary" className="text-xs">já em cotação</Badge>}
                     </label>
                   );
                 })}
@@ -140,7 +161,7 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
         <DialogFooter>
           <Button
             onClick={handleCreate}
-            disabled={isSubmitting || selectedItemIds.size === 0 || selectedSupplierIds.size === 0}
+            disabled={isSubmitting || selectedItems.size === 0 || selectedSupplierIds.size === 0}
           >
             {isSubmitting ? 'Criando...' : 'Criar cotação'}
           </Button>
@@ -158,6 +179,20 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
   const { batches, loading, refetch } = useQuoteBatches();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+  const [compareBatchId, setCompareBatchId] = useState<string | null>(null);
+
+  if (compareBatchId) {
+    return (
+      <QuoteBatchComparison
+        batchId={compareBatchId}
+        products={products}
+        onBack={() => {
+          setCompareBatchId(null);
+          refetch();
+        }}
+      />
+    );
+  }
 
   if (selectedBatchId) {
     return (
@@ -168,11 +203,13 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           setSelectedBatchId(null);
           refetch();
         }}
+        onCompare={(batchId) => setCompareBatchId(batchId)}
       />
     );
   }
 
   const openBatches = batches.filter((b) => b.status === 'aberto');
+  const completedBatches = batches.filter((b) => b.status === 'concluido');
   const cancelledBatches = batches.filter((b) => b.status === 'cancelado');
 
   const formatDate = (dateString: string) =>
@@ -200,6 +237,7 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
         </p>
       </div>
       {batch.status === 'cancelado' && <Badge variant="outline">Cancelado</Badge>}
+      {batch.status === 'concluido' && <Badge>Concluído</Badge>}
     </button>
   );
 
@@ -225,6 +263,12 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Canceladas</p>
             {cancelledBatches.map(renderBatchCard)}
+          </div>
+        )}
+        {completedBatches.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
+            {completedBatches.map(renderBatchCard)}
           </div>
         )}
       </CardContent>

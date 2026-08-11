@@ -16,6 +16,7 @@ interface QuoteBatchSupplierReviewProps {
   supplierName: string;
   items: QuoteBatchDetailItem[];
   products: ProductWithVariations[];
+  batchStatus: 'aberto' | 'cancelado' | 'concluido';
   onBack: () => void;
 }
 
@@ -24,6 +25,7 @@ const QuoteBatchSupplierReview = ({
   supplierName,
   items,
   products,
+  batchStatus,
   onBack,
 }: QuoteBatchSupplierReviewProps) => {
   const {
@@ -42,6 +44,8 @@ const QuoteBatchSupplierReview = ({
   const [draftPrices, setDraftPrices] = useState<Record<string, string>>({});
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [isMarking, setIsMarking] = useState(false);
+
+  const isReadOnly = batchStatus !== 'aberto';
 
   const productById = new Map(products.map((p) => [p.id, p]));
   const lineItemByItemId = new Map(lineItems.map((li) => [li.quote_batch_item_id, li]));
@@ -122,7 +126,12 @@ const QuoteBatchSupplierReview = ({
                     {file.processed_at ? 'Processado' : 'Novo'}
                   </Badge>
                   {file.processed_at && (
-                    <Button variant="outline" size="sm" onClick={() => reprocessFile(file.id)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isReadOnly}
+                      onClick={() => reprocessFile(file.id)}
+                    >
                       <RotateCcw className="h-3 w-3 mr-1" />
                       Processar de novo
                     </Button>
@@ -138,15 +147,20 @@ const QuoteBatchSupplierReview = ({
               accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
               multiple
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={uploading || isReadOnly}
               className="hidden"
               id="quote-file-upload"
             />
-            <Button variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={uploading || isReadOnly}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="h-4 w-4 mr-2" />
               {uploading ? 'Enviando...' : 'Enviar arquivo(s)'}
             </Button>
-            <Button size="sm" disabled={extracting || unprocessedCount === 0} onClick={runExtraction}>
+            <Button size="sm" disabled={extracting || unprocessedCount === 0 || isReadOnly} onClick={runExtraction}>
               <Sparkles className="h-4 w-4 mr-2" />
               {extracting ? 'Extraindo...' : `Extrair com IA (${unprocessedCount} novo(s))`}
             </Button>
@@ -180,6 +194,7 @@ const QuoteBatchSupplierReview = ({
                           min="0"
                           placeholder="—"
                           value={draftPrices[item.id] ?? ''}
+                          disabled={isReadOnly}
                           onChange={(e) => setDraftPrices((prev) => ({ ...prev, [item.id]: e.target.value }))}
                           onFocus={() => setFocusedItemId(item.id)}
                           onBlur={() => {
