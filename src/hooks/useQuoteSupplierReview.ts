@@ -119,7 +119,18 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
             uploaded_by_name: displayName,
           },
         ]);
-        if (insertError) throw insertError;
+        if (insertError) {
+          // Sem isso, um insert que falhou (RLS, rede) deixava o objeto já
+          // enviado ao Storage órfão pra sempre — nenhuma cascade do banco
+          // alcança storage.objects, e sem uma linha em quote_files
+          // apontando pra ele, nada no app nunca mais o encontra. Melhor
+          // esforço: tenta remover antes de propagar o erro original.
+          const { error: cleanupError } = await supabase.storage.from('quote-files').remove([storagePath]);
+          if (cleanupError) {
+            console.error(`Falha ao limpar objeto órfão ${storagePath} após erro de insert:`, cleanupError);
+          }
+          throw insertError;
+        }
       }
 
       toast({ title: 'Arquivo(s) enviado(s)' });
