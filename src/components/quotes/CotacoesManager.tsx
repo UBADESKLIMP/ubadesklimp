@@ -178,6 +178,8 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
   const { batches, loading, refetch } = useQuoteBatches();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+  const [compareBatchId, setCompareBatchId] = useState<string | null>(null);
+  void compareBatchId;
 
   if (selectedBatchId) {
     return (
@@ -188,11 +190,13 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           setSelectedBatchId(null);
           refetch();
         }}
+        onCompare={(batchId) => setCompareBatchId(batchId)}
       />
     );
   }
 
   const openBatches = batches.filter((b) => b.status === 'aberto');
+  const completedBatches = batches.filter((b) => b.status === 'concluido');
   const cancelledBatches = batches.filter((b) => b.status === 'cancelado');
 
   const formatDate = (dateString: string) =>
@@ -220,6 +224,7 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
         </p>
       </div>
       {batch.status === 'cancelado' && <Badge variant="outline">Cancelado</Badge>}
+      {batch.status === 'concluido' && <Badge>Concluído</Badge>}
     </button>
   );
 
@@ -245,6 +250,12 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Canceladas</p>
             {cancelledBatches.map(renderBatchCard)}
+          </div>
+        )}
+        {completedBatches.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
+            {completedBatches.map(renderBatchCard)}
           </div>
         )}
       </CardContent>
