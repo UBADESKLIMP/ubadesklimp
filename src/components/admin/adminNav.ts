@@ -9,6 +9,7 @@ import {
   Truck,
   ClipboardCheck,
   Shield,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 import { StaffAccess, StaffPermission } from '@/hooks/useStaffAccess';
@@ -23,6 +24,7 @@ export type AdminSection =
   | 'categories'
   | 'suppliers'
   | 'missing'
+  | 'quotes'
   | 'staff';
 
 export type AdminNavGroup = 'catalogo' | 'operacao' | 'equipe';
@@ -31,7 +33,7 @@ export interface AdminNavItem {
   key: AdminSection;
   label: string;
   icon: LucideIcon;
-  permission?: StaffPermission;
+  permission?: StaffPermission | StaffPermission[];
   adminOnly?: boolean;
   comingSoon?: boolean;
   group?: AdminNavGroup;
@@ -55,6 +57,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'categories', label: 'Categorias', icon: Tags, permission: 'produtos', group: 'catalogo' },
   { key: 'suppliers', label: 'Fornecedores', icon: Truck, permission: 'fornecedores', group: 'operacao' },
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, permission: 'faltantes', group: 'operacao' },
+  { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
 ];
 
@@ -64,7 +67,8 @@ export const canSeeNavItem = (item: AdminNavItem, staffAccess: StaffAccess): boo
   if (item.comingSoon) return true;
   if (item.adminOnly) return staffAccess.isAdmin;
   if (!item.permission) return true;
-  return staffAccess.isAdmin || staffAccess.permissions.has(item.permission);
+  const required = Array.isArray(item.permission) ? item.permission : [item.permission];
+  return staffAccess.isAdmin || required.every((perm) => staffAccess.permissions.has(perm));
 };
 
 export const getVisibleNavItems = (staffAccess: StaffAccess): AdminNavItem[] =>
