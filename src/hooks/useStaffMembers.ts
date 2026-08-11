@@ -1,20 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 import { StaffPermission } from '@/hooks/useStaffAccess';
-
-const extractFunctionErrorMessage = async (error: unknown, fallback: string): Promise<string> => {
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = await error.context.json();
-      if (body?.error) return body.error;
-    } catch {
-      // resposta de erro não era JSON — usa o fallback
-    }
-  }
-  return error instanceof Error ? error.message : fallback;
-};
+import { extractFunctionErrorMessage } from '@/lib/functionErrors';
 
 export interface StaffMember {
   user_id: string;

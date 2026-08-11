@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useCurrentStaffName } from '@/hooks/useCurrentStaffName';
 
 export interface MissingProduct {
   id: string;
@@ -36,35 +37,7 @@ export const useMissingProducts = () => {
   const { user } = useAuth();
   const [missingProducts, setMissingProducts] = useState<MissingProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentDisplayName, setCurrentDisplayName] = useState<string | null>(null);
-  const [displayNameStatus, setDisplayNameStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-
-  // RLS de staff_members só deixa cada funcionário ver a própria linha, então
-  // buscamos o display_name do usuário atual uma vez pra carimbar em
-  // reported_by_name — não dá pra resolver o nome de OUTRO funcionário via
-  // join (por isso o nome é gravado direto na linha, não buscado depois).
-  useEffect(() => {
-    if (!user) {
-      setCurrentDisplayName(null);
-      setDisplayNameStatus('ready');
-      return;
-    }
-    setDisplayNameStatus('loading');
-    supabase
-      .from('staff_members')
-      .select('display_name')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error fetching current user display name:', error);
-          setDisplayNameStatus('error');
-          return;
-        }
-        setCurrentDisplayName(data?.display_name ?? null);
-        setDisplayNameStatus('ready');
-      });
-  }, [user]);
+  const { displayName: currentDisplayName, status: displayNameStatus } = useCurrentStaffName();
 
   const fetchMissingProducts = useCallback(async () => {
     setLoading(true);
