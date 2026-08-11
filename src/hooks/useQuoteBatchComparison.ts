@@ -225,5 +225,68 @@ export const useQuoteBatchComparison = (batchId: string) => {
     }
   };
 
-  return { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand, refetch: fetchData };
+  const finalizeBatch = async (): Promise<boolean> => {
+    if (!user || !displayName) return false;
+    if (items.length === 0 || items.some((item) => !winners.has(item.id))) {
+      toast({
+        title: 'Ainda falta escolher vencedor',
+        description: 'Todo item precisa de um vencedor antes de gerar os pedidos.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    try {
+      const { error: batchUpdateError } = await supabase
+        .from('quote_batches')
+        .update({
+          status: 'concluido',
+          completed_at: new Date().toISOString(),
+          completed_by: user.id,
+          completed_by_name: displayName,
+        })
+        .eq('id', batchId);
+      if (batchUpdateError) throw batchUpdateError;
+
+      // `items` já tem missing_product_id carregado por fetchData — não
+      // precisa buscar de novo no banco.
+      const missingProductIds = items.map((item) => item.missing_product_id);
+      if (missingProductIds.length > 0) {
+        const { error: resolveError } = await supabase
+          .from('missing_products')
+          .update({ status: 'resolvido', resolved_by: user.id, resolved_at: new Date().toISOString() })
+          .in('id', missingProductIds);
+        if (resolveError) {
+          // O lote já fechou — não desfaz. Loga pra investigar depois, mesmo
+          // padrão de risco aceito já usado em createBatch (sequência de
+          // updates sem transação multi-tabela).
+          console.error('Error resolving missing products after batch completion:', resolveError);
+        }
+      }
+
+      toast({ title: 'Pedidos de compra gerados', description: 'O lote foi concluído.' });
+      await fetchData();
+      return true;
+    } catch (error) {
+      console.error('Error finalizing quote batch:', error);
+      toast({
+        title: 'Erro ao gerar pedidos',
+        description: 'Não foi possível concluir o lote.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  return {
+    loading,
+    batchStatus,
+    items,
+    suppliers,
+    getPrice,
+    winners,
+    setWinner,
+    applyCommand,
+    finalizeBatch,
+    refetch: fetchData,
+  };
 };

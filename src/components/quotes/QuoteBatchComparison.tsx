@@ -1,12 +1,25 @@
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageCircle, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useQuoteBatchComparison } from '@/hooks/useQuoteBatchComparison';
 import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildWhatsAppLink } from '@/lib/whatsapp';
+import { buildPurchaseOrderMessage, downloadPurchaseOrderPdf, PurchaseOrderItem } from '@/lib/purchaseOrder';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
 
@@ -19,11 +32,12 @@ interface QuoteBatchComparisonProps {
 const formatPrice = (price: number) => `R$ ${price.toFixed(2).replace('.', ',')}`;
 
 const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchComparisonProps) => {
-  const { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand } =
+  const { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand, finalizeBatch } =
     useQuoteBatchComparison(batchId);
   const [command, setCommand] = useState('');
   const [isApplyingCommand, setIsApplyingCommand] = useState(false);
   const [commandLog, setCommandLog] = useState<string[]>([]);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const productById = new Map(products.map((p) => [p.id, p]));
   const isReadOnly = batchStatus !== 'aberto';
 
@@ -53,6 +67,30 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     if (price === null) continue;
     subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * item.quantity);
   }
+
+  const allItemsHaveWinner = items.length > 0 && items.every((item) => winners.has(item.id));
+
+  const orderItemsBySupplier = new Map<string, PurchaseOrderItem[]>();
+  for (const item of items) {
+    const winnerId = winners.get(item.id);
+    if (!winnerId) continue;
+    const price = getPrice(item.id, winnerId);
+    if (price === null) continue;
+    const product = productById.get(item.product_id);
+    const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
+    const list = orderItemsBySupplier.get(winnerId) ?? [];
+    list.push({ name: displayName, quantity: item.quantity, unitPrice: price });
+    orderItemsBySupplier.set(winnerId, list);
+  }
+
+  const handleFinalize = async () => {
+    setIsFinalizing(true);
+    try {
+      await finalizeBatch();
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -169,6 +207,66 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {batchStatus === 'aberto' && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={!allItemsHaveWinner || isFinalizing} className="w-full">
+                Gerar pedidos de compra
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Gerar pedidos de compra?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Isso fecha este lote de cotação e marca os itens de Faltantes correspondentes como resolvidos. Não
+                  tem como desfazer.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Voltar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleFinalize}>Gerar pedidos</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {batchStatus === 'concluido' && orderItemsBySupplier.size > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Pedidos de compra</p>
+            {Array.from(orderItemsBySupplier.entries()).map(([supplierId, orderItems]) => {
+              const supplier = suppliers.find((s) => s.id === supplierId);
+              const total = orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+              return (
+                <div key={supplierId} className="border rounded-lg p-4 space-y-2">
+                  <p className="font-medium text-sm">{supplier?.company_name ?? 'Fornecedor'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {orderItems.length} item(ns) · Total: {formatPrice(total)}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button asChild size="sm" variant="outline">
+                      <a
+                        href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadPurchaseOrderPdf(supplier?.company_name ?? 'fornecedor', orderItems)}
+                    >
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Baixar PDF
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>
