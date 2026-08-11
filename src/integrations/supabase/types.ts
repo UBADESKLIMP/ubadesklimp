@@ -38,6 +38,21 @@ export type Database = {
         }
         Relationships: []
       }
+      keep_alive_log: {
+        Row: {
+          id: number
+          pinged_at: string
+        }
+        Insert: {
+          id?: never
+          pinged_at?: string
+        }
+        Update: {
+          id?: never
+          pinged_at?: string
+        }
+        Relationships: []
+      }
       missing_products: {
         Row: {
           created_at: string
@@ -399,18 +414,21 @@ export type Database = {
           created_at: string
           id: string
           missing_product_id: string
+          quantity: number
           quote_batch_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           missing_product_id: string
+          quantity?: number
           quote_batch_id: string
         }
         Update: {
           created_at?: string
           id?: string
           missing_product_id?: string
+          quantity?: number
           quote_batch_id?: string
         }
         Relationships: [
@@ -471,6 +489,9 @@ export type Database = {
       }
       quote_batches: {
         Row: {
+          completed_at: string | null
+          completed_by: string | null
+          completed_by_name: string | null
           created_at: string
           created_by: string | null
           created_by_name: string
@@ -478,6 +499,9 @@ export type Database = {
           status: string
         }
         Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_by_name?: string | null
           created_at?: string
           created_by?: string | null
           created_by_name: string
@@ -485,6 +509,9 @@ export type Database = {
           status?: string
         }
         Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_by_name?: string | null
           created_at?: string
           created_by?: string | null
           created_by_name?: string
@@ -492,6 +519,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_batches_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "quote_batches_created_by_fkey"
             columns: ["created_by"]
@@ -540,6 +574,58 @@ export type Database = {
           {
             foreignKeyName: "quote_files_uploaded_by_fkey"
             columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      quote_item_winners: {
+        Row: {
+          id: string
+          quote_batch_item_id: string
+          quote_batch_supplier_id: string
+          set_at: string
+          set_by: string | null
+          set_by_name: string
+          source: string
+        }
+        Insert: {
+          id?: string
+          quote_batch_item_id: string
+          quote_batch_supplier_id: string
+          set_at?: string
+          set_by?: string | null
+          set_by_name: string
+          source: string
+        }
+        Update: {
+          id?: string
+          quote_batch_item_id?: string
+          quote_batch_supplier_id?: string
+          set_at?: string
+          set_by?: string | null
+          set_by_name?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_item_winners_quote_batch_item_id_fkey"
+            columns: ["quote_batch_item_id"]
+            isOneToOne: true
+            referencedRelation: "quote_batch_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_item_winners_quote_batch_supplier_id_fkey"
+            columns: ["quote_batch_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batch_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_item_winners_set_by_fkey"
+            columns: ["set_by"]
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["user_id"]
