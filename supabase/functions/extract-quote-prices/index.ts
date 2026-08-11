@@ -37,7 +37,7 @@ const MEDIA_TYPE_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
 };
 
-interface ClaudeMatch {
+interface GeminiMatch {
   item: string;
   price: number | null;
 }
@@ -59,10 +59,10 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-    if (!anthropicApiKey) {
-      console.error("ANTHROPIC_API_KEY não configurada.");
+    if (!geminiApiKey) {
+      console.error("GEMINI_API_KEY não configurada.");
       return jsonResponse(req, { error: "IA não configurada no servidor. Avise um administrador." }, 500);
     }
 
@@ -160,17 +160,16 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(req, { error: "Este lote não tem itens." }, 400);
     }
 
-    // Baixa cada arquivo ainda não processado e monta os content blocks de
-    // visão pro request da Claude — imagem ou PDF, conforme a extensão do
-    // caminho salvo no Storage (ver useQuoteSupplierReview, Task 7: o
-    // caminho sempre preserva a extensão do arquivo original).
-    // Só marca processed_at nos arquivos que realmente viraram um content
-    // block — um arquivo pulado (extensão não suportada, falha de download)
-    // não pode desaparecer da fila de "ainda não processado" (files.filter
-    // abaixo), senão fica preso pra sempre sem nenhuma forma de tentar de
-    // novo.
+    // Baixa cada arquivo ainda não processado e monta as parts de visão pro
+    // request do Gemini — imagem ou PDF, conforme a extensão do caminho
+    // salvo no Storage (o caminho sempre preserva a extensão do arquivo
+    // original, ver useQuoteSupplierReview.ts).
+    // Só marca processed_at nos arquivos que realmente viraram uma part —
+    // um arquivo pulado (extensão não suportada, falha de download) não
+    // pode desaparecer da fila de "ainda não processado", senão fica preso
+    // pra sempre sem nenhuma forma de tentar de novo.
     const processedFileIds: string[] = [];
-    const contentBlocks: Array<Record<string, unknown>> = [];
+    const parts: Array<Record<string, unknown>> = [];
     for (const file of files) {
       const ext = file.storage_path.split(".").pop()?.toLowerCase() ?? "";
       const mediaType = MEDIA_TYPE_BY_EXT[ext];
@@ -187,14 +186,11 @@ Deno.serve(async (req: Request) => {
       }
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const base64 = encodeBase64(bytes);
-      contentBlocks.push({
-        type: mediaType === "application/pdf" ? "document" : "image",
-        source: { type: "base64", media_type: mediaType, data: base64 },
-      });
+      parts.push({ inline_data: { mime_type: mediaType, data: base64 } });
       processedFileIds.push(file.id);
     }
 
-    if (contentBlocks.length === 0) {
+    if (parts.length === 0) {
       return jsonResponse(req, { error: "Não foi possível ler os arquivos enviados." }, 400);
     }
 
@@ -208,51 +204,51 @@ Deno.serve(async (req: Request) => {
       `Responda APENAS com um array JSON, sem nenhum texto antes ou depois, no formato:\n` +
       `[{"item": "<nome exatamente como na lista>", "price": <número, sem "R$" nem separador de milhar, use ponto decimal>}]`;
 
-    contentBlocks.push({ type: "text", text: promptText });
+    parts.push({ text: promptText });
 
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-5",
-        // Sonnet 5 liga "thinking" adaptativo por padrão quando o parâmetro
-        // não é informado, e max_tokens é o teto de thinking+resposta
-        // somados — 2048 deixava o thinking consumir o orçamento inteiro
-        // antes de gerar o JSON. Desliga o thinking (não precisamos de
-        // raciocínio encadeado pra esse tipo de extração) e dá folga real
-        // pra resposta.
-        max_tokens: 8192,
-        thinking: { type: "disabled" },
-        messages: [{ role: "user", content: contentBlocks }],
-      }),
-    });
+    const geminiResponse = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": geminiApiKey,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            maxOutputTokens: 8192,
+            // Sem raciocínio encadeado pra esse tipo de extração — deixa o
+            // orçamento de tokens inteiro pra resposta em vez de "thinking".
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+      }
+    );
 
-    if (!claudeResponse.ok) {
-      const errorText = await claudeResponse.text();
-      console.error("Erro na API da Claude:", claudeResponse.status, errorText);
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error("Erro na API do Gemini:", geminiResponse.status, errorText);
       return jsonResponse(req, { error: "A IA não conseguiu processar os arquivos. Tente novamente." }, 502);
     }
 
-    const claudeBody = await claudeResponse.json();
-    if (claudeBody.stop_reason === "max_tokens") {
-      console.error("Resposta da IA truncada por max_tokens:", claudeBody);
+    const geminiBody = await geminiResponse.json();
+    const candidate = geminiBody.candidates?.[0];
+    if (candidate?.finishReason === "MAX_TOKENS") {
+      console.error("Resposta da IA truncada por MAX_TOKENS:", geminiBody);
       return jsonResponse(req, { error: "A resposta da IA ficou grande demais e foi cortada. Tente com menos arquivos por vez." }, 502);
     }
-    const textBlock = (claudeBody.content || []).find((block: { type: string }) => block.type === "text");
-    if (!textBlock?.text) {
+    const textPart = (candidate?.content?.parts || []).find((part: { text?: string }) => typeof part.text === "string");
+    if (!textPart?.text) {
       return jsonResponse(req, { error: "A IA não retornou um resultado legível." }, 502);
     }
 
-    let matches: ClaudeMatch[];
+    let matches: GeminiMatch[];
     try {
-      const jsonMatch = textBlock.text.match(/\[[\s\S]*\]/);
-      matches = JSON.parse(jsonMatch ? jsonMatch[0] : textBlock.text);
+      const jsonMatch = textPart.text.match(/\[[\s\S]*\]/);
+      matches = JSON.parse(jsonMatch ? jsonMatch[0] : textPart.text);
     } catch (parseError) {
-      console.error("Falha ao interpretar resposta da IA:", parseError, textBlock.text);
+      console.error("Falha ao interpretar resposta da IA:", parseError, textPart.text);
       return jsonResponse(req, { error: "A IA retornou um formato inesperado. Tente novamente." }, 502);
     }
 
