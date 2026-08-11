@@ -105,6 +105,23 @@ export const useQuoteBatches = () => {
     }
 
     try {
+      // Revalida "já em lote aberto" contra o estado atual do banco, não só
+      // contra o openItemIds que foi buscado quando o diálogo abriu — evita
+      // duas pessoas colocando o mesmo item em dois lotes abertos ao mesmo
+      // tempo (não há trava de banco pra essa regra, é uma decisão de
+      // produto, não de integridade referencial — ver spec).
+      const { data: stillOpenItems, error: openItemsError } = await supabase
+        .from('quote_batch_items')
+        .select('missing_product_id, quote_batches!inner(status)')
+        .eq('quote_batches.status', 'aberto')
+        .in('missing_product_id', missingProductIds);
+      if (openItemsError) throw openItemsError;
+      if (stillOpenItems && stillOpenItems.length > 0) {
+        throw new Error(
+          'Um ou mais itens escolhidos já entraram em outro lote aberto nesse meio-tempo. Atualize a lista e tente de novo.'
+        );
+      }
+
       const { data: batch, error: batchError } = await supabase
         .from('quote_batches')
         .insert([{ created_by: user.id, created_by_name: displayName }])

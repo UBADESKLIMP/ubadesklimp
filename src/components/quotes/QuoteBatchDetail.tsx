@@ -174,6 +174,16 @@ const QuoteBatchDetail = ({ batchId, products, onBack }: QuoteBatchDetailProps) 
             Lote de {batch.created_by_name}
             {batch.status === 'cancelado' && <Badge variant="outline" className="ml-2">Cancelado</Badge>}
           </h2>
+          <p className="text-sm text-blue-300/60 mt-1">
+            Criado em{' '}
+            {new Date(batch.created_at).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
         </div>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">

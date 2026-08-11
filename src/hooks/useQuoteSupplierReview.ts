@@ -169,9 +169,11 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
         toast({ title: 'Erro na extração', description: message, variant: 'destructive' });
         return;
       }
+      const skippedNote =
+        data.filesSkipped > 0 ? ` ${data.filesSkipped} arquivo(s) não pôde(puderam) ser lido(s).` : '';
       toast({
         title: 'Extração concluída',
-        description: `A IA encontrou preço pra ${data.matched} de ${data.totalItems} item(ns).`,
+        description: `A IA encontrou preço pra ${data.matched} de ${data.totalItems} item(ns).${skippedNote}`,
       });
       await fetchData();
     } catch (error) {
@@ -185,12 +187,20 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
   const updatePrice = async (quoteBatchItemId: string, price: number | null) => {
     if (!user || !displayName) return;
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('quote_line_items')
         .update({ price, updated_by: user.id, updated_by_name: displayName })
         .eq('quote_batch_supplier_id', quoteBatchSupplierId)
-        .eq('quote_batch_item_id', quoteBatchItemId);
+        .eq('quote_batch_item_id', quoteBatchItemId)
+        .select('id');
       if (error) throw error;
+      // Um UPDATE que não acha nenhuma linha retorna error: null — sem essa
+      // checagem, um lote com quote_line_items faltando (insert parcial na
+      // criação, já um risco aceito) fazia o preço "salvar com sucesso" e
+      // sumir, sem nenhum aviso.
+      if (!data || data.length === 0) {
+        throw new Error('Linha de preço não encontrada — este lote pode estar incompleto.');
+      }
       setLineItems((prev) => prev.map((li) => (li.quote_batch_item_id === quoteBatchItemId ? { ...li, price } : li)));
     } catch (error) {
       console.error('Error updating quote line item price:', error);

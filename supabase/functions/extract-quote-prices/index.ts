@@ -264,7 +264,7 @@ Deno.serve(async (req: Request) => {
       const quoteBatchItemId = itemByName.get(match.item);
       if (!quoteBatchItemId) continue;
 
-      const { error: updateError } = await adminClient
+      const { data: updateData, error: updateError } = await adminClient
         .from("quote_line_items")
         .update({
           price: match.price,
@@ -272,10 +272,15 @@ Deno.serve(async (req: Request) => {
           updated_by_name: callerStaff.display_name,
         })
         .eq("quote_batch_supplier_id", quoteBatchSupplierId)
-        .eq("quote_batch_item_id", quoteBatchItemId);
+        .eq("quote_batch_item_id", quoteBatchItemId)
+        .select("id");
 
       if (updateError) {
         console.error(`Falha ao salvar preço de ${match.item}:`, updateError);
+        continue;
+      }
+      if (!updateData || updateData.length === 0) {
+        console.error(`Nenhuma linha de preço encontrada pra ${match.item} (lote incompleto?).`);
         continue;
       }
       matchedCount += 1;

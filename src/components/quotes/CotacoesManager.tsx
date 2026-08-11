@@ -175,6 +175,15 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
   const openBatches = batches.filter((b) => b.status === 'aberto');
   const cancelledBatches = batches.filter((b) => b.status === 'cancelado');
 
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   const renderBatchCard = (batch: (typeof batches)[number]) => (
     <button
       key={batch.id}
@@ -186,7 +195,8 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           {batch.item_count} item(ns) · {batch.supplier_count} fornecedor(es)
         </p>
         <p className="text-sm text-muted-foreground">
-          Criado por {batch.created_by_name} · {batch.suppliers_reviewed_count} de {batch.supplier_count} revisado(s)
+          Criado por {batch.created_by_name} em {formatDate(batch.created_at)} ·{' '}
+          {batch.suppliers_reviewed_count} de {batch.supplier_count} revisado(s)
         </p>
       </div>
       {batch.status === 'cancelado' && <Badge variant="outline">Cancelado</Badge>}

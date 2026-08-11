@@ -40,18 +40,27 @@ const QuoteBatchSupplierReview = ({
   } = useQuoteSupplierReview(quoteBatchSupplierId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [draftPrices, setDraftPrices] = useState<Record<string, string>>({});
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [isMarking, setIsMarking] = useState(false);
 
   const productById = new Map(products.map((p) => [p.id, p]));
   const lineItemByItemId = new Map(lineItems.map((li) => [li.quote_batch_item_id, li]));
 
+  // Não pode substituir draftPrices inteiro toda vez que lineItems muda —
+  // updatePrice troca a identidade do array a cada save bem-sucedido, o que
+  // refaz este efeito e, sem essa checagem, apagava o que a pessoa estivesse
+  // digitando na PRÓXIMA célula enquanto o salvamento da célula anterior
+  // ainda estava em voo. Pula a célula que está em foco agora.
   useEffect(() => {
-    const next: Record<string, string> = {};
-    for (const li of lineItems) {
-      next[li.quote_batch_item_id] = li.price != null ? String(li.price) : '';
-    }
-    setDraftPrices(next);
-  }, [lineItems]);
+    setDraftPrices((prev) => {
+      const next = { ...prev };
+      for (const li of lineItems) {
+        if (li.quote_batch_item_id === focusedItemId) continue;
+        next[li.quote_batch_item_id] = li.price != null ? String(li.price) : '';
+      }
+      return next;
+    });
+  }, [lineItems, focusedItemId]);
 
   const unprocessedCount = files.filter((f) => !f.processed_at).length;
 
@@ -172,9 +181,13 @@ const QuoteBatchSupplierReview = ({
                           placeholder="—"
                           value={draftPrices[item.id] ?? ''}
                           onChange={(e) => setDraftPrices((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                          onBlur={() => handlePriceBlur(item.id)}
+                          onFocus={() => setFocusedItemId(item.id)}
+                          onBlur={() => {
+                            setFocusedItemId((current) => (current === item.id ? null : current));
+                            handlePriceBlur(item.id);
+                          }}
                         />
-                        {lineItem && (
+                        {lineItem && lineItem.price !== null && (
                           <p className="text-xs text-muted-foreground mt-1">por {lineItem.updated_by_name}</p>
                         )}
                       </TableCell>
