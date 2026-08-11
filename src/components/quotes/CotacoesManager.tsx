@@ -22,6 +22,7 @@ import AdminLoadingState from '../admin/AdminLoadingState';
 import AdminEmptyState from '../admin/AdminEmptyState';
 import AdminPageHeader from '../admin/AdminPageHeader';
 import QuoteBatchDetail from './QuoteBatchDetail';
+import QuoteBatchComparison from './QuoteBatchComparison';
 
 interface CreateQuoteBatchDialogProps {
   products: ProductWithVariations[];
@@ -179,7 +180,19 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [compareBatchId, setCompareBatchId] = useState<string | null>(null);
-  void compareBatchId;
+
+  if (compareBatchId) {
+    return (
+      <QuoteBatchComparison
+        batchId={compareBatchId}
+        products={products}
+        onBack={() => {
+          setCompareBatchId(null);
+          refetch();
+        }}
+      />
+    );
+  }
 
   if (selectedBatchId) {
     return (
