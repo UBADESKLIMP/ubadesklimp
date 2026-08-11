@@ -14,6 +14,7 @@ import PriorityProductsManager from '@/components/PriorityProductsManager';
 import StaffManager from '@/components/StaffManager';
 import SupplierManager from '@/components/SupplierManager';
 import MissingProductsManager from '@/components/MissingProductsManager';
+import CotacoesManager from '@/components/quotes/CotacoesManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
@@ -270,6 +271,9 @@ const Admin = () => {
 
       case 'missing':
         return <MissingProductsManager products={products} staffAccess={staffAccess} />;
+
+      case 'quotes':
+        return <CotacoesManager products={products} />;
 
       case 'staff':
         return <StaffManager />;
