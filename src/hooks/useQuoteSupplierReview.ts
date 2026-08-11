@@ -201,7 +201,11 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
       if (!data || data.length === 0) {
         throw new Error('Linha de preço não encontrada — este lote pode estar incompleto.');
       }
-      setLineItems((prev) => prev.map((li) => (li.quote_batch_item_id === quoteBatchItemId ? { ...li, price } : li)));
+      setLineItems((prev) =>
+        prev.map((li) =>
+          li.quote_batch_item_id === quoteBatchItemId ? { ...li, price, updated_by_name: displayName } : li
+        )
+      );
     } catch (error) {
       console.error('Error updating quote line item price:', error);
       toast({ title: 'Erro ao salvar preço', description: 'Não foi possível salvar esse valor.', variant: 'destructive' });
