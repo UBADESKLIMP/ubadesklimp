@@ -394,6 +394,210 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_batch_items: {
+        Row: {
+          created_at: string
+          id: string
+          missing_product_id: string
+          quote_batch_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          missing_product_id: string
+          quote_batch_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          missing_product_id?: string
+          quote_batch_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_batch_items_missing_product_id_fkey"
+            columns: ["missing_product_id"]
+            isOneToOne: false
+            referencedRelation: "missing_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_batch_items_quote_batch_id_fkey"
+            columns: ["quote_batch_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_batch_suppliers: {
+        Row: {
+          created_at: string
+          id: string
+          quote_batch_id: string
+          status: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quote_batch_id: string
+          status?: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quote_batch_id?: string
+          status?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_batch_suppliers_quote_batch_id_fkey"
+            columns: ["quote_batch_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_batch_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      quote_files: {
+        Row: {
+          created_at: string
+          id: string
+          processed_at: string | null
+          quote_batch_supplier_id: string
+          storage_path: string
+          uploaded_by: string | null
+          uploaded_by_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          quote_batch_supplier_id: string
+          storage_path: string
+          uploaded_by?: string | null
+          uploaded_by_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          quote_batch_supplier_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_files_quote_batch_supplier_id_fkey"
+            columns: ["quote_batch_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batch_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      quote_line_items: {
+        Row: {
+          id: string
+          price: number | null
+          quote_batch_item_id: string
+          quote_batch_supplier_id: string
+          updated_at: string
+          updated_by: string | null
+          updated_by_name: string
+        }
+        Insert: {
+          id?: string
+          price?: number | null
+          quote_batch_item_id: string
+          quote_batch_supplier_id: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string
+        }
+        Update: {
+          id?: string
+          price?: number | null
+          quote_batch_item_id?: string
+          quote_batch_supplier_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_line_items_quote_batch_item_id_fkey"
+            columns: ["quote_batch_item_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batch_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_line_items_quote_batch_supplier_id_fkey"
+            columns: ["quote_batch_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "quote_batch_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_line_items_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       staff_members: {
         Row: {
           created_at: string
