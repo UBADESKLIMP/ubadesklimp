@@ -16,12 +16,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMissingProducts, MissingProductReportItem } from '@/hooks/useMissingProducts';
+import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
 import { ProductWithVariations } from '@/types/product';
 import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminLoadingState from './admin/AdminLoadingState';
 import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { useQuoteBatches } from '@/hooks/useQuoteBatches';
 
 interface ReportRow {
   key: string;
@@ -197,6 +200,7 @@ const isRowComplete = (row: ReportRow, productById: Map<string, ProductWithVaria
 const MissingProductsManager = ({ products, staffAccess }: MissingProductsManagerProps) => {
   const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, displayNameStatus } =
     useMissingProducts();
+  const { openItemIds } = useQuoteBatches();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -360,17 +364,15 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
           <div className="space-y-3">
             {missingProducts.map((item) => {
               const product = productById.get(item.product_id);
-              const fragranceName = product?.fragrances?.find((f) => f.id === item.fragrance_id)?.name;
-              const variationLabel = product?.variations?.find((v) => v.id === item.variation_id)?.literage;
-              const detailParts = [fragranceName, variationLabel].filter((part): part is string => Boolean(part));
-              const displayName =
-                detailParts.length > 0
-                  ? `${product?.name ?? 'Produto removido'} — ${detailParts.join(' — ')}`
-                  : product?.name || 'Produto removido';
+              const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
+              const inQuote = openItemIds.has(item.id);
               return (
                 <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
                   <div>
-                    <p className="font-medium">{displayName}</p>
+                    <p className="font-medium flex items-center gap-2 flex-wrap">
+                      {displayName}
+                      {inQuote && <Badge variant="secondary" className="text-xs">Em cotação</Badge>}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {item.stock_remaining !== null ? `${item.stock_remaining} restando` : 'Quantidade não informada'}
                       {' · '}

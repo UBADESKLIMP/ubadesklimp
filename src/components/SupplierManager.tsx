@@ -210,7 +210,12 @@ const SupplierManager = () => {
 
   const handleDelete = async (supplier: Supplier) => {
     if (deletingId) return;
-    if (!window.confirm(`Excluir o fornecedor "${supplier.contact_name}" (${supplier.company_name})? Essa ação não pode ser desfeita.`)) return;
+    if (
+      !window.confirm(
+        `Excluir o fornecedor "${supplier.contact_name}" (${supplier.company_name})? Essa ação não pode ser desfeita e também apaga o histórico de cotações desse fornecedor (preços e arquivos enviados).`
+      )
+    )
+      return;
     setDeletingId(supplier.id);
     try {
       await deleteSupplier(supplier.id);
