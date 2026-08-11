@@ -37,6 +37,10 @@ const MEDIA_TYPE_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
 };
 
+// ~82MB em base64 (bytes * ~1.37), com folga sob o limite de request
+// inline de ~100MB da API do Gemini.
+const MAX_TOTAL_BYTES = 60 * 1024 * 1024;
+
 interface GeminiMatch {
   item: string;
   price: number | null;
@@ -170,6 +174,7 @@ Deno.serve(async (req: Request) => {
     // pra sempre sem nenhuma forma de tentar de novo.
     const processedFileIds: string[] = [];
     const parts: Array<Record<string, unknown>> = [];
+    let totalBytes = 0;
     for (const file of files) {
       const ext = file.storage_path.split(".").pop()?.toLowerCase() ?? "";
       const mediaType = MEDIA_TYPE_BY_EXT[ext];
@@ -185,6 +190,11 @@ Deno.serve(async (req: Request) => {
         continue;
       }
       const bytes = new Uint8Array(await blob.arrayBuffer());
+      if (totalBytes + bytes.length > MAX_TOTAL_BYTES) {
+        console.error(`Pulando ${file.storage_path}: ultrapassaria o limite de tamanho do request.`);
+        continue;
+      }
+      totalBytes += bytes.length;
       const base64 = encodeBase64(bytes);
       parts.push({ inline_data: { mime_type: mediaType, data: base64 } });
       processedFileIds.push(file.id);
@@ -207,7 +217,7 @@ Deno.serve(async (req: Request) => {
     parts.push({ text: promptText });
 
     const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
       {
         method: "POST",
         headers: {
@@ -215,16 +225,27 @@ Deno.serve(async (req: Request) => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          contents: [{ parts }],
+          contents: [{ role: "user", parts }],
           generationConfig: {
             maxOutputTokens: 8192,
-            // Sem raciocínio encadeado pra esse tipo de extração — deixa o
-            // orçamento de tokens inteiro pra resposta em vez de "thinking".
-            thinkingConfig: { thinkingBudget: 0 },
+            // thinking_budget é legado e não é mais aceito em modelos
+            // Gemini 3.x — thinkingLevel é o parâmetro atual, e nesses
+            // modelos não dá pra desligar o "thinking" por completo, só
+            // reduzir. Fixa o modelo (em vez de "gemini-flash-latest")
+            // porque esse alias já trocou de versão duas vezes em 2026, e
+            // qual parâmetro de thinking é válido depende de qual modelo
+            // ele aponta hoje.
+            thinkingConfig: { thinkingLevel: "minimal" },
           },
         }),
       }
     );
+
+    if (geminiResponse.status === 429) {
+      const errorText = await geminiResponse.text();
+      console.error("Cota da API do Gemini excedida:", errorText);
+      return jsonResponse(req, { error: "A cota gratuita da IA acabou por hoje. Tente de novo mais tarde." }, 429);
+    }
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
@@ -238,8 +259,11 @@ Deno.serve(async (req: Request) => {
       console.error("Resposta da IA truncada por MAX_TOKENS:", geminiBody);
       return jsonResponse(req, { error: "A resposta da IA ficou grande demais e foi cortada. Tente com menos arquivos por vez." }, 502);
     }
-    const textPart = (candidate?.content?.parts || []).find((part: { text?: string }) => typeof part.text === "string");
+    const textPart = (candidate?.content?.parts || []).find(
+      (part: { text?: string; thought?: boolean }) => typeof part.text === "string" && part.thought !== true
+    );
     if (!textPart?.text) {
+      console.error("Nenhuma part de texto utilizável na resposta da IA:", geminiBody);
       return jsonResponse(req, { error: "A IA não retornou um resultado legível." }, 502);
     }
 
