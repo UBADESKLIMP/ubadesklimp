@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useCurrentStaffName } from '@/hooks/useCurrentStaffName';
+import { extractFunctionErrorMessage } from '@/lib/functionErrors';
 
 export interface ComparisonItem {
   id: string;
@@ -206,5 +207,23 @@ export const useQuoteBatchComparison = (batchId: string) => {
     }
   };
 
-  return { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, refetch: fetchData };
+  const applyCommand = async (command: string): Promise<{ applied: number; skipped: number }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('apply-quote-reassignment', {
+        body: { quoteBatchId: batchId, command },
+      });
+      if (error) {
+        const message = await extractFunctionErrorMessage(error, 'Não foi possível aplicar o comando.');
+        toast({ title: 'Erro no comando', description: message, variant: 'destructive' });
+        throw error;
+      }
+      await fetchData();
+      return { applied: data.applied as number, skipped: data.skipped as number };
+    } catch (error) {
+      console.error('Error applying quote reassignment command:', error);
+      throw error;
+    }
+  };
+
+  return { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand, refetch: fetchData };
 };

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuoteBatchComparison } from '@/hooks/useQuoteBatchComparison';
 import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
@@ -17,9 +19,31 @@ interface QuoteBatchComparisonProps {
 const formatPrice = (price: number) => `R$ ${price.toFixed(2).replace('.', ',')}`;
 
 const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchComparisonProps) => {
-  const { loading, batchStatus, items, suppliers, getPrice, winners, setWinner } = useQuoteBatchComparison(batchId);
+  const { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand } =
+    useQuoteBatchComparison(batchId);
+  const [command, setCommand] = useState('');
+  const [isApplyingCommand, setIsApplyingCommand] = useState(false);
+  const [commandLog, setCommandLog] = useState<string[]>([]);
   const productById = new Map(products.map((p) => [p.id, p]));
   const isReadOnly = batchStatus !== 'aberto';
+
+  const handleApplyCommand = async () => {
+    const trimmed = command.trim();
+    if (!trimmed) return;
+    setIsApplyingCommand(true);
+    try {
+      const { applied, skipped } = await applyCommand(trimmed);
+      setCommandLog((prev) => [
+        `"${trimmed}" — ${applied} reatribuído(s)${skipped > 0 ? `, ${skipped} ignorado(s)` : ''}.`,
+        ...prev,
+      ]);
+      setCommand('');
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setIsApplyingCommand(false);
+    }
+  };
 
   const subtotalBySupplier = new Map<string, number>();
   for (const item of items) {
@@ -119,6 +143,34 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
             </p>
           ))}
         </div>
+        {!isReadOnly && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Pedir ajuste à IA</p>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder='Ex: "tira o Fornecedor X, passa os itens dele pro próximo colocado"'
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleApplyCommand();
+                }}
+                disabled={isApplyingCommand}
+              />
+              <Button onClick={handleApplyCommand} disabled={isApplyingCommand || !command.trim()}>
+                {isApplyingCommand ? 'Aplicando...' : 'Aplicar'}
+              </Button>
+            </div>
+            {commandLog.length > 0 && (
+              <div className="space-y-1">
+                {commandLog.map((entry, index) => (
+                  <p key={index} className="text-xs text-muted-foreground">
+                    {entry}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
