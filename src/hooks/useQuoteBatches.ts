@@ -14,6 +14,12 @@ export interface QuoteBatchSummary {
   suppliers_reviewed_count: number;
 }
 
+// Marca o erro de revalidação (Fix 5 do review final) pra distinguir dos
+// outros erros de createBatch no catch — sem isso, o catch genérico
+// mostrava sempre "não foi possível criar o lote", escondendo a única
+// mensagem que diz o que fazer (atualizar a lista e tentar de novo).
+class QuoteItemsAlreadyOpenError extends Error {}
+
 export const useQuoteBatches = () => {
   const { user } = useAuth();
   const { displayName, status: displayNameStatus } = useCurrentStaffName();
@@ -117,7 +123,7 @@ export const useQuoteBatches = () => {
         .in('missing_product_id', missingProductIds);
       if (openItemsError) throw openItemsError;
       if (stillOpenItems && stillOpenItems.length > 0) {
-        throw new Error(
+        throw new QuoteItemsAlreadyOpenError(
           'Um ou mais itens escolhidos já entraram em outro lote aberto nesse meio-tempo. Atualize a lista e tente de novo.'
         );
       }
@@ -162,7 +168,8 @@ export const useQuoteBatches = () => {
       console.error('Error creating quote batch:', error);
       toast({
         title: 'Erro ao criar cotação',
-        description: 'Não foi possível criar o lote. Tente novamente.',
+        description:
+          error instanceof QuoteItemsAlreadyOpenError ? error.message : 'Não foi possível criar o lote. Tente novamente.',
         variant: 'destructive',
       });
       throw error;
