@@ -141,13 +141,16 @@ export const useQuoteBatchComparison = (batchId: string) => {
               set_by: user.id,
               set_by_name: displayName,
             });
-            nextWinners.set(item.id, cheapestSupplierId);
           }
         }
         if (toInsert.length > 0) {
           const { error: insertWinnersError } = await supabase.from('quote_item_winners').insert(toInsert);
           if (insertWinnersError) {
             console.error('Error auto-assigning quote winners:', insertWinnersError);
+          } else {
+            for (const row of toInsert) {
+              nextWinners.set(row.quote_batch_item_id, row.quote_batch_supplier_id);
+            }
           }
         }
       }
