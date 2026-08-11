@@ -18,6 +18,7 @@ import AdminLoadingState from './admin/AdminLoadingState';
 import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
 import { normalizeText } from '@/lib/utils';
+import { buildWhatsAppLink } from '@/lib/whatsapp';
 
 interface SupplierFormState {
   contactName: string;
@@ -38,15 +39,6 @@ const emptyForm = (): SupplierFormState => ({
   maxInstallments: '',
   notes: '',
 });
-
-// wa.me exige o número com código do país; se quem digitou já colocou 55 na
-// frente mantemos, senão prefixamos — sem isso o link abre "número inválido".
-const buildWhatsAppLink = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '');
-  const hasCountryCode = digits.length === 12 || digits.length === 13;
-  const withCountryCode = hasCountryCode ? digits : `55${digits}`;
-  return `https://wa.me/${withCountryCode}`;
-};
 
 const toNullableInt = (value: string): number | null => {
   const trimmed = value.trim();
