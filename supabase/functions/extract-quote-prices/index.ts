@@ -164,6 +164,12 @@ Deno.serve(async (req: Request) => {
     // visão pro request da Claude — imagem ou PDF, conforme a extensão do
     // caminho salvo no Storage (ver useQuoteSupplierReview, Task 7: o
     // caminho sempre preserva a extensão do arquivo original).
+    // Só marca processed_at nos arquivos que realmente viraram um content
+    // block — um arquivo pulado (extensão não suportada, falha de download)
+    // não pode desaparecer da fila de "ainda não processado" (files.filter
+    // abaixo), senão fica preso pra sempre sem nenhuma forma de tentar de
+    // novo.
+    const processedFileIds: string[] = [];
     const contentBlocks: Array<Record<string, unknown>> = [];
     for (const file of files) {
       const ext = file.storage_path.split(".").pop()?.toLowerCase() ?? "";
@@ -185,6 +191,7 @@ Deno.serve(async (req: Request) => {
         type: mediaType === "application/pdf" ? "document" : "image",
         source: { type: "base64", media_type: mediaType, data: base64 },
       });
+      processedFileIds.push(file.id);
     }
 
     if (contentBlocks.length === 0) {
@@ -212,7 +219,14 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-5",
-        max_tokens: 2048,
+        // Sonnet 5 liga "thinking" adaptativo por padrão quando o parâmetro
+        // não é informado, e max_tokens é o teto de thinking+resposta
+        // somados — 2048 deixava o thinking consumir o orçamento inteiro
+        // antes de gerar o JSON. Desliga o thinking (não precisamos de
+        // raciocínio encadeado pra esse tipo de extração) e dá folga real
+        // pra resposta.
+        max_tokens: 8192,
+        thinking: { type: "disabled" },
         messages: [{ role: "user", content: contentBlocks }],
       }),
     });
@@ -224,6 +238,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const claudeBody = await claudeResponse.json();
+    if (claudeBody.stop_reason === "max_tokens") {
+      console.error("Resposta da IA truncada por max_tokens:", claudeBody);
+      return jsonResponse(req, { error: "A resposta da IA ficou grande demais e foi cortada. Tente com menos arquivos por vez." }, 502);
+    }
     const textBlock = (claudeBody.content || []).find((block: { type: string }) => block.type === "text");
     if (!textBlock?.text) {
       return jsonResponse(req, { error: "A IA não retornou um resultado legível." }, 502);
@@ -263,18 +281,24 @@ Deno.serve(async (req: Request) => {
       matchedCount += 1;
     }
 
-    const fileIds = files.map((f) => f.id);
-    const { error: markProcessedError } = await adminClient
-      .from("quote_files")
-      .update({ processed_at: new Date().toISOString() })
-      .in("id", fileIds);
-    if (markProcessedError) {
-      console.error("Falha ao marcar arquivos como processados:", markProcessedError);
+    if (processedFileIds.length > 0) {
+      const { error: markProcessedError } = await adminClient
+        .from("quote_files")
+        .update({ processed_at: new Date().toISOString() })
+        .in("id", processedFileIds);
+      if (markProcessedError) {
+        console.error("Falha ao marcar arquivos como processados:", markProcessedError);
+      }
     }
 
     return jsonResponse(
       req,
-      { matched: matchedCount, totalItems: resolvedItems.length, filesProcessed: fileIds.length },
+      {
+        matched: matchedCount,
+        totalItems: resolvedItems.length,
+        filesProcessed: processedFileIds.length,
+        filesSkipped: files.length - processedFileIds.length,
+      },
       200
     );
   } catch (error) {
