@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.excluir-funcionario]
 verify_jwt = false
+
+[functions.extract-quote-prices]
+verify_jwt = false
