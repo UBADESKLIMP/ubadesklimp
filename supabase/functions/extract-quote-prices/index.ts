@@ -37,9 +37,14 @@ const MEDIA_TYPE_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
 };
 
-// ~82MB em base64 (bytes * ~1.37), com folga sob o limite de request
-// inline de ~100MB da API do Gemini.
-const MAX_TOTAL_BYTES = 60 * 1024 * 1024;
+// O limite real que importa aqui não é o da API do Gemini (~100MB por
+// arquivo) — é o de memória do isolate da Edge Function do Supabase
+// (256MB). Bytes crus, string base64, corpo JSON.stringify e a codificação
+// UTF-8 que o fetch faz do corpo ficam todos na memória ao mesmo tempo, uns
+// 1.37x o tamanho cru cada — um limite de 60MB estouraria isso de sobra.
+// 12MB crus (~16MB em base64) dá pra várias fotos ou um PDF comum por
+// rodada, com folga real sob o limite do isolate.
+const MAX_TOTAL_BYTES = 12 * 1024 * 1024;
 
 interface GeminiMatch {
   item: string;
