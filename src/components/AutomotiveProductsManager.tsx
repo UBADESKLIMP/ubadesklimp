@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
+import AddProductWithAiDialog from '@/components/AddProductWithAiDialog';
+import { ProductAiSuggestions } from '@/lib/productResearchDraft';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalesStats } from '@/hooks/useSalesStats';
 import { useCategories } from '@/hooks/useCategories';
@@ -25,6 +27,13 @@ const AutomotiveProductsManager = () => {
   const { categories: automotiveCategories, loading: catLoading, createCategory, deleteCategory } = useCategories('automotivo');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
+
+  const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
+    setEditingProduct(draft as ProductWithVariations);
+    setAiSuggestions(suggestions);
+    setIsDialogOpen(true);
+  };
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [savingCategory, setSavingCategory] = useState(false);
@@ -92,7 +101,7 @@ const AutomotiveProductsManager = () => {
       // Forçar linha automotiva
       productPayload.line_type = 'automotivo';
 
-      if (editingProduct) {
+      if (editingProduct?.id) {
         await updateProduct(editingProduct.id, productPayload);
 
         if (fragrances) {
@@ -107,6 +116,9 @@ const AutomotiveProductsManager = () => {
         await refetch();
       } else {
         const savedProduct = await createProduct(productPayload);
+        if (savedProduct) {
+          setEditingProduct({ ...savedProduct, variations: [] } as ProductWithVariations);
+        }
 
         if (fragrances && fragrances.length > 0 && savedProduct?.id) {
           const fragrancesToInsert = fragrances.map((fragrance: any) => ({
@@ -319,30 +331,40 @@ const AutomotiveProductsManager = () => {
         title="Produtos Automotivos"
         description={`${automotiveProducts.length} itens · arraste para reorganizar`}
         action={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={() => setEditingProduct(null)}
-                className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/25"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
-              <DialogHeader>
-                <DialogTitle className="text-white flex items-center gap-2">
-                  <Car className="h-5 w-5 text-blue-400" />
-                  {editingProduct ? 'Editar Produto Automotivo' : 'Novo Produto Automotivo'}
-                </DialogTitle>
-              </DialogHeader>
-              <ProductForm
-                product={editingProduct}
-                onSave={handleSaveProduct}
-                onCancel={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <AddProductWithAiDialog lineType="automotivo" onResult={handleAiResult} />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setAiSuggestions(null);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-500/25"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Produto
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-white flex items-center gap-2">
+                    <Car className="h-5 w-5 text-blue-400" />
+                    {editingProduct ? 'Editar Produto Automotivo' : 'Novo Produto Automotivo'}
+                  </DialogTitle>
+                </DialogHeader>
+                <ProductForm
+                  product={editingProduct}
+                  onSave={handleSaveProduct}
+                  onCancel={() => {
+                    setIsDialogOpen(false);
+                    setAiSuggestions(null);
+                  }}
+                  aiSuggestions={aiSuggestions ?? undefined}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 
