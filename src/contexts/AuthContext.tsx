@@ -39,20 +39,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    // O GoTrueClient do Supabase relê a sessão do localStorage e reemite
+    // SIGNED_IN toda vez que a aba volta a ficar visível, mesmo sem token
+    // ter mudado — sempre com um objeto novo (referência diferente, mesmo
+    // conteúdo). Sem esse guard, isso propaga "referência trocou" pra todo
+    // hook com `useEffect(..., [user])` (useStaffAccess, useProfile etc.),
+    // que voltam a `loading: true` e refazem a busca — dá a impressão de
+    // que o app inteiro reinicia sempre que a pessoa troca de aba e volta.
+    const applySession = (nextSession: Session | null) => {
+      setSession((prev) => (prev?.access_token === nextSession?.access_token ? prev : nextSession));
+      setUser((prev) => (prev?.id === nextSession?.user?.id ? prev : nextSession?.user ?? null));
+      setLoading(false);
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (_event, session) => {
+        applySession(session);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      applySession(session);
     });
 
     return () => subscription.unsubscribe();
