@@ -18,10 +18,19 @@ interface ProductVariationsSectionProps {
   fragrances: any[];
   onFragrancesChange: (fragrances: any[]) => void;
   onMainImageChange?: (imageUrl: string) => void;
+  aiSuggestedSizes?: { literage: string; image_url: string | null }[];
+  aiSuggestedFragrances?: { name: string; image_url: string | null }[];
 }
 
-const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, onMainImageChange }: ProductVariationsSectionProps) => {
-  const { uploadImage, uploading } = useImageUpload();
+const ProductVariationsSection = ({
+  productId,
+  fragrances,
+  onFragrancesChange,
+  onMainImageChange,
+  aiSuggestedSizes,
+  aiSuggestedFragrances,
+}: ProductVariationsSectionProps) => {
+  const { uploadImage, uploadImageFromUrl, uploading } = useImageUpload();
   const { variations, loading, createVariation, updateVariation, deleteVariation, reorderVariation, setPrimaryVariation } = useProductVariations(productId);
   const { saveFragrances } = useProductFragrances(productId);
   const [newVariation, setNewVariation] = useState({
@@ -29,9 +38,21 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
     price: '',
     image_url: ''
   });
+  const [pendingSizeSuggestions, setPendingSizeSuggestions] = useState(aiSuggestedSizes ?? []);
 
   const handleFragrancesChange = (newFragrances: any[]) => {
     onFragrancesChange(newFragrances);
+  };
+
+  const applySizeSuggestion = async (suggestion: { literage: string; image_url: string | null }) => {
+    setPendingSizeSuggestions((prev) => prev.filter((s) => s.literage !== suggestion.literage));
+    setNewVariation({ literage: suggestion.literage, price: '', image_url: '' });
+    if (suggestion.image_url) {
+      const uploaded = await uploadImageFromUrl(suggestion.image_url);
+      if (uploaded) {
+        setNewVariation((prev) => ({ ...prev, image_url: uploaded }));
+      }
+    }
   };
 
   const handleAddVariation = async () => {
@@ -203,6 +224,23 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
           ))}
         </div>
 
+        {pendingSizeSuggestions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border border-dashed border-blue-500/40 bg-muted/20">
+            <span className="text-sm text-muted-foreground mr-1">Sugestões da IA:</span>
+            {pendingSizeSuggestions.map((suggestion) => (
+              <Button
+                key={suggestion.literage}
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => applySizeSuggestion(suggestion)}
+              >
+                {suggestion.literage}
+              </Button>
+            ))}
+          </div>
+        )}
+
         {/* Nova variação */}
         <Card className="border-dashed border-2">
           <CardHeader>
@@ -293,11 +331,12 @@ const ProductVariationsSection = ({ productId, fragrances, onFragrancesChange, o
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold">Fragrâncias Disponíveis</h3>
         </div>
-        <ProductFragrancesSection 
+        <ProductFragrancesSection
           fragrances={fragrances}
           onFragrancesChange={handleFragrancesChange}
           onMainImageChange={onMainImageChange}
           availableLiterages={variations.map(v => v.literage)}
+          aiSuggestedFragrances={aiSuggestedFragrances}
         />
       </div>
     </div>
