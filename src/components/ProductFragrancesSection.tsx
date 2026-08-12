@@ -13,16 +13,24 @@ interface ProductFragrancesSectionProps {
   onFragrancesChange: (fragrances: ProductFragrance[]) => void;
   onMainImageChange?: (url: string) => void;
   availableLiterages: string[];
+  aiSuggestedFragrances?: { name: string; image_url: string | null }[];
 }
 
-const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onMainImageChange, availableLiterages }: ProductFragrancesSectionProps) => {
-  const { uploadImage, uploading } = useImageUpload();
+const ProductFragrancesSection = ({
+  fragrances,
+  onFragrancesChange,
+  onMainImageChange,
+  availableLiterages,
+  aiSuggestedFragrances,
+}: ProductFragrancesSectionProps) => {
+  const { uploadImage, uploadImageFromUrl, uploading } = useImageUpload();
   const [newFragrance, setNewFragrance] = useState({
     name: '',
     description: '',
     image_url: '',
     available_literages: [...availableLiterages] // Por padrão, todas as litragens
   });
+  const [pendingFragranceSuggestions, setPendingFragranceSuggestions] = useState(aiSuggestedFragrances ?? []);
 
   // Atualizar litragens disponíveis quando mudam
   useEffect(() => {
@@ -31,6 +39,17 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onMainImageC
       available_literages: [...availableLiterages]
     }));
   }, [availableLiterages]);
+
+  const applyFragranceSuggestion = async (suggestion: { name: string; image_url: string | null }) => {
+    setPendingFragranceSuggestions((prev) => prev.filter((f) => f.name !== suggestion.name));
+    setNewFragrance((prev) => ({ ...prev, name: suggestion.name, image_url: '' }));
+    if (suggestion.image_url) {
+      const uploaded = await uploadImageFromUrl(suggestion.image_url);
+      if (uploaded) {
+        setNewFragrance((prev) => (prev.name === suggestion.name ? { ...prev, image_url: uploaded } : prev));
+      }
+    }
+  };
 
   const handleAddFragrance = () => {
     if (!newFragrance.name) return;
@@ -268,6 +287,23 @@ const ProductFragrancesSection = ({ fragrances, onFragrancesChange, onMainImageC
           </Card>
         ))}
       </div>
+
+      {pendingFragranceSuggestions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border border-dashed border-blue-500/40 bg-muted/20">
+          <span className="text-sm text-muted-foreground mr-1">Sugestões da IA:</span>
+          {pendingFragranceSuggestions.map((suggestion) => (
+            <Button
+              key={suggestion.name}
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => applyFragranceSuggestion(suggestion)}
+            >
+              {suggestion.name}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Nova fragrância */}
       <Card className="border-dashed border-2">
