@@ -89,16 +89,30 @@ Nome sempre no formato **Tipo + Marca** (ex: "Multiuso Veja", "Cera de Carnaúba
 
 ## 5. Tela de revisão — plugando no `ProductForm` existente
 
-O diálogo de pesquisa fecha e abre a mesma dialog "Novo Produto" que já existe hoje (`ProductForm.tsx`), mas com um `initialData` novo montado a partir da resposta da Edge Function, em vez de abrir vazia:
+**Restrição real do código, não uma escolha de design:** `product_variations` e `product_fragrances` são tabelas separadas com FK pra `products.id` — só existem depois que o produto já foi salvo uma vez. A própria aba "Variações" do `ProductForm` já reflete isso hoje: seu conteúdo mostra "Salve o produto primeiro para gerenciar suas variações" enquanto `product?.id` não existe (`ProductVariationsSection.tsx:604-608`), e adicionar uma variação já exige preço preenchido pra habilitar o botão (`ProductVariationsSection.tsx:271`). Isso não é algo que este spec introduz — é assim no cadastro manual hoje. Por isso a revisão da IA acontece em **duas fases**, sem alterar esse comportamento existente:
+
+### Fase 1 — Informações básicas (antes de salvar)
+
+O diálogo de pesquisa fecha e abre a mesma dialog "Novo Produto" que já existe hoje (`ProductForm.tsx`), com um `initialData` novo montado a partir da resposta da Edge Function, em vez de abrir vazia:
 
 - `name`, `description`, `category` ← direto da resposta.
 - Campos técnicos (`material`/`validity`/`specifications` ou `brand`/`action_type`/`ph_level`/`application_area`) ← direto da resposta, conforme `lineType`.
-- `image_url` ← preenchido só depois que a pessoa clicar "Usar esta foto" na sugestão (seção 3); antes disso fica vazio, com a sugestão visível ao lado pra decidir.
-- `has_variations` + `variations[]` (litragem + `price: ''` + sugestão de foto) quando `sizes.length >= 2`; senão `has_variations: false` + `literage_single`.
-- `has_fragrances` + `fragrances[]` (nome + sugestão de foto) quando `fragrances.length > 0`.
-- **Preço (base e de cada variação) sempre vazio**, obrigando a pessoa a preencher antes de conseguir salvar — mesma validação `required` que já existe no formulário hoje, sem mudança nela.
+- `image_url` (imagem principal) ← preenchido só depois que a pessoa clicar "Usar esta foto" na sugestão (seção 3); antes disso fica vazio, com a sugestão visível ao lado pra decidir.
+- `has_variations` já vem `true` quando `sizes.length >= 2` (isso só destrava a aba "Variações" pra fase 2 — não preenche `variations[]` ainda, que não existe até salvar). Quando `sizes.length <= 1`, `has_variations` fica `false` e `literage_single` já vem preenchido com o único tamanho encontrado (esse campo é da aba Básica, existe mesmo sem produto salvo).
+- **Preço Base sempre vazio**, obrigando a pessoa a preencher antes de conseguir salvar — mesma validação `required` que já existe, sem mudança nela.
+- `fragrances[]`/`has_fragrances` **não** entram no `initialData` desta fase — ver Fase 2.
 
-A partir daqui, a pessoa edita/corrige/apaga qualquer campo à vontade e salva pelo botão "Salvar" que já existe — nenhum caminho de escrita novo, nenhum salvamento automático.
+A pessoa edita/corrige/apaga qualquer campo à vontade e clica "Salvar Produto" — mesmo botão, mesmo caminho de escrita (`createProduct`) que já existe hoje.
+
+### Fase 2 — Tamanhos e fragrâncias (depois de salvar, só quando a IA achou mais de 1 tamanho e/ou alguma fragrância)
+
+Assim que o `onSave` da Fase 1 resolve com sucesso, se a pesquisa da IA tinha `sizes.length >= 2` ou `fragrances.length > 0`, o diálogo **não fecha**: troca automaticamente pra aba "Variações" (agora destrancada, já que o produto tem `id`). Essa aba usa exatamente o `ProductVariationsSection`/`ProductFragrancesSection` que já existem, com duas adições pontuais e aditivas (nenhuma mudança no que já existe):
+
+- `ProductVariationsSection` ganha uma prop nova opcional `aiSuggestedSizes?: { literage: string; image_url: string | null }[]`. Quando presente, mostra uma lista de chips acima do card "Adicionar Nova Variação" (ex: "500ml", "1L", "5L"). Clicar num chip preenche `newVariation.literage` (e faz a mesma coisa que "Usar esta foto" faria com `newVariation.image_url`, se a sugestão tiver foto) e remove o chip da lista — a pessoa só digita o preço e clica "Adicionar Variação", do jeito que já funciona hoje.
+- `ProductFragrancesSection` ganha uma prop nova opcional `aiSuggestedFragrances?: { name: string; image_url: string | null }[]`, mesmo padrão de chip clicável preenchendo `newFragrance.name`/`newFragrance.image_url` — fragrância não tem preço, então "Adicionar" já fica disponível assim que o nome estiver preenchido, igual hoje.
+- Se a IA não achou tamanho nenhum (ou só 1) e nenhuma fragrância, a Fase 2 não acontece — o diálogo fecha normalmente após salvar, como no fluxo manual de hoje.
+
+Em nenhum momento um tamanho ou fragrância é criado sem a pessoa clicar "Adicionar" — as sugestões só evitam digitar/re-enviar foto na mão, nunca pulam a confirmação.
 
 ## 6. Erros e casos de borda
 
@@ -113,11 +127,12 @@ A partir daqui, a pessoa edita/corrige/apaga qualquer campo à vontade e salva p
 Sem suíte automatizada (padrão do projeto — `npm run typecheck` é a verificação real). Verificação manual:
 
 - `npm run typecheck` limpo.
-- Pesquisar um produto bem conhecido (ex: "veja multiuso") → formulário abre com nome no padrão Tipo + Marca, categoria reaproveitada de uma já existente, pelo menos 1 tamanho, foto sugerida carregando.
-- Pesquisar um produto automotivo conhecido (ex: "cera hybrid wax vonixx") → campos automotivos (marca/ph/área de aplicação) preenchidos, campos de limpeza (material/validade) ausentes.
-- Pesquisar um produto com fragrâncias conhecidas → `has_fragrances` marcado, lista de fragrâncias preenchida, cada uma com sugestão de foto própria.
-- Pesquisar um nome inventado/sem sentido → `confidence: "none"`, formulário abre só com o nome digitado e o aviso visível.
-- Clicar "Usar esta foto" numa sugestão → imagem sobe pro Cloudinary e aparece no preview do campo certo.
-- Preço continua obrigatório: tentar salvar sem preencher preço barra do jeito que já barra hoje.
+- Pesquisar um produto bem conhecido com 1 tamanho só (ex: "lustra móveis idel") → formulário abre com nome no padrão Tipo + Marca, categoria reaproveitada de uma já existente, `literage_single` preenchido, foto sugerida carregando. Salvar fecha o diálogo normalmente (sem Fase 2, já que só achou 1 tamanho e nenhuma fragrância).
+- Pesquisar um produto com vários tamanhos conhecidos (ex: "veja multiuso") → Fase 1 abre com `has_variations` já marcado. Salvar mantém o diálogo aberto e já pula pra aba Variações, com chips de tamanho sugeridos. Clicar num chip preenche o mini-formulário; digitar preço e clicar "Adicionar Variação" cria a variação de verdade (confirma com `select * from product_variations where product_id = '<id>'`).
+- Pesquisar um produto automotivo conhecido (ex: "cera hybrid wax vonixx") → campos automotivos (marca/ph/área de aplicação) preenchidos na Fase 1, campos de limpeza (material/validade) ausentes.
+- Pesquisar um produto com fragrâncias conhecidas → Fase 2 mostra chips de fragrância sugeridos; clicar um chip preenche o nome (e foto, se tiver) no mini-formulário de fragrância; clicar "Adicionar" cria a fragrância de verdade.
+- Pesquisar um nome inventado/sem sentido → `confidence: "none"`, formulário abre só com o nome digitado e o aviso visível, sem Fase 2.
+- Clicar "Usar esta foto" numa sugestão (imagem principal, de tamanho ou de fragrância) → imagem sobe pro Cloudinary e aparece no preview do campo certo.
+- Preço continua obrigatório em todo lugar que já era obrigatório hoje: Preço Base pra salvar o produto na Fase 1, preço de cada variação pra habilitar "Adicionar Variação" na Fase 2 — nenhuma das duas validações muda.
 - Provocar erro de rede (desligar wi-fi) durante a pesquisa → toast de erro, diálogo de entrada continua aberto e usável.
 - Funcionário sem permissão `produtos` → botão "Adicionar com IA" nem aparece (mesma regra de "Novo Produto").
