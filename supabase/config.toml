@@ -16,3 +16,6 @@ verify_jwt = false
 
 [functions.apply-quote-reassignment]
 verify_jwt = false
+
+[functions.research-product]
+verify_jwt = false
