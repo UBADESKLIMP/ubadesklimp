@@ -6,6 +6,8 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
+import AddProductWithAiDialog from '@/components/AddProductWithAiDialog';
+import { ProductAiSuggestions } from '@/lib/productResearchDraft';
 import CategoryManager from '@/components/CategoryManager';
 import OrdersManager from '@/components/OrdersManager';
 import AutomotiveProductsManager from '@/components/AutomotiveProductsManager';
@@ -37,6 +39,14 @@ const Admin = () => {
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
+
+  const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
+    setEditingProduct(draft as ProductWithVariations);
+    setAiSuggestions(suggestions);
+    setIsDialogOpen(true);
+  };
+
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -57,7 +67,7 @@ const Admin = () => {
       let savedProduct;
       const { fragrances, ...productPayload } = productData;
 
-      if (editingProduct) {
+      if (editingProduct?.id) {
         savedProduct = await updateProduct(editingProduct.id, productPayload);
 
         if (fragrances) {
@@ -73,6 +83,9 @@ const Admin = () => {
         await refetch();
       } else {
         savedProduct = await createProduct(productPayload);
+        if (savedProduct) {
+          setEditingProduct(savedProduct);
+        }
 
         if (fragrances && fragrances.length > 0 && savedProduct?.id) {
           const { supabase } = await import('@/integrations/supabase/client');
@@ -180,26 +193,39 @@ const Admin = () => {
               title="Produtos de Limpeza"
               description="Arraste para reorganizar a ordem de exibição na vitrine."
               action={
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingProduct(null)} className="bg-blue-600 hover:bg-blue-500 text-white">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Novo Produto
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">
-                        {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ProductForm
-                      product={editingProduct}
-                      onSave={handleSaveProduct}
-                      onCancel={() => setIsDialogOpen(false)}
-                    />
-                  </DialogContent>
-                </Dialog>
+                <div className="flex items-center gap-2">
+                  <AddProductWithAiDialog lineType="limpeza" onResult={handleAiResult} />
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        onClick={() => {
+                          setEditingProduct(null);
+                          setAiSuggestions(null);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-500 text-white"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Novo Produto
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">
+                          {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <ProductForm
+                        product={editingProduct}
+                        onSave={handleSaveProduct}
+                        onCancel={() => {
+                          setIsDialogOpen(false);
+                          setAiSuggestions(null);
+                        }}
+                        aiSuggestions={aiSuggestions ?? undefined}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
               }
             />
 
