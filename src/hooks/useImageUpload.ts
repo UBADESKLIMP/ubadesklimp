@@ -59,5 +59,38 @@ export const useImageUpload = () => {
     }
   };
 
-  return { uploadImage, uploading };
+  const uploadImageFromUrl = async (url: string): Promise<string | null> => {
+    if (!url) return null;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', url);
+      formData.append('upload_preset', UPLOAD_PRESET);
+
+      const response = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha no upload para Cloudinary a partir da URL');
+      }
+
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Error uploading image from URL:', error);
+      toast({
+        title: "Não foi possível usar essa foto sugerida",
+        description: "Envie uma foto manualmente.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return { uploadImage, uploadImageFromUrl, uploading };
 };
