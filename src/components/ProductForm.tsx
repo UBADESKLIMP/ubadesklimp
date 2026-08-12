@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,16 +14,32 @@ import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
 import ProductVariationsSection from './ProductVariationsSection';
 import PriorityPositionSelect from './PriorityPositionSelect';
+import { ProductAiSuggestions } from '@/lib/productResearchDraft';
 
 interface ProductFormProps {
   product?: ProductWithVariations | null;
   onSave: (productData: any) => Promise<void>;
   onCancel: () => void;
+  aiSuggestions?: ProductAiSuggestions;
 }
 
-const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
-  const { uploadImage, uploading } = useImageUpload();
+const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormProps) => {
+  const { uploadImage, uploadImageFromUrl, uploading } = useImageUpload();
   const [saving, setSaving] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('basic');
+  const previousProductIdRef = useRef<string | undefined>(product?.id);
+
+  useEffect(() => {
+    const hadNoId = !previousProductIdRef.current;
+    const hasIdNow = !!product?.id;
+    const hasPendingSuggestions =
+      !!aiSuggestions && (aiSuggestions.sizes.length > 0 || aiSuggestions.fragrances.length > 0);
+    if (hadNoId && hasIdNow && hasPendingSuggestions) {
+      setActiveTab('variations');
+    }
+    previousProductIdRef.current = product?.id;
+  }, [product?.id, aiSuggestions]);
   
   // Linha do produto (limpeza ou automotivo)
   const [lineType, setLineType] = useState<'limpeza' | 'automotivo'>(
@@ -178,7 +194,17 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Tabs defaultValue="basic" className="w-full">
+      {aiSuggestions?.confidence === 'none' && (
+        <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-sm text-destructive-foreground">
+          Não encontrei detalhes confiáveis pra esse produto — preencha manualmente.
+        </div>
+      )}
+      {aiSuggestions?.confidence === 'low' && (
+        <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10 text-sm text-yellow-100">
+          Não tenho certeza sobre alguns destes dados — confira com atenção antes de salvar.
+        </div>
+      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="basic" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
@@ -369,11 +395,36 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   )}
                   {formData.image_url && (
                     <div className="mt-2">
-                      <img 
-                        src={formData.image_url} 
-                        alt="Preview" 
+                      <img
+                        src={formData.image_url}
+                        alt="Preview"
                         className="w-20 h-20 object-contain rounded border bg-muted/50"
                       />
+                    </div>
+                  )}
+                  {!formData.image_url && aiSuggestions?.mainImageUrl && (
+                    <div className="flex items-center gap-3 p-2 rounded border border-dashed border-blue-500/40">
+                      <img
+                        src={aiSuggestions.mainImageUrl}
+                        alt="Sugestão da IA"
+                        className="w-16 h-16 object-contain rounded border bg-muted/50"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="flex-1 text-sm text-muted-foreground">Foto sugerida pela IA</div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={uploading}
+                        onClick={async () => {
+                          const uploaded = await uploadImageFromUrl(aiSuggestions.mainImageUrl!);
+                          if (uploaded) setFormData(prev => ({ ...prev, image_url: uploaded }));
+                        }}
+                      >
+                        Usar esta foto
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -594,11 +645,13 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
             </CardHeader>
             <CardContent>
               {product?.id ? (
-                <ProductVariationsSection 
-                  productId={product.id} 
+                <ProductVariationsSection
+                  productId={product.id}
                   fragrances={formData.fragrances}
                   onFragrancesChange={(fragrances) => setFormData(prev => ({ ...prev, fragrances }))}
                   onMainImageChange={updateMainImage}
+                  aiSuggestedSizes={aiSuggestions?.sizes}
+                  aiSuggestedFragrances={aiSuggestions?.fragrances}
                 />
               ) : (
                 <div className="text-center p-8 text-muted-foreground">
