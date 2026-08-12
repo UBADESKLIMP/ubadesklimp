@@ -50,7 +50,7 @@ const ProductVariationsSection = ({
     if (suggestion.image_url) {
       const uploaded = await uploadImageFromUrl(suggestion.image_url);
       if (uploaded) {
-        setNewVariation((prev) => ({ ...prev, image_url: uploaded }));
+        setNewVariation((prev) => (prev.literage === suggestion.literage ? { ...prev, image_url: uploaded } : prev));
       }
     }
   };
