@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Car, DollarSign, TrendingUp, ShoppingBag, Tags, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +87,16 @@ const AutomotiveProductsManager = () => {
 
     return filtered;
   }, [automotiveProducts, searchTerm, categoryFilter, sortOption]);
+
+  // Atualizar editingProduct quando products mudar
+  useEffect(() => {
+    if (editingProduct) {
+      const updatedProduct = products.find(p => p.id === editingProduct.id);
+      if (updatedProduct) {
+        setEditingProduct(updatedProduct);
+      }
+    }
+  }, [products]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
