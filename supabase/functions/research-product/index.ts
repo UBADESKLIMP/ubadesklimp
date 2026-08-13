@@ -213,11 +213,21 @@ Deno.serve(async (req: Request) => {
     const rawSizes = Array.isArray(result.sizes) ? (result.sizes as Array<Record<string, unknown>>) : [];
     const rawFragrances = Array.isArray(result.fragrances) ? (result.fragrances as Array<Record<string, unknown>>) : [];
 
+    // A IA só pode reaproveitar uma categoria que já existe no cadastro desta
+    // loja. Se ela devolver algo que não bate com nenhuma existente (mesmo
+    // ignorando maiúsculas/minúsculas e espaços), o campo vira null em vez de
+    // persistir uma categoria "fantasma" que não aparece no <Select> do
+    // formulário (que só lista as categorias reais).
+    const rawCategory = typeof result.category === "string" ? result.category.trim() : "";
+    const matchedCategory = rawCategory
+      ? existingCategories.find((cat) => cat.trim().toLowerCase() === rawCategory.toLowerCase()) ?? null
+      : null;
+
     const normalized: ResearchResult = {
       confidence: result.confidence === "high" || result.confidence === "low" ? result.confidence : "none",
       name: typeof result.name === "string" && result.name.trim() ? result.name.trim() : null,
       description: typeof result.description === "string" ? result.description : null,
-      category: typeof result.category === "string" ? result.category : null,
+      category: matchedCategory,
       material: typeof result.material === "string" ? result.material : null,
       validity: typeof result.validity === "string" ? result.validity : null,
       specifications: typeof result.specifications === "string" ? result.specifications : null,
