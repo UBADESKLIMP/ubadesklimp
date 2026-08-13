@@ -38,14 +38,15 @@ const ProductVariationsSection = ({
     price: '',
     image_url: ''
   });
-  const [pendingSizeSuggestions, setPendingSizeSuggestions] = useState(aiSuggestedSizes ?? []);
+  const pendingSizeSuggestions = (aiSuggestedSizes ?? []).filter(
+    (suggestion) => !variations.some((v) => v.literage === suggestion.literage)
+  );
 
   const handleFragrancesChange = (newFragrances: any[]) => {
     onFragrancesChange(newFragrances);
   };
 
   const applySizeSuggestion = async (suggestion: { literage: string; image_url: string | null }) => {
-    setPendingSizeSuggestions((prev) => prev.filter((s) => s.literage !== suggestion.literage));
     setNewVariation({ literage: suggestion.literage, price: '', image_url: '' });
     if (suggestion.image_url) {
       const uploaded = await uploadImageFromUrl(suggestion.image_url);

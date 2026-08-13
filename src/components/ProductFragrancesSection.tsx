@@ -30,7 +30,9 @@ const ProductFragrancesSection = ({
     image_url: '',
     available_literages: [...availableLiterages] // Por padrão, todas as litragens
   });
-  const [pendingFragranceSuggestions, setPendingFragranceSuggestions] = useState(aiSuggestedFragrances ?? []);
+  const pendingFragranceSuggestions = (aiSuggestedFragrances ?? []).filter(
+    (suggestion) => !fragrances.some((f) => f.name === suggestion.name)
+  );
 
   // Atualizar litragens disponíveis quando mudam
   useEffect(() => {
@@ -41,7 +43,6 @@ const ProductFragrancesSection = ({
   }, [availableLiterages]);
 
   const applyFragranceSuggestion = async (suggestion: { name: string; image_url: string | null }) => {
-    setPendingFragranceSuggestions((prev) => prev.filter((f) => f.name !== suggestion.name));
     setNewFragrance((prev) => ({ ...prev, name: suggestion.name, image_url: '' }));
     if (suggestion.image_url) {
       const uploaded = await uploadImageFromUrl(suggestion.image_url);
