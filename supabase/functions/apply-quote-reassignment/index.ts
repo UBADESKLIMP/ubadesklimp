@@ -38,6 +38,7 @@ Deno.serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    const geminiApiKey2 = Deno.env.get("GEMINI_API_KEY_2");
 
     if (!geminiApiKey) {
       console.error("GEMINI_API_KEY não configurada.");
@@ -187,23 +188,30 @@ Deno.serve(async (req: Request) => {
       `texto antes ou depois, no formato: [{"item": "<nome exatamente como listado acima>", "supplier": "<nome ` +
       `exatamente como listado acima>"}]. Se nenhuma reatribuição fizer sentido, responda [].`;
 
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "x-goog-api-key": geminiApiKey,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: promptText }] }],
-          generationConfig: {
-            maxOutputTokens: 4096,
-            thinkingConfig: { thinkingLevel: "minimal" },
+    const callGemini = (key: string) =>
+      fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": key,
+            "content-type": "application/json",
           },
-        }),
-      }
-    );
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: promptText }] }],
+            generationConfig: {
+              maxOutputTokens: 4096,
+              thinkingConfig: { thinkingLevel: "minimal" },
+            },
+          }),
+        }
+      );
+
+    let geminiResponse = await callGemini(geminiApiKey);
+    if (geminiResponse.status === 429 && geminiApiKey2) {
+      console.error("Chave 1 do Gemini bateu cota, tentando a chave 2.");
+      geminiResponse = await callGemini(geminiApiKey2);
+    }
 
     if (geminiResponse.status === 429) {
       const errorText = await geminiResponse.text();
