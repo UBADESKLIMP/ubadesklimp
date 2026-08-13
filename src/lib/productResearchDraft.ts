@@ -8,6 +8,23 @@ export interface ProductAiSuggestions {
   fragrances: ProductResearchFragrance[];
 }
 
+// Infere a unidade de medida a partir da string de tamanho devolvida pela IA
+// (ex: "500ml", "5L", "1kg", "30cm"). Checa os sufixos mais específicos antes
+// dos mais curtos que os contêm (ml antes de l, kg antes de g), senão "500ml"
+// bateria incorretamente no teste de litros. Sem sufixo reconhecido, cai em
+// 'unidades' (ex: "8 Rolos", "2 unidades").
+export const inferSizeUnit = (
+  literage: string
+): 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades' => {
+  const normalized = literage.trim().toLowerCase().replace(/\s+/g, '');
+  if (/ml$/.test(normalized)) return 'ml';
+  if (/(^|[0-9])l$/.test(normalized)) return 'litros';
+  if (/kg$/.test(normalized)) return 'kg';
+  if (/g$/.test(normalized)) return 'g';
+  if (/cm$/.test(normalized)) return 'cm';
+  return 'unidades';
+};
+
 // Fase 1: só os campos editáveis antes do produto existir (nome, descrição,
 // categoria, campos técnicos, tamanho único quando só há 1). Tamanhos
 // múltiplos e fragrâncias não entram aqui — ver buildAiSuggestions, que
@@ -27,6 +44,7 @@ export const buildProductDraft = (
     line_type: lineType,
     has_variations: hasMultipleSizes,
     literage_single: singleSize?.literage || '',
+    ...(singleSize ? { size_unit: inferSizeUnit(singleSize.literage) } : {}),
     material: result.material || '',
     validity: result.validity || '',
     specifications: result.specifications || '',
