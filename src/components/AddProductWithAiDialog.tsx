@@ -56,6 +56,7 @@ const AddProductWithAiDialog = ({ lineType, onResult }: AddProductWithAiDialogPr
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: veja multiuso"
               disabled={researching}
+              className="text-foreground"
             />
           </div>
           <div>
@@ -66,6 +67,7 @@ const AddProductWithAiDialog = ({ lineType, onResult }: AddProductWithAiDialogPr
               onChange={(e) => setSizeHint(e.target.value)}
               placeholder="Ex: 500ml"
               disabled={researching}
+              className="text-foreground"
             />
           </div>
           <Button onClick={handleSearch} disabled={researching || !name.trim()} className="w-full">
