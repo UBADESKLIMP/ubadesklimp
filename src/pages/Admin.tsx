@@ -195,7 +195,13 @@ const Admin = () => {
               action={
                 <div className="flex items-center gap-2">
                   <AddProductWithAiDialog lineType="limpeza" onResult={handleAiResult} />
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <Dialog
+                    open={isDialogOpen}
+                    onOpenChange={(open) => {
+                      setIsDialogOpen(open);
+                      if (!open) setAiSuggestions(null);
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         onClick={() => {
