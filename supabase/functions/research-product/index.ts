@@ -147,24 +147,34 @@ Deno.serve(async (req: Request) => {
       `"fragrances": [{ "name": string, "image_url": string ou null }]\n` +
       `}`;
 
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "x-goog-api-key": geminiApiKey,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: promptText }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: {
-            maxOutputTokens: 4096,
-            thinkingConfig: { thinkingLevel: "minimal" },
+    let geminiResponse: Response;
+    try {
+      geminiResponse = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": geminiApiKey,
+            "content-type": "application/json",
           },
-        }),
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: promptText }] }],
+            tools: [{ google_search: {} }],
+            generationConfig: {
+              maxOutputTokens: 4096,
+              thinkingConfig: { thinkingLevel: "minimal" },
+            },
+          }),
+          signal: AbortSignal.timeout(20000),
+        }
+      );
+    } catch (fetchError) {
+      if (fetchError instanceof Error && fetchError.name === "TimeoutError") {
+        console.error("Timeout ao chamar a API do Gemini.");
+        return jsonResponse(req, { error: "A pesquisa demorou demais e foi cancelada. Tente novamente." }, 502);
       }
-    );
+      throw fetchError;
+    }
 
     if (geminiResponse.status === 429) {
       const errorText = await geminiResponse.text();
