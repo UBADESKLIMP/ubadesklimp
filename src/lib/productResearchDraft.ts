@@ -18,7 +18,6 @@ export const buildProductDraft = (
   lineType: 'limpeza' | 'automotivo'
 ): Partial<ProductWithVariations> => {
   const hasMultipleSizes = result.sizes.length >= 2;
-  const hasFragrances = result.fragrances.length > 0;
   const singleSize = result.sizes.length === 1 ? result.sizes[0] : null;
 
   return {
@@ -26,7 +25,7 @@ export const buildProductDraft = (
     description: result.description || '',
     category: result.category || '',
     line_type: lineType,
-    has_variations: hasMultipleSizes || hasFragrances,
+    has_variations: hasMultipleSizes,
     literage_single: singleSize?.literage || '',
     material: result.material || '',
     validity: result.validity || '',

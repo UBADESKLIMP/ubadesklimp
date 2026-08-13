@@ -214,7 +214,11 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
             <Settings className="h-4 w-4" />
             <span>Detalhes</span>
           </TabsTrigger>
-          <TabsTrigger value="variations" className="flex items-center space-x-2" disabled={!formData.has_variations}>
+          <TabsTrigger
+            value="variations"
+            className="flex items-center space-x-2"
+            disabled={!formData.has_variations && !(aiSuggestions?.fragrances && aiSuggestions.fragrances.length > 0)}
+          >
             <Layers className="h-4 w-4" />
             <span>Variações</span>
           </TabsTrigger>
