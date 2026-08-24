@@ -3,6 +3,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const STAFF_EMAIL_DOMAIN = "equipe.ubadesklimp.internal";
 const VALID_PERMISSIONS = ["faltantes", "produtos", "fornecedores", "financeiro"];
+// O dashboard do Supabase trava "Minimum password length" em >= 6, sem
+// exceção — não dá pra usar o PIN de 4 dígitos puro como senha do Auth.
+// Completa com um sufixo fixo só pra passar no piso da plataforma; a
+// entropia real continua sendo só a dos 4 dígitos (o sufixo é público, está
+// no código-fonte). Precisa ficar idêntico ao usado em AuthContext.tsx no
+// login, senão a senha gerada aqui nunca bate na hora de entrar.
+const STAFF_PIN_SUFFIX = "-pin";
 
 // Reflete de volta exatamente os cabeçalhos que o navegador pediu no
 // preflight, em vez de uma lista fixa — se o cliente supabase-js manda um
@@ -97,7 +104,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: created, error: createError } = await adminClient.auth.admin.createUser({
       email: syntheticEmail,
-      password,
+      password: password + STAFF_PIN_SUFFIX,
       email_confirm: true,
     });
 

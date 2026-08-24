@@ -4,6 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const STAFF_EMAIL_DOMAIN = 'equipe.ubadesklimp.internal';
+// Precisa ser idêntico ao sufixo em supabase/functions/criar-funcionario —
+// é o que completa o PIN de 4 dígitos até o piso de 6 caracteres que o
+// Supabase Auth exige (trava do dashboard, não configurável).
+const STAFF_PIN_SUFFIX = '-pin';
 
 // Login de funcionário usa um "usuário" (ex. "leticia"), sem e-mail de verdade.
 // Resolve pra um e-mail sintético determinístico, sem round-trip ao banco.
@@ -11,6 +15,15 @@ const resolveLoginEmail = (identifier: string): string => {
   const trimmed = identifier.trim();
   return trimmed.includes('@') ? trimmed : `${trimmed.toLowerCase()}@${STAFF_EMAIL_DOMAIN}`;
 };
+
+// Login de funcionário com PIN novo (4 dígitos) precisa do sufixo pra bater
+// com a senha real salva no Auth. Só aplica quando o texto digitado é
+// exatamente 4 dígitos — funcionários criados antes dessa mudança ainda têm
+// a senha alfanumérica antiga e devem continuar entrando sem alteração.
+const resolveLoginPassword = (identifier: string, password: string): string =>
+  !identifier.trim().includes('@') && /^\d{4}$/.test(password)
+    ? `${password}${STAFF_PIN_SUFFIX}`
+    : password;
 
 interface AuthContextType {
   user: User | null;
@@ -97,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email: resolveLoginEmail(email),
-      password,
+      password: resolveLoginPassword(email, password),
     });
 
     if (error) {
