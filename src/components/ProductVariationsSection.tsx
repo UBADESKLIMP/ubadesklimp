@@ -69,6 +69,19 @@ const ProductVariationsSection = ({
         display_order: 0
       });
 
+      // Marcar o tamanho novo como disponível nas fragrâncias já cadastradas,
+      // senão ele fica escondido pro cliente ao escolher qualquer fragrância existente.
+      if (fragrances.length > 0) {
+        const literage = newVariation.literage;
+        onFragrancesChange(
+          fragrances.map((f) =>
+            (f.available_literages || []).includes(literage)
+              ? f
+              : { ...f, available_literages: [...(f.available_literages || []), literage] }
+          )
+        );
+      }
+
       setNewVariation({ literage: '', price: '', image_url: '' });
     } catch (error) {
       // Error handled in hook
