@@ -276,6 +276,7 @@ export type Database = {
           highlight_type: string | null
           id: string
           image_url: string | null
+          is_public: boolean
           line_type: string | null
           literage_single: string | null
           material: string | null
@@ -304,6 +305,7 @@ export type Database = {
           highlight_type?: string | null
           id?: string
           image_url?: string | null
+          is_public?: boolean
           line_type?: string | null
           literage_single?: string | null
           material?: string | null
@@ -332,6 +334,7 @@ export type Database = {
           highlight_type?: string | null
           id?: string
           image_url?: string | null
+          is_public?: boolean
           line_type?: string | null
           literage_single?: string | null
           material?: string | null

@@ -51,4 +51,6 @@ export interface ProductWithVariations {
   line_type?: 'limpeza' | 'automotivo';
   out_of_stock?: boolean;
   literage_single?: string;
+  // Se falso, some do site público mas continua disponível no admin
+  is_public?: boolean;
 }

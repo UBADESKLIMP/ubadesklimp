@@ -12,6 +12,7 @@ export const useBrands = () => {
         .from('products')
         .select('brand')
         .eq('line_type', 'automotivo')
+        .eq('is_public', true)
         .not('brand', 'is', null);
 
       if (error) throw error;

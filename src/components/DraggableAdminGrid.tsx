@@ -26,9 +26,10 @@ interface DraggableAdminGridProps {
   onReorder: (reorderedProducts: ProductWithVariations[]) => Promise<void>;
   onEdit: (product: ProductWithVariations) => void;
   onDelete: (id: string) => void;
+  onToggleVisibility: (product: ProductWithVariations) => void;
 }
 
-const DraggableAdminGrid = ({ products, onReorder, onEdit, onDelete }: DraggableAdminGridProps) => {
+const DraggableAdminGrid = ({ products, onReorder, onEdit, onDelete, onToggleVisibility }: DraggableAdminGridProps) => {
   const [activeProduct, setActiveProduct] = useState<ProductWithVariations | null>(null);
   const [localProducts, setLocalProducts] = useState(products);
 
@@ -97,6 +98,7 @@ const DraggableAdminGrid = ({ products, onReorder, onEdit, onDelete }: Draggable
               product={product}
               onEdit={onEdit}
               onDelete={onDelete}
+              onToggleVisibility={onToggleVisibility}
             />
           ))}
         </div>

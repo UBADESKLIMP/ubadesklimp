@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useProducts } from '@/hooks/useProducts';
+import { usePreserveScroll } from '@/hooks/usePreserveScroll';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
 import AddProductWithAiDialog from '@/components/AddProductWithAiDialog';
@@ -14,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSalesStats } from '@/hooks/useSalesStats';
 import { useCategories } from '@/hooks/useCategories';
 import DraggableAdminGrid from './DraggableAdminGrid';
+import NonPublicProductsSection from './NonPublicProductsSection';
 import AdminProductFilters, { SortOption } from './AdminProductFilters';
 import { normalizeText } from '@/lib/utils';
 import AdminLoadingState from './admin/AdminLoadingState';
@@ -22,11 +24,12 @@ import AdminPageHeader from './admin/AdminPageHeader';
 import { syncProductFragrances } from '@/lib/productFragrances';
 
 const AutomotiveProductsManager = () => {
-  const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
+  const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { stats: automotiveStats, loading: statsLoading } = useSalesStats('automotivo');
   const { categories: automotiveCategories, loading: catLoading, createCategory, deleteCategory } = useCategories('automotivo');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  usePreserveScroll(isDialogOpen);
   const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
 
   const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
@@ -163,6 +166,19 @@ const AutomotiveProductsManager = () => {
   const handleReorderProducts = useCallback(async (reorderedProducts: ProductWithVariations[]) => {
     await updateDisplayOrder(reorderedProducts);
   }, [updateDisplayOrder]);
+
+  const handleToggleVisibility = useCallback(async (product: ProductWithVariations) => {
+    await updateProduct(product.id, { is_public: !(product.is_public ?? true) });
+  }, [updateProduct]);
+
+  const publicAutomotiveProducts = useMemo(
+    () => filteredAutomotiveProducts.filter(p => p.is_public ?? true),
+    [filteredAutomotiveProducts]
+  );
+  const nonPublicAutomotiveProducts = useMemo(
+    () => filteredAutomotiveProducts.filter(p => !(p.is_public ?? true)),
+    [filteredAutomotiveProducts]
+  );
 
   const formatProductPrice = (price: number | undefined) => {
     if (!price) return 'Preço não definido';
@@ -399,15 +415,16 @@ const AutomotiveProductsManager = () => {
       />
 
       {/* Products Grid with Drag and Drop */}
-      {filteredAutomotiveProducts.length > 0 ? (
+      {publicAutomotiveProducts.length > 0 ? (
         <DraggableAdminGrid
-          products={filteredAutomotiveProducts}
+          products={publicAutomotiveProducts}
           onReorder={handleReorderProducts}
           onEdit={(product) => {
             setEditingProduct(product);
             setIsDialogOpen(true);
           }}
           onDelete={handleDeleteProduct}
+          onToggleVisibility={handleToggleVisibility}
         />
       ) : automotiveProducts.length > 0 ? (
         <AdminEmptyState
@@ -431,6 +448,16 @@ const AutomotiveProductsManager = () => {
           }
         />
       )}
+
+      <NonPublicProductsSection
+        products={nonPublicAutomotiveProducts}
+        onEdit={(product) => {
+          setEditingProduct(product);
+          setIsDialogOpen(true);
+        }}
+        onDelete={handleDeleteProduct}
+        onToggleVisibility={handleToggleVisibility}
+      />
     </div>
   );
 };

@@ -3,15 +3,17 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Edit3, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { ProductWithVariations } from '@/types/product';
 
 interface SortableAdminProductCardProps {
   product: ProductWithVariations;
   onEdit: (product: ProductWithVariations) => void;
   onDelete: (id: string) => void;
+  onToggleVisibility: (product: ProductWithVariations) => void;
 }
 
-const SortableAdminProductCard = ({ product, onEdit, onDelete }: SortableAdminProductCardProps) => {
+const SortableAdminProductCard = ({ product, onEdit, onDelete, onToggleVisibility }: SortableAdminProductCardProps) => {
   const {
     attributes,
     listeners,
@@ -93,11 +95,21 @@ const SortableAdminProductCard = ({ product, onEdit, onDelete }: SortableAdminPr
         </div>
       </div>
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-2">
           <div>
             <CardTitle className="text-lg text-white">{product.name}</CardTitle>
             <p className="text-sm text-blue-300/50">{product.category}</p>
           </div>
+          <label
+            className="flex flex-col items-center gap-1 shrink-0 cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-[10px] uppercase tracking-wide text-blue-300/50">Público</span>
+            <Switch
+              checked={product.is_public ?? true}
+              onCheckedChange={() => onToggleVisibility(product)}
+            />
+          </label>
         </div>
       </CardHeader>
       <CardContent>

@@ -13,11 +13,19 @@ export interface Product {
   image_url: string | null;
   priority: boolean;
   highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
+  is_public?: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export const useProducts = () => {
+interface UseProductsOptions {
+  // Por padrão o hook só traz produtos públicos (seguro por padrão pro
+  // site). O admin passa true pra também ver produtos não públicos.
+  includeNonPublic?: boolean;
+}
+
+export const useProducts = (options?: UseProductsOptions) => {
+  const includeNonPublic = options?.includeNonPublic ?? false;
   const [products, setProducts] = useState<ProductWithVariations[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +54,8 @@ export const useProducts = () => {
       'ph_level',
       'application_area',
       'line_type',
-      'brand'
+      'brand',
+      'is_public'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -63,14 +72,20 @@ export const useProducts = () => {
     }
     try {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
+      let productsQuery = supabase
+        .from('products')
+        .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,display_order,created_at,updated_at')
+        .order('display_order', { ascending: true })
+        .order('priority', { ascending: false })
+        .order('priority_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (!includeNonPublic) {
+        productsQuery = productsQuery.eq('is_public', true);
+      }
+
       const [productsResult, variationsResult, fragrancesResult] = await Promise.all([
-        supabase
-          .from('products')
-          .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,display_order,created_at,updated_at')
-          .order('display_order', { ascending: true })
-          .order('priority', { ascending: false })
-          .order('priority_order', { ascending: true })
-          .order('created_at', { ascending: false }),
+        productsQuery,
         supabase
           .from('product_variations')
           .select('id,product_id,literage,price,image_url,is_primary,display_order,created_at,updated_at')
@@ -117,6 +132,7 @@ export const useProducts = () => {
           specifications: product.specifications,
           out_of_stock: product.out_of_stock || false,
           literage_single: product.literage_single,
+          is_public: (product as any).is_public ?? true,
           size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
           price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
           action_type: product.action_type || null,

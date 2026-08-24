@@ -3,6 +3,7 @@ import { Plus, Package, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useProducts } from '@/hooks/useProducts';
+import { usePreserveScroll } from '@/hooks/usePreserveScroll';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
 import ProductForm from '@/components/ProductForm';
@@ -19,6 +20,7 @@ import MissingProductsManager from '@/components/MissingProductsManager';
 import CotacoesManager from '@/components/quotes/CotacoesManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
+import NonPublicProductsSection from '@/components/NonPublicProductsSection';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
 import { normalizeText } from '@/lib/utils';
 import AdminShell from '@/components/admin/AdminShell';
@@ -29,7 +31,7 @@ import { AdminSection, getVisibleNavItems } from '@/components/admin/adminNav';
 import { syncProductFragrances } from '@/lib/productFragrances';
 
 const Admin = () => {
-  const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts();
+  const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();
 
@@ -38,6 +40,7 @@ const Admin = () => {
 
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  usePreserveScroll(isDialogOpen);
 
   const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
 
@@ -126,6 +129,10 @@ const Admin = () => {
     await updateDisplayOrder(reorderedProducts);
   }, [updateDisplayOrder]);
 
+  const handleToggleVisibility = useCallback(async (product: ProductWithVariations) => {
+    await updateProduct(product.id, { is_public: !(product.is_public ?? true) });
+  }, [updateProduct]);
+
   const limpezaProducts = useMemo(() =>
     products.filter(p => (p.line_type ?? 'limpeza') === 'limpeza'),
     [products]
@@ -163,6 +170,15 @@ const Admin = () => {
 
     return filtered;
   }, [limpezaProducts, searchTerm, categoryFilter, sortOption]);
+
+  const publicLimpezaProducts = useMemo(
+    () => filteredLimpezaProducts.filter(p => p.is_public ?? true),
+    [filteredLimpezaProducts]
+  );
+  const nonPublicLimpezaProducts = useMemo(
+    () => filteredLimpezaProducts.filter(p => !(p.is_public ?? true)),
+    [filteredLimpezaProducts]
+  );
 
   if (loading || staffAccess.loading) {
     return (
@@ -247,15 +263,16 @@ const Admin = () => {
               onSortChange={setSortOption}
             />
 
-            {filteredLimpezaProducts.length > 0 ? (
+            {publicLimpezaProducts.length > 0 ? (
               <DraggableAdminGrid
-                products={filteredLimpezaProducts}
+                products={publicLimpezaProducts}
                 onReorder={handleReorderProducts}
                 onEdit={(product) => {
                   setEditingProduct(product);
                   setIsDialogOpen(true);
                 }}
                 onDelete={handleDeleteProduct}
+                onToggleVisibility={handleToggleVisibility}
               />
             ) : limpezaProducts.length > 0 ? (
               <AdminEmptyState
@@ -276,6 +293,16 @@ const Admin = () => {
                 }
               />
             )}
+
+            <NonPublicProductsSection
+              products={nonPublicLimpezaProducts}
+              onEdit={(product) => {
+                setEditingProduct(product);
+                setIsDialogOpen(true);
+              }}
+              onDelete={handleDeleteProduct}
+              onToggleVisibility={handleToggleVisibility}
+            />
           </div>
         );
 

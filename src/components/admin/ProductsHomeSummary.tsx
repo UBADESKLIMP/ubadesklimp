@@ -10,7 +10,7 @@ interface ProductsHomeSummaryProps {
 }
 
 const ProductsHomeSummary = ({ onNavigate }: ProductsHomeSummaryProps) => {
-  const { products, loading } = useProducts();
+  const { products, loading } = useProducts({ includeNonPublic: true });
 
   const incompleteCount = useMemo(
     () => products.filter((product) => !product.image_url || !product.description).length,
