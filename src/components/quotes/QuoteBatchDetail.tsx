@@ -143,7 +143,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
     <Card>
       <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack} className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/10">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>

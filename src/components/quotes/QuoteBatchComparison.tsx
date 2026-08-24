@@ -110,7 +110,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   return (
     <Card>
       <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg space-y-4">
-        <Button variant="ghost" size="sm" onClick={onBack} className="w-fit">
+        <Button variant="ghost" size="sm" onClick={onBack} className="w-fit text-blue-300 hover:text-blue-200 hover:bg-blue-500/10">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
