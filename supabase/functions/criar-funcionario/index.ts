@@ -86,12 +86,11 @@ Deno.serve(async (req: Request) => {
         400,
       );
     }
-    // 8+ caracteres: essas contas são autenticadas por um e-mail sintético
-    // previsível (username@equipe.ubadesklimp.internal) e podem ter is_admin
-    // true, então o mínimo de senha precisa ser mais forte que um cadastro
-    // comum de cliente.
-    if (!password || password.length < 8) {
-      return jsonResponse(req, { error: "Senha precisa ter pelo menos 8 caracteres." }, 400);
+    // PIN numérico de 4 dígitos — decisão do usuário em favor de praticidade
+    // (equipe loga no chão da loja), ciente de que é bem mais fácil de
+    // forçar por tentativa e erro do que uma senha alfanumérica maior.
+    if (!/^\d{4}$/.test(password)) {
+      return jsonResponse(req, { error: "Senha precisa ter exatamente 4 dígitos numéricos." }, 400);
     }
 
     const syntheticEmail = `${username}@${STAFF_EMAIL_DOMAIN}`;

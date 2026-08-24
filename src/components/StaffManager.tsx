@@ -63,7 +63,7 @@ const StaffManager = () => {
   };
 
   const handleCreate = async () => {
-    if (!createForm.username || !createForm.password || createForm.password.length < 8) return;
+    if (!createForm.username || !/^\d{4}$/.test(createForm.password)) return;
     setIsSubmitting(true);
     try {
       await createStaffMember({
@@ -129,13 +129,18 @@ const StaffManager = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="staff-password">Senha</Label>
+                <Label htmlFor="staff-password">Senha (4 dígitos)</Label>
                 <Input
                   id="staff-password"
                   type="text"
-                  placeholder="mínimo 8 caracteres"
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                  maxLength={4}
+                  placeholder="0000"
                   value={createForm.password}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, password: e.target.value.replace(/\D/g, '').slice(0, 4) }))
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -178,7 +183,7 @@ const StaffManager = () => {
             <DialogFooter>
               <Button
                 onClick={handleCreate}
-                disabled={isSubmitting || !createForm.username || !createForm.password || createForm.password.length < 8}
+                disabled={isSubmitting || !createForm.username || !/^\d{4}$/.test(createForm.password)}
               >
                 {isSubmitting ? 'Criando...' : 'Criar funcionário'}
               </Button>
