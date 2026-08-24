@@ -29,7 +29,7 @@ const AutomotiveProductsManager = () => {
   const { categories: automotiveCategories, loading: catLoading, createCategory, deleteCategory } = useCategories('automotivo');
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  usePreserveScroll(isDialogOpen);
+  const { onCloseAutoFocus } = usePreserveScroll(isDialogOpen);
   const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
 
   const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
@@ -378,7 +378,10 @@ const AutomotiveProductsManager = () => {
                   Novo Produto
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
+              <DialogContent
+                onCloseAutoFocus={onCloseAutoFocus}
+                className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white"
+              >
                 <DialogHeader>
                   <DialogTitle className="text-white flex items-center gap-2">
                     <Car className="h-5 w-5 text-blue-400" />

@@ -40,7 +40,7 @@ const Admin = () => {
 
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  usePreserveScroll(isDialogOpen);
+  const { onCloseAutoFocus } = usePreserveScroll(isDialogOpen);
 
   const [aiSuggestions, setAiSuggestions] = useState<ProductAiSuggestions | null>(null);
 
@@ -230,7 +230,10 @@ const Admin = () => {
                         Novo Produto
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white">
+                    <DialogContent
+                      onCloseAutoFocus={onCloseAutoFocus}
+                      className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f0f18] border-blue-500/30 text-white"
+                    >
                       <DialogHeader>
                         <DialogTitle className="text-white">
                           {editingProduct ? 'Editar Produto' : 'Novo Produto'}
