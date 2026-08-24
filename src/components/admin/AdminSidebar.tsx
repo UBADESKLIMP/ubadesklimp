@@ -22,7 +22,7 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       className={cn(
-        'hidden md:flex flex-col shrink-0 bg-[#0c0c14] border-r border-blue-500/10 py-4 transition-[width] duration-200 ease-out overflow-hidden',
+        'hidden md:flex flex-col shrink-0 sticky top-0 h-screen self-start bg-[#0c0c14] border-r border-blue-500/10 py-4 transition-[width] duration-200 ease-out overflow-hidden',
         expanded ? 'w-52' : 'w-[52px]'
       )}
     >
