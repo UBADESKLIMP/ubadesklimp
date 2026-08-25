@@ -22,7 +22,7 @@ import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminLoadingState from './admin/AdminLoadingState';
 import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
-import { cn } from '@/lib/utils';
+import { cn, normalizeText } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useQuoteBatches } from '@/hooks/useQuoteBatches';
 
@@ -79,7 +79,7 @@ const ProductPicker = ({ products, value, onChange }: ProductPickerProps) => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
+        <Command filter={(value, search) => (normalizeText(value).includes(normalizeText(search)) ? 1 : 0)}>
           <CommandInput placeholder="Buscar produto..." />
           <CommandList>
             <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
