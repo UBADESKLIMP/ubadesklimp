@@ -68,6 +68,27 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
     });
   };
 
+  // "já em cotação" fica desabilitado e não entra na seleção em massa.
+  const selectableItems = missingProducts.filter((item) => !openItemIds.has(item.id));
+  const allItemsSelected = selectableItems.length > 0 && selectableItems.every((item) => selectedItems.has(item.id));
+
+  const toggleAllItems = () => {
+    setSelectedItems((prev) => {
+      if (allItemsSelected) return new Map();
+      const next = new Map(prev);
+      selectableItems.forEach((item) => {
+        if (!next.has(item.id)) next.set(item.id, 1);
+      });
+      return next;
+    });
+  };
+
+  const allSuppliersSelected = suppliers.length > 0 && suppliers.every((s) => selectedSupplierIds.has(s.id));
+
+  const toggleAllSuppliers = () => {
+    setSelectedSupplierIds(allSuppliersSelected ? new Set() : new Set(suppliers.map((s) => s.id)));
+  };
+
   const handleCreate = async () => {
     setIsSubmitting(true);
     try {
@@ -103,7 +124,14 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
         </DialogHeader>
         <div className="space-y-6">
           <div className="space-y-2">
-            <p className="text-sm font-medium">Itens faltantes</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Itens faltantes</p>
+              {selectableItems.length > 0 && (
+                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={toggleAllItems}>
+                  {allItemsSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+                </Button>
+              )}
+            </div>
             {loadingMissing ? (
               <AdminLoadingState rows={2} tone="light" />
             ) : missingProducts.length === 0 ? (
@@ -141,7 +169,14 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
             )}
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-medium">Fornecedores</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Fornecedores</p>
+              {suppliers.length > 0 && (
+                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={toggleAllSuppliers}>
+                  {allSuppliersSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+                </Button>
+              )}
+            </div>
             {loadingSuppliers ? (
               <AdminLoadingState rows={2} tone="light" />
             ) : suppliers.length === 0 ? (
