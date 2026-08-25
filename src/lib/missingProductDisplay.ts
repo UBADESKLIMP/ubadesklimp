@@ -9,7 +9,12 @@ export const buildMissingItemDisplayName = (
   variationId: string | null
 ): string => {
   const fragranceName = product?.fragrances?.find((f) => f.id === fragranceId)?.name;
-  const variationLabel = product?.variations?.find((v) => v.id === variationId)?.literage;
+  // Produto com uma litragem só (sem múltiplas variações) guarda o tamanho
+  // em literage_single, não na tabela de variações — cai pra ele quando não
+  // há variação específica pra resolver.
+  const variationLabel =
+    product?.variations?.find((v) => v.id === variationId)?.literage ??
+    (product && !product.has_variations ? product.literage_single ?? undefined : undefined);
   const detailParts = [fragranceName, variationLabel].filter((part): part is string => Boolean(part));
   return detailParts.length > 0
     ? `${product?.name ?? 'Produto removido'} — ${detailParts.join(' — ')}`
