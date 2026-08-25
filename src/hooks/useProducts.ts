@@ -14,6 +14,8 @@ export interface Product {
   priority: boolean;
   highlight_type?: 'bestseller' | 'promotion' | 'new' | 'featured' | 'none' | null;
   is_public?: boolean;
+  purchase_avg_quantity?: string | null;
+  purchase_notes?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,7 +57,9 @@ export const useProducts = (options?: UseProductsOptions) => {
       'application_area',
       'line_type',
       'brand',
-      'is_public'
+      'is_public',
+      'purchase_avg_quantity',
+      'purchase_notes'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
@@ -74,7 +78,7 @@ export const useProducts = (options?: UseProductsOptions) => {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
       let productsQuery = supabase
         .from('products')
-        .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,display_order,created_at,updated_at')
+        .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,purchase_avg_quantity,purchase_notes,display_order,created_at,updated_at')
         .order('display_order', { ascending: true })
         .order('priority', { ascending: false })
         .order('priority_order', { ascending: true })
@@ -133,6 +137,8 @@ export const useProducts = (options?: UseProductsOptions) => {
           out_of_stock: product.out_of_stock || false,
           literage_single: product.literage_single,
           is_public: (product as any).is_public ?? true,
+          purchase_avg_quantity: (product as any).purchase_avg_quantity ?? null,
+          purchase_notes: (product as any).purchase_notes ?? null,
           size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
           price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
           action_type: product.action_type || null,

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X, Loader2, Star, Package, Settings, Layers, Car, Droplets, MapPin } from 'lucide-react';
+import { Save, X, Loader2, Star, Package, Settings, Layers, Car, Droplets, MapPin, ShoppingCart } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useCategories } from '@/hooks/useCategories';
 import { ProductWithVariations } from '@/types/product';
@@ -72,6 +72,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
     ph_level: string;
     application_area: string;
     brand: string;
+    purchase_avg_quantity: string;
+    purchase_notes: string;
   }>({
     name: product?.name || '',
     description: product?.description || '',
@@ -95,6 +97,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
     ph_level: (product as any)?.ph_level || '',
     application_area: (product as any)?.application_area || '',
     brand: (product as any)?.brand || '',
+    purchase_avg_quantity: product?.purchase_avg_quantity || '',
+    purchase_notes: product?.purchase_notes || '',
   });
 
   useEffect(() => {
@@ -134,6 +138,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
         ph_level: (product as any)?.ph_level || '',
         application_area: (product as any)?.application_area || '',
         brand: (product as any)?.brand || '',
+        purchase_avg_quantity: product.purchase_avg_quantity || '',
+        purchase_notes: product.purchase_notes || '',
       });
     }
   }, [product]);
@@ -179,6 +185,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
         ph_level: formData.ph_level || null,
         application_area: formData.application_area || null,
         brand: formData.brand || null,
+        purchase_avg_quantity: formData.purchase_avg_quantity || null,
+        purchase_notes: formData.purchase_notes || null,
         line_type: lineType,
       };
 
@@ -205,7 +213,7 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
         </div>
       )}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Básico</span>
@@ -221,6 +229,10 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
           >
             <Layers className="h-4 w-4" />
             <span>Variações</span>
+          </TabsTrigger>
+          <TabsTrigger value="compras" className="flex items-center space-x-2">
+            <ShoppingCart className="h-4 w-4" />
+            <span>Compras</span>
           </TabsTrigger>
         </TabsList>
 
@@ -663,6 +675,39 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
                   <p>Salve o produto primeiro para gerenciar suas variações</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Aba Compras */}
+        <TabsContent value="compras" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações de Compra</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Uso interno — nunca aparece no site, ajuda a lembrar como esse produto costuma ser comprado
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="purchase_avg_quantity">Quantidade que costuma comprar</Label>
+                <Input
+                  id="purchase_avg_quantity"
+                  value={formData.purchase_avg_quantity}
+                  onChange={(e) => setFormData({ ...formData, purchase_avg_quantity: e.target.value })}
+                  placeholder="Ex: 5 caixas de 12, 1 fardo, 20 unidades"
+                />
+              </div>
+              <div>
+                <Label htmlFor="purchase_notes">Observações de compra</Label>
+                <Textarea
+                  id="purchase_notes"
+                  value={formData.purchase_notes}
+                  onChange={(e) => setFormData({ ...formData, purchase_notes: e.target.value })}
+                  rows={4}
+                  placeholder="Fornecedor preferido, prazo de entrega, condição de pagamento, o que mais for útil lembrar na hora de comprar..."
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
