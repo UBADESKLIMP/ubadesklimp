@@ -35,7 +35,10 @@ const AutomotiveProductsManager = () => {
   const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
     setEditingProduct(draft as ProductWithVariations);
     setAiSuggestions(suggestions);
-    setIsDialogOpen(true);
+    // Ver comentário equivalente em Admin.tsx: abrir o próximo Dialog do
+    // Radix no mesmo tick em que o "Adicionar com IA" fecha trava o scroll
+    // do body — esperar o próximo tick evita a corrida.
+    setTimeout(() => setIsDialogOpen(true), 0);
   };
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');

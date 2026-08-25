@@ -47,7 +47,11 @@ const Admin = () => {
   const handleAiResult = (draft: Partial<ProductWithVariations>, suggestions: ProductAiSuggestions) => {
     setEditingProduct(draft as ProductWithVariations);
     setAiSuggestions(suggestions);
-    setIsDialogOpen(true);
+    // O diálogo "Adicionar com IA" acabou de se fechar (setOpen(false) rodou
+    // antes deste callback). Abrir o próximo Dialog do Radix no mesmo tick
+    // faz o cleanup de um brigar com o mount do outro e trava o scroll do
+    // body — esperar o próximo tick deixa o primeiro terminar de desmontar.
+    setTimeout(() => setIsDialogOpen(true), 0);
   };
 
   // Estados para filtros
