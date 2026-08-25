@@ -72,7 +72,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
     ph_level: string;
     application_area: string;
     brand: string;
-    purchase_avg_quantity: string;
+    purchase_min_quantity: string;
+    purchase_max_quantity: string;
     purchase_notes: string;
   }>({
     name: product?.name || '',
@@ -97,7 +98,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
     ph_level: (product as any)?.ph_level || '',
     application_area: (product as any)?.application_area || '',
     brand: (product as any)?.brand || '',
-    purchase_avg_quantity: product?.purchase_avg_quantity || '',
+    purchase_min_quantity: product?.purchase_min_quantity || '',
+    purchase_max_quantity: product?.purchase_max_quantity || '',
     purchase_notes: product?.purchase_notes || '',
   });
 
@@ -138,7 +140,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
         ph_level: (product as any)?.ph_level || '',
         application_area: (product as any)?.application_area || '',
         brand: (product as any)?.brand || '',
-        purchase_avg_quantity: product.purchase_avg_quantity || '',
+        purchase_min_quantity: product.purchase_min_quantity || '',
+        purchase_max_quantity: product.purchase_max_quantity || '',
         purchase_notes: product.purchase_notes || '',
       });
     }
@@ -185,7 +188,8 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
         ph_level: formData.ph_level || null,
         application_area: formData.application_area || null,
         brand: formData.brand || null,
-        purchase_avg_quantity: formData.purchase_avg_quantity || null,
+        purchase_min_quantity: formData.purchase_min_quantity || null,
+        purchase_max_quantity: formData.purchase_max_quantity || null,
         purchase_notes: formData.purchase_notes || null,
         line_type: lineType,
       };
@@ -689,14 +693,25 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="purchase_avg_quantity">Quantidade que costuma comprar</Label>
-                <Input
-                  id="purchase_avg_quantity"
-                  value={formData.purchase_avg_quantity}
-                  onChange={(e) => setFormData({ ...formData, purchase_avg_quantity: e.target.value })}
-                  placeholder="Ex: 5 caixas de 12, 1 fardo, 20 unidades"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="purchase_min_quantity">Compra mínima</Label>
+                  <Input
+                    id="purchase_min_quantity"
+                    value={formData.purchase_min_quantity}
+                    onChange={(e) => setFormData({ ...formData, purchase_min_quantity: e.target.value })}
+                    placeholder="Ex: 2cx"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="purchase_max_quantity">Compra máxima</Label>
+                  <Input
+                    id="purchase_max_quantity"
+                    value={formData.purchase_max_quantity}
+                    onChange={(e) => setFormData({ ...formData, purchase_max_quantity: e.target.value })}
+                    placeholder="Ex: 5cx (o que cabe no estoque)"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="purchase_notes">Observações de compra</Label>

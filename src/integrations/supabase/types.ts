@@ -287,7 +287,8 @@ export type Database = {
           price_position: string | null
           priority: boolean
           priority_order: number | null
-          purchase_avg_quantity: string | null
+          purchase_min_quantity: string | null
+          purchase_max_quantity: string | null
           purchase_notes: string | null
           size_unit: string | null
           specifications: string | null
@@ -318,7 +319,8 @@ export type Database = {
           price_position?: string | null
           priority?: boolean
           priority_order?: number | null
-          purchase_avg_quantity?: string | null
+          purchase_min_quantity?: string | null
+          purchase_max_quantity?: string | null
           purchase_notes?: string | null
           size_unit?: string | null
           specifications?: string | null
@@ -349,7 +351,8 @@ export type Database = {
           price_position?: string | null
           priority?: boolean
           priority_order?: number | null
-          purchase_avg_quantity?: string | null
+          purchase_min_quantity?: string | null
+          purchase_max_quantity?: string | null
           purchase_notes?: string | null
           size_unit?: string | null
           specifications?: string | null

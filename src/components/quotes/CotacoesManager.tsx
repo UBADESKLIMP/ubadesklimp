@@ -24,6 +24,16 @@ import AdminPageHeader from '../admin/AdminPageHeader';
 import QuoteBatchDetail from './QuoteBatchDetail';
 import QuoteBatchComparison from './QuoteBatchComparison';
 
+// Dica de "quanto costumo comprar" salva na aba Compras do produto — ajuda
+// na hora de decidir a quantidade da cotação sem precisar sair daqui.
+const buildPurchaseHint = (product: ProductWithVariations | undefined): string | null => {
+  const min = product?.purchase_min_quantity;
+  const max = product?.purchase_max_quantity;
+  if (min && max) return `Compra: ${min} – ${max}`;
+  if (min || max) return `Compra: ${min || max}`;
+  return null;
+};
+
 interface CreateQuoteBatchDialogProps {
   products: ProductWithVariations[];
   open: boolean;
@@ -143,13 +153,18 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
                   const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                   const alreadyInQuote = openItemIds.has(item.id);
                   const isSelected = selectedItems.has(item.id);
+                  const purchaseHint = buildPurchaseHint(product);
                   return (
                     <label
                       key={item.id}
+                      title={product?.purchase_notes || undefined}
                       className={`flex items-center gap-2 p-1.5 rounded ${alreadyInQuote ? 'opacity-50' : 'cursor-pointer hover:bg-muted/50'}`}
                     >
                       <Checkbox checked={isSelected} disabled={alreadyInQuote} onCheckedChange={() => toggleItem(item.id)} />
-                      <span className="text-sm flex-1">{displayName}</span>
+                      <span className="text-sm flex-1">
+                        {displayName}
+                        {purchaseHint && <span className="block text-xs text-muted-foreground">{purchaseHint}</span>}
+                      </span>
                       {isSelected && (
                         <Input
                           type="number"

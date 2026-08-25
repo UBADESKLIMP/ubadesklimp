@@ -54,6 +54,7 @@ export interface ProductWithVariations {
   // Se falso, some do site público mas continua disponível no admin
   is_public?: boolean;
   // Uso interno de compras — nunca aparece no site
-  purchase_avg_quantity?: string | null;
+  purchase_min_quantity?: string | null;
+  purchase_max_quantity?: string | null;
   purchase_notes?: string | null;
 }
