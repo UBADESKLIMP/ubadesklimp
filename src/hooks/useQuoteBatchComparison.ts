@@ -11,7 +11,7 @@ export interface ComparisonItem {
   product_id: string;
   fragrance_id: string | null;
   variation_id: string | null;
-  quantity: number;
+  quantity: number | null;
 }
 
 export interface ComparisonSupplier {
@@ -58,7 +58,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
       const typedItemRows = (itemRows || []) as unknown as Array<{
         id: string;
         missing_product_id: string;
-        quantity: number;
+        quantity: number | null;
         missing_products: { product_id: string; fragrance_id: string | null; variation_id: string | null } | null;
       }>;
       const nextItems: ComparisonItem[] = typedItemRows.map((row) => ({

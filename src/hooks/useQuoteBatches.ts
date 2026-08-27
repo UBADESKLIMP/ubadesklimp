@@ -16,7 +16,7 @@ export interface QuoteBatchSummary {
 
 export interface QuoteBatchItemInput {
   missingProductId: string;
-  quantity: number;
+  quantity: number | null;
 }
 
 // Marca o erro de revalidação (Fix 5 do review final) pra distinguir dos

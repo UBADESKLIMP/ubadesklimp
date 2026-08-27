@@ -45,7 +45,7 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
   const { missingProducts, loading: loadingMissing } = useMissingProducts();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const { openItemIds, createBatch } = useQuoteBatches();
-  const [selectedItems, setSelectedItems] = useState<Map<string, number>>(new Map());
+  const [selectedItems, setSelectedItems] = useState<Map<string, number | null>>(new Map());
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -55,12 +55,12 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
     setSelectedItems((prev) => {
       const next = new Map(prev);
       if (next.has(id)) next.delete(id);
-      else next.set(id, 1);
+      else next.set(id, null);
       return next;
     });
   };
 
-  const setItemQuantity = (id: string, quantity: number) => {
+  const setItemQuantity = (id: string, quantity: number | null) => {
     setSelectedItems((prev) => {
       if (!prev.has(id)) return prev;
       const next = new Map(prev);
@@ -87,7 +87,7 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
       if (allItemsSelected) return new Map();
       const next = new Map(prev);
       selectableItems.forEach((item) => {
-        if (!next.has(item.id)) next.set(item.id, 1);
+        if (!next.has(item.id)) next.set(item.id, null);
       });
       return next;
     });
@@ -170,10 +170,19 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
                           type="number"
                           min="1"
                           step="1"
-                          className="w-16 h-7 text-xs"
-                          value={selectedItems.get(item.id)}
+                          placeholder="Qtd (opcional)"
+                          className="w-28 h-7 text-xs"
+                          value={selectedItems.get(item.id) ?? ''}
                           onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => setItemQuantity(item.id, Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                              setItemQuantity(item.id, null);
+                              return;
+                            }
+                            const parsed = parseInt(raw, 10);
+                            setItemQuantity(item.id, Number.isNaN(parsed) ? null : Math.max(1, parsed));
+                          }}
                         />
                       )}
                       {alreadyInQuote && <Badge variant="secondary" className="text-xs">já em cotação</Badge>}

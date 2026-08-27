@@ -206,7 +206,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
               const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
               return (
                 <p key={item.id} className="text-sm text-muted-foreground">
-                  {item.quantity}x {displayName}
+                  {item.quantity ? `${item.quantity}x ` : ''}{displayName}
                 </p>
               );
             })}

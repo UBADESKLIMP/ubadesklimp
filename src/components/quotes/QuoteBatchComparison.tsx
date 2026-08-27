@@ -65,7 +65,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     if (!winnerId) continue;
     const price = getPrice(item.id, winnerId);
     if (price === null) continue;
-    subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * item.quantity);
+    subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * (item.quantity ?? 1));
   }
 
   const allItemsHaveWinner =
@@ -84,7 +84,9 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     const product = productById.get(item.product_id);
     const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
     const list = orderItemsBySupplier.get(winnerId) ?? [];
-    list.push({ name: displayName, quantity: item.quantity, unitPrice: price });
+    // Pedido final precisa de uma quantidade real pro fornecedor — cotação
+    // pode ficar sem quantidade definida, mas o pedido assume 1 nesse caso.
+    list.push({ name: displayName, quantity: item.quantity ?? 1, unitPrice: price });
     orderItemsBySupplier.set(winnerId, list);
   }
 
@@ -143,7 +145,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
-                      {item.quantity}x {displayName}
+                      {item.quantity ? `${item.quantity}x ` : ''}{displayName}
                     </TableCell>
                     {suppliers.map((supplier) => {
                       const price = getPrice(item.id, supplier.id);

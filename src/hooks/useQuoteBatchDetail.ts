@@ -9,7 +9,7 @@ export interface QuoteBatchDetailItem {
   fragrance_id: string | null;
   variation_id: string | null;
   stock_remaining: number | null;
-  quantity: number;
+  quantity: number | null;
 }
 
 export interface QuoteBatchDetailSupplier {
@@ -54,7 +54,7 @@ export const useQuoteBatchDetail = (batchId: string) => {
       const typedItemRows = (itemRows || []) as unknown as Array<{
         id: string;
         missing_product_id: string;
-        quantity: number;
+        quantity: number | null;
         missing_products: {
           product_id: string;
           fragrance_id: string | null;
