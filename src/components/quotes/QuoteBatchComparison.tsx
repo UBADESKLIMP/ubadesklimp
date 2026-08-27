@@ -32,7 +32,7 @@ interface QuoteBatchComparisonProps {
 const formatPrice = (price: number) => `R$ ${price.toFixed(2).replace('.', ',')}`;
 
 const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchComparisonProps) => {
-  const { loading, batchStatus, items, suppliers, getPrice, winners, setWinner, applyCommand, finalizeBatch } =
+  const { loading, batchStatus, items, suppliers, getPrice, getNote, winners, setWinner, applyCommand, finalizeBatch } =
     useQuoteBatchComparison(batchId);
   const [command, setCommand] = useState('');
   const [isApplyingCommand, setIsApplyingCommand] = useState(false);
@@ -149,27 +149,31 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                     </TableCell>
                     {suppliers.map((supplier) => {
                       const price = getPrice(item.id, supplier.id);
+                      const note = getNote(item.id, supplier.id);
                       const isWinner = winnerId === supplier.id;
                       return (
                         <TableCell key={supplier.id}>
                           {price === null ? (
                             <span className="text-muted-foreground">—</span>
                           ) : (
-                            <button
-                              type="button"
-                              disabled={isReadOnly}
-                              onClick={() => setWinner(item.id, supplier.id)}
-                              className={`text-sm px-2 py-1 rounded ${
-                                isWinner ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-muted/50'
-                              } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
-                            >
-                              {formatPrice(price)}
-                              {isWinner && (
-                                <Badge variant="secondary" className="ml-2 text-[10px]">
-                                  Vencedor
-                                </Badge>
-                              )}
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                disabled={isReadOnly}
+                                onClick={() => setWinner(item.id, supplier.id)}
+                                className={`text-sm px-2 py-1 rounded ${
+                                  isWinner ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-muted/50'
+                                } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
+                              >
+                                {formatPrice(price)}
+                                {isWinner && (
+                                  <Badge variant="secondary" className="ml-2 text-[10px]">
+                                    Vencedor
+                                  </Badge>
+                                )}
+                              </button>
+                              {note && <p className="text-xs text-muted-foreground px-2">{note}</p>}
+                            </>
                           )}
                         </TableCell>
                       );

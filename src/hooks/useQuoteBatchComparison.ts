@@ -30,12 +30,17 @@ export const useQuoteBatchComparison = (batchId: string) => {
   const [items, setItems] = useState<ComparisonItem[]>([]);
   const [suppliers, setSuppliers] = useState<ComparisonSupplier[]>([]);
   const [priceByKey, setPriceByKey] = useState<Record<string, number | null>>({});
+  const [noteByKey, setNoteByKey] = useState<Record<string, string | null>>({});
   const [winners, setWinners] = useState<Map<string, string>>(new Map());
 
   const priceKey = (itemId: string, supplierId: string) => `${itemId}::${supplierId}`;
   const getPrice = useCallback(
     (itemId: string, supplierId: string): number | null => priceByKey[priceKey(itemId, supplierId)] ?? null,
     [priceByKey]
+  );
+  const getNote = useCallback(
+    (itemId: string, supplierId: string): string | null => noteByKey[priceKey(itemId, supplierId)] ?? null,
+    [noteByKey]
   );
 
   const fetchData = useCallback(async () => {
@@ -73,14 +78,14 @@ export const useQuoteBatchComparison = (batchId: string) => {
 
       const { data: supplierRows, error: suppliersError } = await supabase
         .from('quote_batch_suppliers')
-        .select('id, suppliers(company_name, phone), quote_line_items(quote_batch_item_id, price)')
+        .select('id, suppliers(company_name, phone), quote_line_items(quote_batch_item_id, price, notes)')
         .eq('quote_batch_id', batchId);
       if (suppliersError) throw suppliersError;
 
       const typedSupplierRows = (supplierRows || []) as unknown as Array<{
         id: string;
         suppliers: { company_name: string; phone: string } | null;
-        quote_line_items: { quote_batch_item_id: string; price: number | null }[];
+        quote_line_items: { quote_batch_item_id: string; price: number | null; notes: string | null }[];
       }>;
 
       const nextSuppliers: ComparisonSupplier[] = typedSupplierRows.map((row) => ({
@@ -91,12 +96,15 @@ export const useQuoteBatchComparison = (batchId: string) => {
       setSuppliers(nextSuppliers);
 
       const nextPriceByKey: Record<string, number | null> = {};
+      const nextNoteByKey: Record<string, string | null> = {};
       for (const supplierRow of typedSupplierRows) {
         for (const lineItem of supplierRow.quote_line_items) {
           nextPriceByKey[priceKey(lineItem.quote_batch_item_id, supplierRow.id)] = lineItem.price;
+          nextNoteByKey[priceKey(lineItem.quote_batch_item_id, supplierRow.id)] = lineItem.notes;
         }
       }
       setPriceByKey(nextPriceByKey);
+      setNoteByKey(nextNoteByKey);
 
       const { data: winnerRows, error: winnersError } = await supabase
         .from('quote_item_winners')
@@ -284,6 +292,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
     items,
     suppliers,
     getPrice,
+    getNote,
     winners,
     setWinner,
     applyCommand,

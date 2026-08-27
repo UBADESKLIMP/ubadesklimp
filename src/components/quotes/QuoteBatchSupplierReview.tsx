@@ -38,10 +38,12 @@ const QuoteBatchSupplierReview = ({
     reprocessFile,
     runExtraction,
     updatePrice,
+    updateNote,
     markReviewed,
   } = useQuoteSupplierReview(quoteBatchSupplierId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [draftPrices, setDraftPrices] = useState<Record<string, string>>({});
+  const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [isMarking, setIsMarking] = useState(false);
 
@@ -61,6 +63,14 @@ const QuoteBatchSupplierReview = ({
       for (const li of lineItems) {
         if (li.quote_batch_item_id === focusedItemId) continue;
         next[li.quote_batch_item_id] = li.price != null ? String(li.price) : '';
+      }
+      return next;
+    });
+    setDraftNotes((prev) => {
+      const next = { ...prev };
+      for (const li of lineItems) {
+        if (li.quote_batch_item_id === focusedItemId) continue;
+        next[li.quote_batch_item_id] = li.notes ?? '';
       }
       return next;
     });
@@ -86,6 +96,11 @@ const QuoteBatchSupplierReview = ({
     if (!Number.isNaN(parsed)) {
       updatePrice(quoteBatchItemId, parsed);
     }
+  };
+
+  const handleNoteBlur = (quoteBatchItemId: string) => {
+    const raw = (draftNotes[quoteBatchItemId] ?? '').trim();
+    updateNote(quoteBatchItemId, raw === '' ? null : raw);
   };
 
   const handleMarkReviewed = async () => {
@@ -177,6 +192,7 @@ const QuoteBatchSupplierReview = ({
                 <TableRow>
                   <TableHead>Item</TableHead>
                   <TableHead className="w-40">Preço (R$)</TableHead>
+                  <TableHead className="w-56">Adendo do fornecedor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -205,6 +221,20 @@ const QuoteBatchSupplierReview = ({
                         {lineItem && lineItem.price !== null && (
                           <p className="text-xs text-muted-foreground mt-1">por {lineItem.updated_by_name}</p>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          placeholder="Ex: confirmou 3L"
+                          value={draftNotes[item.id] ?? ''}
+                          disabled={isReadOnly}
+                          onChange={(e) => setDraftNotes((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          onFocus={() => setFocusedItemId(item.id)}
+                          onBlur={() => {
+                            setFocusedItemId((current) => (current === item.id ? null : current));
+                            handleNoteBlur(item.id);
+                          }}
+                        />
                       </TableCell>
                     </TableRow>
                   );

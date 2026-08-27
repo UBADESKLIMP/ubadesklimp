@@ -17,6 +17,7 @@ export interface QuoteLineItem {
   id: string;
   quote_batch_item_id: string;
   price: number | null;
+  notes: string | null;
   updated_by_name: string;
   updated_at: string;
 }
@@ -52,7 +53,7 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
           .order('created_at'),
         supabase
           .from('quote_line_items')
-          .select('id, quote_batch_item_id, price, updated_by_name, updated_at')
+          .select('id, quote_batch_item_id, price, notes, updated_by_name, updated_at')
           .eq('quote_batch_supplier_id', quoteBatchSupplierId),
       ]);
 
@@ -212,6 +213,28 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
     }
   };
 
+  const updateNote = async (quoteBatchItemId: string, notes: string | null) => {
+    if (!user || !displayName) return;
+    try {
+      const { data, error } = await supabase
+        .from('quote_line_items')
+        .update({ notes, updated_by: user.id, updated_by_name: displayName })
+        .eq('quote_batch_supplier_id', quoteBatchSupplierId)
+        .eq('quote_batch_item_id', quoteBatchItemId)
+        .select('id');
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('Linha de preço não encontrada — este lote pode estar incompleto.');
+      }
+      setLineItems((prev) =>
+        prev.map((li) => (li.quote_batch_item_id === quoteBatchItemId ? { ...li, notes } : li))
+      );
+    } catch (error) {
+      console.error('Error updating quote line item note:', error);
+      toast({ title: 'Erro ao salvar adendo', description: 'Não foi possível salvar essa observação.', variant: 'destructive' });
+    }
+  };
+
   const markReviewed = async () => {
     try {
       const { error } = await supabase.from('quote_batch_suppliers').update({ status: 'revisado' }).eq('id', quoteBatchSupplierId);
@@ -234,6 +257,7 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
     reprocessFile,
     runExtraction,
     updatePrice,
+    updateNote,
     markReviewed,
     refetch: fetchData,
   };
