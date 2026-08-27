@@ -11,11 +11,13 @@ export interface MissingProduct {
   variation_id: string | null;
   stock_remaining: number | null;
   report_count: number;
-  status: 'pendente' | 'resolvido';
+  status: 'pendente' | 'resolvido' | 'cancelado';
   reported_by: string | null;
   reported_by_name: string;
   resolved_by: string | null;
   resolved_at: string | null;
+  cancelled_by: string | null;
+  cancelled_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -227,6 +229,33 @@ export const useMissingProducts = () => {
     }
   };
 
+  const cancelMissingProduct = async (id: string) => {
+    if (!user) throw new Error('Usuário não autenticado');
+    try {
+      const { error } = await supabase
+        .from('missing_products')
+        .update({
+          status: 'cancelado',
+          cancelled_by: user.id,
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMissingProducts((prev) => prev.filter((item) => item.id !== id));
+      toast({ title: 'Faltante cancelada' });
+    } catch (error) {
+      console.error('Error cancelling missing product:', error);
+      toast({
+        title: 'Erro ao cancelar',
+        description: 'Não foi possível cancelar este item.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchMissingProducts();
   }, [fetchMissingProducts]);
@@ -236,6 +265,7 @@ export const useMissingProducts = () => {
     loading,
     reportMissingProducts,
     resolveMissingProduct,
+    cancelMissingProduct,
     refetch: fetchMissingProducts,
     displayNameStatus,
   };

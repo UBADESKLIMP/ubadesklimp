@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, ChevronsUpDown, ClipboardCheck } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -198,13 +198,14 @@ const isRowComplete = (row: ReportRow, productById: Map<string, ProductWithVaria
 };
 
 const MissingProductsManager = ({ products, staffAccess }: MissingProductsManagerProps) => {
-  const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, displayNameStatus } =
+  const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, cancelMissingProduct, displayNameStatus } =
     useMissingProducts();
   const { openItemIds } = useQuoteBatches();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const canResolve =
     staffAccess.isAdmin || (staffAccess.permissions.has('faltantes') && staffAccess.permissions.has('fornecedores'));
@@ -267,6 +268,18 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
       // erro já mostrado via toast dentro do hook
     } finally {
       setResolvingId(null);
+    }
+  };
+
+  const handleCancel = async (id: string) => {
+    if (!window.confirm('Cancelar este item? Ele some da lista de faltantes (não é o mesmo que resolvido).')) return;
+    setCancellingId(id);
+    try {
+      await cancelMissingProduct(id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -391,6 +404,18 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                         onClick={() => handleResolve(item.id)}
                       >
                         Marcar como resolvido
+                      </Button>
+                    )}
+                    {canResolve && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        aria-label="Cancelar item (produto errado, não é uma compra resolvida)"
+                        disabled={cancellingId === item.id}
+                        onClick={() => handleCancel(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
