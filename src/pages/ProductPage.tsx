@@ -75,7 +75,7 @@ const ProductPageSkeleton = () => (
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { products, loading } = useProducts();
+  const { products, loading, error } = useProducts();
   const { addToCart } = useCart();
 
   const product = products.find((p) => p.slug === slug) ?? null;
@@ -122,6 +122,24 @@ const ProductPage = () => {
 
   if (loading) {
     return <ProductPageSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-14 md:pt-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-4">
+            <h1 className="text-2xl font-bold">Não foi possível carregar o produto</h1>
+            <p className="text-muted-foreground">
+              Verifique sua conexão com a internet e tente novamente.
+            </p>
+            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   if (!product) {
@@ -197,7 +215,7 @@ const ProductPage = () => {
   const backTo = product.line_type === 'automotivo' ? '/automotivo' : '/';
 
   const similarProducts = products
-    .filter((p) => p.id !== product.id && p.category === product.category)
+    .filter((p) => p.id !== product.id && p.category === product.category && p.line_type === product.line_type)
     .slice(0, 6);
 
   return (

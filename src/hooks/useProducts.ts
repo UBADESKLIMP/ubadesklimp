@@ -31,6 +31,7 @@ export const useProducts = (options?: UseProductsOptions) => {
   const includeNonPublic = options?.includeNonPublic ?? false;
   const [products, setProducts] = useState<ProductWithVariations[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   // Sanitize payload to only include columns that exist in 'products' table
   const sanitizeProductPayload = (data: any) => {
@@ -76,6 +77,7 @@ export const useProducts = (options?: UseProductsOptions) => {
     if (isInitialLoad) {
       setLoading(true);
     }
+    setError(false);
     try {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
       let productsQuery = supabase
@@ -161,6 +163,7 @@ export const useProducts = (options?: UseProductsOptions) => {
       setProducts(productsWithVariations);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setError(true);
       toast({
         title: "Erro ao carregar produtos",
         description: "Não foi possível carregar os produtos.",
@@ -296,6 +299,7 @@ export const useProducts = (options?: UseProductsOptions) => {
   return {
     products,
     loading,
+    error,
     createProduct,
     updateProduct,
     deleteProduct,
