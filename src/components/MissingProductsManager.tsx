@@ -298,7 +298,7 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                   Reportar falta
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-h-[90vh] overflow-y-auto overscroll-contain">
                 <DialogHeader>
                   <DialogTitle>Reportar produtos faltando</DialogTitle>
                 </DialogHeader>
