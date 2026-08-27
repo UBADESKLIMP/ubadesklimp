@@ -80,7 +80,7 @@ export const useProducts = (options?: UseProductsOptions) => {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
       let productsQuery = supabase
         .from('products')
-        .select('id,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,purchase_min_quantity,purchase_max_quantity,purchase_notes,display_order,created_at,updated_at')
+        .select('id,slug,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,purchase_min_quantity,purchase_max_quantity,purchase_notes,display_order,created_at,updated_at')
         .order('display_order', { ascending: true })
         .order('priority', { ascending: false })
         .order('priority_order', { ascending: true })
@@ -124,6 +124,7 @@ export const useProducts = (options?: UseProductsOptions) => {
 
         return {
           id: product.id,
+          slug: product.slug,
           name: product.name,
           description: product.description,
           category: product.category,

@@ -22,6 +22,7 @@ export interface ProductFragrance {
 
 export interface ProductWithVariations {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   category: string;
