@@ -4,22 +4,19 @@ import AutomotiveBanner from '@/components/AutomotiveBanner';
 import Products from '@/components/Products';
 import About from '@/components/About';
 import Footer from '@/components/Footer';
-import { CartProvider } from '@/contexts/CartContext';
 
 const Index = () => {
   return (
-    <CartProvider>
-      <div className="min-h-screen">
-        <Header />
-        <main className="pt-14 md:pt-16">
-          <Hero />
-          <AutomotiveBanner />
-          <Products />
-          <About />
-        </main>
-        <Footer />
-      </div>
-    </CartProvider>
+    <div className="min-h-screen">
+      <Header />
+      <main className="pt-14 md:pt-16">
+        <Hero />
+        <AutomotiveBanner />
+        <Products />
+        <About />
+      </main>
+      <Footer />
+    </div>
   );
 };
 
