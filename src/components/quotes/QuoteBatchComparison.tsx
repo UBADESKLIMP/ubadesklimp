@@ -133,6 +133,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                 {suppliers.map((supplier) => (
                   <TableHead key={supplier.id} className="min-w-32">
                     {supplier.company_name}
+                    <span className="block font-normal text-muted-foreground">({supplier.contact_name})</span>
                   </TableHead>
                 ))}
               </TableRow>
@@ -188,7 +189,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
           <p className="text-sm font-medium">Subtotal por fornecedor</p>
           {suppliers.map((supplier) => (
             <p key={supplier.id} className="text-sm text-muted-foreground">
-              {supplier.company_name}: {formatPrice(subtotalBySupplier.get(supplier.id) ?? 0)}
+              {supplier.company_name} ({supplier.contact_name}): {formatPrice(subtotalBySupplier.get(supplier.id) ?? 0)}
             </p>
           ))}
         </div>
@@ -251,7 +252,9 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
               const total = orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
               return (
                 <div key={supplierId} className="border rounded-lg p-4 space-y-2">
-                  <p className="font-medium text-sm">{supplier?.company_name ?? 'Fornecedor'}</p>
+                  <p className="font-medium text-sm">
+                    {supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'Fornecedor'}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {orderItems.length} item(ns) · Total: {formatPrice(total)}
                   </p>
@@ -269,7 +272,12 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => downloadPurchaseOrderPdf(supplier?.company_name ?? 'fornecedor', orderItems)}
+                      onClick={() =>
+                        downloadPurchaseOrderPdf(
+                          supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'fornecedor',
+                          orderItems
+                        )
+                      }
                     >
                       <FileDown className="h-4 w-4 mr-2" />
                       Baixar PDF

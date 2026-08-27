@@ -17,6 +17,7 @@ export interface ComparisonItem {
 export interface ComparisonSupplier {
   id: string;
   company_name: string;
+  contact_name: string;
   phone: string;
 }
 
@@ -78,19 +79,20 @@ export const useQuoteBatchComparison = (batchId: string) => {
 
       const { data: supplierRows, error: suppliersError } = await supabase
         .from('quote_batch_suppliers')
-        .select('id, suppliers(company_name, phone), quote_line_items(quote_batch_item_id, price, notes)')
+        .select('id, suppliers(company_name, contact_name, phone), quote_line_items(quote_batch_item_id, price, notes)')
         .eq('quote_batch_id', batchId);
       if (suppliersError) throw suppliersError;
 
       const typedSupplierRows = (supplierRows || []) as unknown as Array<{
         id: string;
-        suppliers: { company_name: string; phone: string } | null;
+        suppliers: { company_name: string; contact_name: string; phone: string } | null;
         quote_line_items: { quote_batch_item_id: string; price: number | null; notes: string | null }[];
       }>;
 
       const nextSuppliers: ComparisonSupplier[] = typedSupplierRows.map((row) => ({
         id: row.id,
         company_name: row.suppliers?.company_name ?? 'Fornecedor removido',
+        contact_name: row.suppliers?.contact_name ?? '',
         phone: row.suppliers?.phone ?? '',
       }));
       setSuppliers(nextSuppliers);

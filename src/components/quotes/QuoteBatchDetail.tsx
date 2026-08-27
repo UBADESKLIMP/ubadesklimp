@@ -106,7 +106,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
     return (
       <QuoteBatchSupplierReview
         quoteBatchSupplierId={selectedSupplierId}
-        supplierName={supplier?.company_name ?? 'Fornecedor'}
+        supplierName={supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'Fornecedor'}
         items={items}
         products={products}
         batchStatus={batch.status}
@@ -227,7 +227,9 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
                 className="w-full text-left border rounded-lg p-3 flex items-center justify-between gap-2 hover:bg-muted/50 transition-colors"
               >
                 <div>
-                  <p className="font-medium text-sm">{supplier.company_name}</p>
+                  <p className="font-medium text-sm">
+                    {supplier.company_name} <span className="text-muted-foreground font-normal">({supplier.contact_name})</span>
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {supplier.filled_count} de {items.length} preenchido(s)
                   </p>
