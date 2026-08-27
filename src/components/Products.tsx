@@ -1,5 +1,6 @@
 import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,7 +9,6 @@ import { useProducts } from '@/hooks/useProducts';
 import { useImagePreload } from '@/hooks/useImagePreload';
 import { ProductWithVariations } from '@/types/product';
 import ProductCard from './ProductCard';
-import ProductDetailModal from './ProductDetailModal';
 import { normalizeText } from '@/lib/utils';
 
 const Products = () => {
@@ -19,10 +19,9 @@ const Products = () => {
   
   // Preload das imagens prioritárias
   useImagePreload(limpezaProducts, 8);
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get unique categories from limpeza products only
   const categories = Array.from(new Set(limpezaProducts.map(product => product.category))).sort();
@@ -42,13 +41,7 @@ const Products = () => {
   };
 
   const handleShowDetails = (product: ProductWithVariations) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
+    navigate(`/produto/${product.slug}`);
   };
 
   if (loading) {
@@ -199,13 +192,6 @@ const Products = () => {
           </div>
         )}
       </div>
-
-      {/* Modal de detalhes */}
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </section>
   );
 };

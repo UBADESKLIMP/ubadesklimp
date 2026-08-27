@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -74,6 +74,7 @@ const ProductPageSkeleton = () => (
 
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { products, loading } = useProducts();
   const { addToCart } = useCart();
 
@@ -410,9 +411,7 @@ const ProductPage = () => {
                   <ProductCard
                     key={similar.id}
                     product={similar}
-                    onShowDetails={() => {
-                      window.location.href = `/produto/${similar.slug}`;
-                    }}
+                    onShowDetails={() => navigate(`/produto/${similar.slug}`)}
                   />
                 ))}
               </div>

@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Car, Search, X } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import ProductDetailModal from '@/components/ProductDetailModal';
 import BrandFilter from '@/components/BrandFilter';
 import ProductSortSelect, { PublicSortOption } from '@/components/ProductSortSelect';
 import { Button } from '@/components/ui/button';
@@ -30,8 +29,7 @@ const Automotivo = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<PublicSortOption>('default');
-  const [selectedProduct, setSelectedProduct] = useState<ProductWithVariations | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [parallaxY, setParallaxY] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   
@@ -145,13 +143,7 @@ const Automotivo = () => {
   }, [automotiveProducts, searchTerm, selectedBrand, sortOption]);
 
   const handleShowDetails = (product: ProductWithVariations) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
+    navigate(`/produto/${product.slug}`);
   };
 
   return (
@@ -642,12 +634,6 @@ const Automotivo = () => {
       </main>
 
       <Footer />
-
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </div>
   );
 };
