@@ -49,6 +49,7 @@ const MAX_TOTAL_BYTES = 12 * 1024 * 1024;
 interface GeminiMatch {
   item: string;
   price: number | null;
+  note?: string | null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -217,8 +218,12 @@ Deno.serve(async (req: Request) => {
       `Encontre, no(s) arquivo(s) anexado(s), o preço unitário de cada item da lista acima. ` +
       `IGNORE qualquer outro produto que apareça no arquivo mas não esteja nessa lista — o fornecedor pode vender outras coisas, ` +
       `mas só nos interessam os itens listados. Se um item da lista não aparecer no arquivo, não o inclua na resposta. ` +
+      `Além do preço, se o arquivo do fornecedor trouxer alguma informação específica que ajude a confirmar exatamente qual ` +
+      `variação daquele item é essa cotação — principalmente tamanho/litragem/peso quando o nome pedido não especifica um, ` +
+      `mas também marca, cor ou se é um preço promocional — inclua essa informação num campo "note" curto (ex: "3L", "500ml ECO"). ` +
+      `Só preencha "note" quando o arquivo realmente trouxer algo relevante — não invente nem repita o que já está óbvio no nome do item. ` +
       `Responda APENAS com um array JSON, sem nenhum texto antes ou depois, no formato:\n` +
-      `[{"item": "<nome exatamente como na lista>", "price": <número, sem "R$" nem separador de milhar, use ponto decimal>}]`;
+      `[{"item": "<nome exatamente como na lista>", "price": <número, sem "R$" nem separador de milhar, use ponto decimal>, "note": "<opcional, curto, ou omita se não houver nada relevante>"}]`;
 
     parts.push({ text: promptText });
 
@@ -297,13 +302,18 @@ Deno.serve(async (req: Request) => {
       const quoteBatchItemId = itemByName.get(match.item);
       if (!quoteBatchItemId) continue;
 
+      const updatePayload: Record<string, unknown> = {
+        price: match.price,
+        updated_by: caller.id,
+        updated_by_name: callerStaff.display_name,
+      };
+      if (typeof match.note === "string" && match.note.trim() !== "") {
+        updatePayload.notes = match.note.trim();
+      }
+
       const { data: updateData, error: updateError } = await adminClient
         .from("quote_line_items")
-        .update({
-          price: match.price,
-          updated_by: caller.id,
-          updated_by_name: callerStaff.display_name,
-        })
+        .update(updatePayload)
         .eq("quote_batch_supplier_id", quoteBatchSupplierId)
         .eq("quote_batch_item_id", quoteBatchItemId)
         .select("id");
