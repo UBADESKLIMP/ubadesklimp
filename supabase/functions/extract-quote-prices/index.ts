@@ -110,6 +110,7 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json().catch(() => null);
     const quoteBatchSupplierId = typeof body?.quoteBatchSupplierId === "string" ? body.quoteBatchSupplierId : "";
+    const pastedText = typeof body?.pastedText === "string" ? body.pastedText.trim() : "";
     if (!quoteBatchSupplierId) {
       return jsonResponse(req, { error: "quoteBatchSupplierId é obrigatório." }, 400);
     }
@@ -123,19 +124,25 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(req, { error: "Cotação de fornecedor não encontrada." }, 404);
     }
 
-    const { data: files, error: filesError } = await adminClient
-      .from("quote_files")
-      .select("id, storage_path")
-      .eq("quote_batch_supplier_id", quoteBatchSupplierId)
-      .is("processed_at", null);
-    if (filesError) throw filesError;
+    // Modo texto colado pula completamente a busca/download de quote_files
+    // — não existe nenhum arquivo envolvido nesse caminho.
+    let files: { id: string; storage_path: string }[] = [];
+    if (!pastedText) {
+      const { data: filesData, error: filesError } = await adminClient
+        .from("quote_files")
+        .select("id, storage_path")
+        .eq("quote_batch_supplier_id", quoteBatchSupplierId)
+        .is("processed_at", null);
+      if (filesError) throw filesError;
 
-    if (!files || files.length === 0) {
-      return jsonResponse(req, { error: "Nenhum arquivo novo pra processar." }, 400);
+      if (!filesData || filesData.length === 0) {
+        return jsonResponse(req, { error: "Nenhum arquivo novo pra processar." }, 400);
+      }
+      files = filesData;
     }
 
     // Monta a lista de itens pedidos nesse lote, com o nome resolvido
-    // (Produto — Fragrância — Tamanho), pra IA casar contra o arquivo do
+    // (Produto — Fragrância — Tamanho), pra IA casar contra o material do
     // fornecedor. Roda com service_role, então ignora RLS de propósito —
     // a permissão de quem chamou já foi checada acima.
     const { data: batchItems, error: batchItemsError } = await adminClient
@@ -174,7 +181,8 @@ Deno.serve(async (req: Request) => {
     // Baixa cada arquivo ainda não processado e monta as parts de visão pro
     // request do Gemini — imagem ou PDF, conforme a extensão do caminho
     // salvo no Storage (o caminho sempre preserva a extensão do arquivo
-    // original, ver useQuoteSupplierReview.ts).
+    // original, ver useQuoteSupplierReview.ts). Pulado inteiramente no modo
+    // texto colado (files fica vazio nesse caso).
     // Só marca processed_at nos arquivos que realmente viraram uma part —
     // um arquivo pulado (extensão não suportada, falha de download) não
     // pode desaparecer da fila de "ainda não processado", senão fica preso
@@ -207,25 +215,29 @@ Deno.serve(async (req: Request) => {
       processedFileIds.push(file.id);
     }
 
-    if (parts.length === 0) {
+    if (!pastedText && parts.length === 0) {
       return jsonResponse(req, { error: "Não foi possível ler os arquivos enviados." }, 400);
     }
 
     const itemListText = resolvedItems.map((item) => `- ${item.name}`).join("\n");
     const promptText =
-      `Você está lendo uma cotação de fornecedor (foto ou PDF) pra uma loja de produtos de limpeza. ` +
+      `Você está lendo uma cotação de fornecedor (mensagem de texto, foto ou PDF) pra uma loja de produtos de limpeza. ` +
       `Aqui está a lista EXATA de itens que foram pedidos nessa cotação:\n\n${itemListText}\n\n` +
-      `Encontre, no(s) arquivo(s) anexado(s), o preço unitário de cada item da lista acima. ` +
-      `IGNORE qualquer outro produto que apareça no arquivo mas não esteja nessa lista — o fornecedor pode vender outras coisas, ` +
-      `mas só nos interessam os itens listados. Se um item da lista não aparecer no arquivo, não o inclua na resposta. ` +
-      `Além do preço, se o arquivo do fornecedor trouxer alguma informação específica que ajude a confirmar exatamente qual ` +
+      `Encontre, no material fornecido abaixo, o preço unitário de cada item da lista acima. ` +
+      `IGNORE qualquer outro produto que apareça mas não esteja nessa lista — o fornecedor pode vender outras coisas, ` +
+      `mas só nos interessam os itens listados. Se um item da lista não aparecer, não o inclua na resposta. ` +
+      `Além do preço, se o material trouxer alguma informação específica que ajude a confirmar exatamente qual ` +
       `variação daquele item é essa cotação — principalmente tamanho/litragem/peso quando o nome pedido não especifica um, ` +
       `mas também marca, cor ou se é um preço promocional — inclua essa informação num campo "note" curto (ex: "3L", "500ml ECO"). ` +
-      `Só preencha "note" quando o arquivo realmente trouxer algo relevante — não invente nem repita o que já está óbvio no nome do item. ` +
+      `Só preencha "note" quando o material realmente trouxer algo relevante — não invente nem repita o que já está óbvio no nome do item. ` +
       `Responda APENAS com um array JSON, sem nenhum texto antes ou depois, no formato:\n` +
       `[{"item": "<nome exatamente como na lista>", "price": <número, sem "R$" nem separador de milhar, use ponto decimal>, "note": "<opcional, curto, ou omita se não houver nada relevante>"}]`;
 
-    parts.push({ text: promptText });
+    if (pastedText) {
+      parts.push({ text: `Material da cotação (mensagem de texto colada):\n\n${pastedText}\n\n${promptText}` });
+    } else {
+      parts.push({ text: promptText });
+    }
 
     const callGemini = (key: string) =>
       fetch(
