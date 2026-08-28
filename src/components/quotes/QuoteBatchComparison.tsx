@@ -32,8 +32,19 @@ interface QuoteBatchComparisonProps {
 const formatPrice = (price: number) => `R$ ${price.toFixed(2).replace('.', ',')}`;
 
 const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchComparisonProps) => {
-  const { loading, batchStatus, items, suppliers, getPrice, getNote, winners, setWinner, applyCommand, finalizeBatch } =
-    useQuoteBatchComparison(batchId);
+  const {
+    loading,
+    batchStatus,
+    items,
+    suppliers,
+    getPrice,
+    getNote,
+    winners,
+    getWinnerSource,
+    setWinner,
+    applyCommand,
+    finalizeBatch,
+  } = useQuoteBatchComparison(batchId);
   const [command, setCommand] = useState('');
   const [isApplyingCommand, setIsApplyingCommand] = useState(false);
   const [commandLog, setCommandLog] = useState<string[]>([]);
@@ -143,6 +154,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                 const product = productById.get(item.product_id);
                 const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                 const winnerId = winners.get(item.id);
+                const winnerSource = getWinnerSource(item.id);
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
@@ -152,6 +164,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                       const price = getPrice(item.id, supplier.id);
                       const note = getNote(item.id, supplier.id);
                       const isWinner = winnerId === supplier.id;
+                      const isManualWinner = isWinner && winnerSource !== 'auto';
                       return (
                         <TableCell key={supplier.id}>
                           {price === null ? (
@@ -163,13 +176,17 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                                 disabled={isReadOnly}
                                 onClick={() => setWinner(item.id, supplier.id)}
                                 className={`text-sm px-2 py-1 rounded ${
-                                  isWinner ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-muted/50'
+                                  isManualWinner
+                                    ? 'bg-amber-600 text-white font-semibold'
+                                    : isWinner
+                                      ? 'bg-emerald-600 text-white font-semibold'
+                                      : 'hover:bg-muted/50'
                                 } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
                               >
                                 {formatPrice(price)}
                                 {isWinner && (
                                   <Badge variant="secondary" className="ml-2 text-[10px]">
-                                    Vencedor
+                                    {isManualWinner ? 'Manual' : 'Mais barato'}
                                   </Badge>
                                 )}
                               </button>

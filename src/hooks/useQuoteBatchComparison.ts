@@ -33,6 +33,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
   const [priceByKey, setPriceByKey] = useState<Record<string, number | null>>({});
   const [noteByKey, setNoteByKey] = useState<Record<string, string | null>>({});
   const [winners, setWinners] = useState<Map<string, string>>(new Map());
+  const [winnerSources, setWinnerSources] = useState<Map<string, WinnerSource>>(new Map());
 
   const priceKey = (itemId: string, supplierId: string) => `${itemId}::${supplierId}`;
   const getPrice = useCallback(
@@ -42,6 +43,10 @@ export const useQuoteBatchComparison = (batchId: string) => {
   const getNote = useCallback(
     (itemId: string, supplierId: string): string | null => noteByKey[priceKey(itemId, supplierId)] ?? null,
     [noteByKey]
+  );
+  const getWinnerSource = useCallback(
+    (itemId: string): WinnerSource | null => winnerSources.get(itemId) ?? null,
+    [winnerSources]
   );
 
   const fetchData = useCallback(async () => {
@@ -110,7 +115,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
 
       const { data: winnerRows, error: winnersError } = await supabase
         .from('quote_item_winners')
-        .select('quote_batch_item_id, quote_batch_supplier_id')
+        .select('quote_batch_item_id, quote_batch_supplier_id, source')
         .in(
           'quote_batch_item_id',
           nextItems.map((item) => item.id)
@@ -120,9 +125,19 @@ export const useQuoteBatchComparison = (batchId: string) => {
       const nextWinners = new Map<string, string>(
         (winnerRows || []).map((row) => [row.quote_batch_item_id as string, row.quote_batch_supplier_id as string])
       );
+      const nextWinnerSources = new Map<string, WinnerSource>(
+        (winnerRows || []).map((row) => [row.quote_batch_item_id as string, row.source as WinnerSource])
+      );
 
-      // Inicialização automática: todo item sem vencedor ainda ganha o
-      // fornecedor de menor preço não nulo. Item sem nenhum preço cotado
+      // Inicialização/atualização automática: todo item sem vencedor ainda
+      // ganha o fornecedor de menor preço não nulo — e todo item cujo
+      // vencedor ATUAL veio do próprio automático (source 'auto', nunca
+      // 'manual' nem 'ia') é reavaliado a cada carregamento, porque um
+      // fornecedor pode mandar um preço mais barato depois que o primeiro
+      // já tinha "ganho" por ser o único cotado até então. Sem isso, um
+      // vencedor automático decidido cedo ficava preso pra sempre, mesmo
+      // depois de um preço mais barato chegar. Escolha manual (ou vinda do
+      // comando de IA) nunca é tocada aqui. Item sem nenhum preço cotado
       // fica sem vencedor (nada pra escolher). Só roda quando o lote ainda
       // está aberto — lote concluído/cancelado não ganha vencedor novo.
       if (batchRow.status === 'aberto' && user && displayName) {
@@ -133,8 +148,9 @@ export const useQuoteBatchComparison = (batchId: string) => {
           set_by: string;
           set_by_name: string;
         }> = [];
+        const toUpdate: Array<{ quote_batch_item_id: string; quote_batch_supplier_id: string }> = [];
+
         for (const item of nextItems) {
-          if (nextWinners.has(item.id)) continue;
           let cheapestSupplierId: string | null = null;
           let cheapestPrice = Infinity;
           for (const supplier of nextSuppliers) {
@@ -144,7 +160,12 @@ export const useQuoteBatchComparison = (batchId: string) => {
               cheapestSupplierId = supplier.id;
             }
           }
-          if (cheapestSupplierId) {
+          if (!cheapestSupplierId) continue;
+
+          const currentWinnerId = nextWinners.get(item.id);
+          const currentSource = nextWinnerSources.get(item.id);
+
+          if (!currentWinnerId) {
             toInsert.push({
               quote_batch_item_id: item.id,
               quote_batch_supplier_id: cheapestSupplierId,
@@ -152,8 +173,12 @@ export const useQuoteBatchComparison = (batchId: string) => {
               set_by: user.id,
               set_by_name: displayName,
             });
+            nextWinnerSources.set(item.id, 'auto');
+          } else if (currentSource === 'auto' && currentWinnerId !== cheapestSupplierId) {
+            toUpdate.push({ quote_batch_item_id: item.id, quote_batch_supplier_id: cheapestSupplierId });
           }
         }
+
         if (toInsert.length > 0) {
           const { error: insertWinnersError } = await supabase.from('quote_item_winners').insert(toInsert);
           if (insertWinnersError) {
@@ -164,9 +189,28 @@ export const useQuoteBatchComparison = (batchId: string) => {
             }
           }
         }
+
+        for (const row of toUpdate) {
+          const { error: updateWinnerError } = await supabase
+            .from('quote_item_winners')
+            .update({
+              quote_batch_supplier_id: row.quote_batch_supplier_id,
+              set_by: user.id,
+              set_by_name: displayName,
+              set_at: new Date().toISOString(),
+            })
+            .eq('quote_batch_item_id', row.quote_batch_item_id)
+            .eq('source', 'auto');
+          if (updateWinnerError) {
+            console.error('Error refreshing stale auto quote winner:', updateWinnerError);
+            continue;
+          }
+          nextWinners.set(row.quote_batch_item_id, row.quote_batch_supplier_id);
+        }
       }
 
       setWinners(nextWinners);
+      setWinnerSources(nextWinnerSources);
     } catch (error) {
       console.error('Error fetching quote batch comparison:', error);
       toast({
@@ -205,6 +249,11 @@ export const useQuoteBatchComparison = (batchId: string) => {
       setWinners((prev) => {
         const next = new Map(prev);
         next.set(itemId, supplierId);
+        return next;
+      });
+      setWinnerSources((prev) => {
+        const next = new Map(prev);
+        next.set(itemId, 'manual');
         return next;
       });
     } catch (error) {
@@ -296,6 +345,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
     getPrice,
     getNote,
     winners,
+    getWinnerSource,
     setWinner,
     applyCommand,
     finalizeBatch,
