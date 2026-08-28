@@ -35,8 +35,11 @@ const parsePrice = (value: unknown): number | null => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') return null;
-    const normalized = trimmed.replace(',', '.').replace(/[^\d.-]/g, '');
-    const parsed = parseFloat(normalized);
+    const cleaned = trimmed.replace(/[^\d.,-]/g, '');
+    const canonical = cleaned.includes(',')
+      ? cleaned.replace(/\./g, '').replace(',', '.')
+      : cleaned;
+    const parsed = parseFloat(canonical);
     return Number.isNaN(parsed) ? null : parsed;
   }
   return null;
