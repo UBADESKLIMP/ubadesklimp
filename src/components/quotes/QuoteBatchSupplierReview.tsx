@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Upload, RotateCcw, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, Upload, RotateCcw, Sparkles, Check, ClipboardPaste, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuoteSupplierReview } from '@/hooks/useQuoteSupplierReview';
 import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { parseQuoteRequestExcel } from '@/lib/quoteExcel';
+import { toast } from '@/hooks/use-toast';
 import { QuoteBatchDetailItem } from '@/hooks/useQuoteBatchDetail';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
@@ -46,6 +49,10 @@ const QuoteBatchSupplierReview = ({
   const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [isMarking, setIsMarking] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
+  const [isPasteOpen, setIsPasteOpen] = useState(false);
+  const [pastedTextValue, setPastedTextValue] = useState('');
+  const [importingExcel, setImportingExcel] = useState(false);
 
   const isReadOnly = batchStatus !== 'aberto';
 
@@ -114,6 +121,46 @@ const QuoteBatchSupplierReview = ({
     }
   };
 
+  const handleExtractFromText = async () => {
+    const trimmed = pastedTextValue.trim();
+    if (trimmed === '') return;
+    await runExtraction(trimmed);
+    setPastedTextValue('');
+    setIsPasteOpen(false);
+  };
+
+  const handleExcelChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (excelInputRef.current) excelInputRef.current.value = '';
+    if (!file) return;
+
+    setImportingExcel(true);
+    try {
+      const rows = await parseQuoteRequestExcel(file);
+      const knownItemIds = new Set(items.map((item) => item.id));
+      let matched = 0;
+      for (const row of rows) {
+        if (!knownItemIds.has(row.itemId)) continue;
+        if (row.price !== null) {
+          await updatePrice(row.itemId, row.price);
+        }
+        if (row.note !== null) {
+          await updateNote(row.itemId, row.note);
+        }
+        matched += 1;
+      }
+      toast({
+        title: 'Planilha importada',
+        description: `${matched} de ${rows.length} linha(s) reconhecida(s) e aplicada(s).`,
+      });
+    } catch (error) {
+      console.error('Error importing quote excel:', error);
+      toast({ title: 'Erro ao importar', description: 'Não foi possível ler essa planilha.', variant: 'destructive' });
+    } finally {
+      setImportingExcel(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg space-y-4">
@@ -155,7 +202,7 @@ const QuoteBatchSupplierReview = ({
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input
               ref={fileInputRef}
               type="file"
@@ -175,11 +222,57 @@ const QuoteBatchSupplierReview = ({
               <Upload className="h-4 w-4 mr-2" />
               {uploading ? 'Enviando...' : 'Enviar arquivo(s)'}
             </Button>
-            <Button size="sm" disabled={extracting || unprocessedCount === 0 || isReadOnly} onClick={runExtraction}>
+            <Button size="sm" disabled={extracting || unprocessedCount === 0 || isReadOnly} onClick={() => runExtraction()}>
               <Sparkles className="h-4 w-4 mr-2" />
               {extracting ? 'Extraindo...' : `Extrair com IA (${unprocessedCount} novo(s))`}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isReadOnly}
+              onClick={() => setIsPasteOpen((prev) => !prev)}
+            >
+              <ClipboardPaste className="h-4 w-4 mr-2" />
+              Colar texto
+            </Button>
+            <input
+              ref={excelInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleExcelChange}
+              disabled={importingExcel || isReadOnly}
+              className="hidden"
+              id="quote-excel-upload"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={importingExcel || isReadOnly}
+              onClick={() => excelInputRef.current?.click()}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              {importingExcel ? 'Importando...' : 'Importar Excel'}
+            </Button>
           </div>
+          {isPasteOpen && (
+            <div className="space-y-2 border rounded-md p-3">
+              <Textarea
+                placeholder="Cole aqui o texto que o fornecedor mandou no WhatsApp..."
+                value={pastedTextValue}
+                onChange={(e) => setPastedTextValue(e.target.value)}
+                disabled={extracting || isReadOnly}
+                rows={6}
+              />
+              <Button
+                size="sm"
+                disabled={extracting || pastedTextValue.trim() === '' || isReadOnly}
+                onClick={handleExtractFromText}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {extracting ? 'Extraindo...' : 'Extrair do texto colado'}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

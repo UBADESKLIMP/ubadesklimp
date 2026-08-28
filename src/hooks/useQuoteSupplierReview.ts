@@ -159,11 +159,11 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
     }
   };
 
-  const runExtraction = async () => {
+  const runExtraction = async (pastedText?: string) => {
     setExtracting(true);
     try {
       const { data, error } = await supabase.functions.invoke('extract-quote-prices', {
-        body: { quoteBatchSupplierId },
+        body: pastedText ? { quoteBatchSupplierId, pastedText } : { quoteBatchSupplierId },
       });
       if (error) {
         const message = await extractFunctionErrorMessage(error, 'Não foi possível extrair os preços.');
