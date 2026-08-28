@@ -145,7 +145,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
       id: item.id,
       displayName: buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id),
     }));
-    const batchLabel = new Date(batch.created_at).toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const batchLabel = `${new Date(batch.created_at).toLocaleDateString('pt-BR').replace(/\//g, '-')}-${batchId.slice(0, 8)}`;
     buildQuoteRequestExcel(rows, batchLabel);
   };
 
