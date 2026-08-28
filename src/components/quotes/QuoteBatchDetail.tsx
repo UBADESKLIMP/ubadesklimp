@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRightLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Plus, X, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import {
 import { useQuoteBatchDetail } from '@/hooks/useQuoteBatchDetail';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildQuoteRequestExcel } from '@/lib/quoteExcel';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
 import QuoteBatchSupplierReview from './QuoteBatchSupplierReview';
@@ -139,6 +140,15 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
     );
   }
 
+  const handleExportExcel = () => {
+    const rows = items.map((item) => ({
+      id: item.id,
+      displayName: buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id),
+    }));
+    const batchLabel = new Date(batch.created_at).toLocaleDateString('pt-BR').replace(/\//g, '-');
+    buildQuoteRequestExcel(rows, batchLabel);
+  };
+
   return (
     <Card>
       <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg space-y-4">
@@ -199,7 +209,13 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
         <div className="space-y-2">
-          <p className="text-sm font-medium">Itens ({items.length})</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Itens ({items.length})</p>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
+          </div>
           <div className="space-y-1">
             {items.map((item) => {
               const product = productById.get(item.product_id);
