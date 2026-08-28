@@ -159,7 +159,7 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
     }
   };
 
-  const runExtraction = async (pastedText?: string) => {
+  const runExtraction = async (pastedText?: string): Promise<boolean> => {
     setExtracting(true);
     try {
       const { data, error } = await supabase.functions.invoke('extract-quote-prices', {
@@ -168,7 +168,7 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
       if (error) {
         const message = await extractFunctionErrorMessage(error, 'Não foi possível extrair os preços.');
         toast({ title: 'Erro na extração', description: message, variant: 'destructive' });
-        return;
+        return false;
       }
       const skippedNote =
         data.filesSkipped > 0 ? ` ${data.filesSkipped} arquivo(s) não pôde(puderam) ser lido(s).` : '';
@@ -177,9 +177,11 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
         description: `A IA encontrou preço pra ${data.matched} de ${data.totalItems} item(ns).${skippedNote}`,
       });
       await fetchData();
+      return true;
     } catch (error) {
       console.error('Error running quote extraction:', error);
       toast({ title: 'Erro na extração', description: 'Não foi possível extrair os preços.', variant: 'destructive' });
+      return false;
     } finally {
       setExtracting(false);
     }

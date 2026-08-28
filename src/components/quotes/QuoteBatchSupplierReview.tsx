@@ -55,6 +55,7 @@ const QuoteBatchSupplierReview = ({
   const [importingExcel, setImportingExcel] = useState(false);
 
   const isReadOnly = batchStatus !== 'aberto';
+  const busy = uploading || extracting || importingExcel;
 
   const productById = new Map(products.map((p) => [p.id, p]));
   const lineItemByItemId = new Map(lineItems.map((li) => [li.quote_batch_item_id, li]));
@@ -124,7 +125,8 @@ const QuoteBatchSupplierReview = ({
   const handleExtractFromText = async () => {
     const trimmed = pastedTextValue.trim();
     if (trimmed === '') return;
-    await runExtraction(trimmed);
+    const ok = await runExtraction(trimmed);
+    if (!ok) return;
     setPastedTextValue('');
     setIsPasteOpen(false);
   };
@@ -138,21 +140,30 @@ const QuoteBatchSupplierReview = ({
     try {
       const rows = await parseQuoteRequestExcel(file);
       const knownItemIds = new Set(items.map((item) => item.id));
-      let matched = 0;
+      let applied = 0;
       for (const row of rows) {
         if (!knownItemIds.has(row.itemId)) continue;
+        if (row.price === null && row.note === null) continue;
         if (row.price !== null) {
           await updatePrice(row.itemId, row.price);
         }
         if (row.note !== null) {
           await updateNote(row.itemId, row.note);
         }
-        matched += 1;
+        applied += 1;
       }
-      toast({
-        title: 'Planilha importada',
-        description: `${matched} de ${rows.length} linha(s) reconhecida(s) e aplicada(s).`,
-      });
+      if (applied === 0) {
+        toast({
+          title: 'Nenhum item aplicado',
+          description: 'Nenhuma linha reconhecida — a coluna de ID pode ter sido removida. Exporte a planilha de novo e peça pro fornecedor preencher essa mesma cópia.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Planilha importada',
+          description: `${applied} de ${rows.length} item(ns) preenchido(s).`,
+        });
+      }
     } catch (error) {
       console.error('Error importing quote excel:', error);
       toast({ title: 'Erro ao importar', description: 'Não foi possível ler essa planilha.', variant: 'destructive' });
@@ -209,27 +220,27 @@ const QuoteBatchSupplierReview = ({
               accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
               multiple
               onChange={handleFileChange}
-              disabled={uploading || isReadOnly}
+              disabled={busy || isReadOnly}
               className="hidden"
               id="quote-file-upload"
             />
             <Button
               variant="outline"
               size="sm"
-              disabled={uploading || isReadOnly}
+              disabled={busy || isReadOnly}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4 mr-2" />
               {uploading ? 'Enviando...' : 'Enviar arquivo(s)'}
             </Button>
-            <Button size="sm" disabled={extracting || unprocessedCount === 0 || isReadOnly} onClick={() => runExtraction()}>
+            <Button size="sm" disabled={busy || unprocessedCount === 0 || isReadOnly} onClick={() => runExtraction()}>
               <Sparkles className="h-4 w-4 mr-2" />
               {extracting ? 'Extraindo...' : `Extrair com IA (${unprocessedCount} novo(s))`}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={isReadOnly}
+              disabled={busy || isReadOnly}
               onClick={() => setIsPasteOpen((prev) => !prev)}
             >
               <ClipboardPaste className="h-4 w-4 mr-2" />
@@ -240,14 +251,14 @@ const QuoteBatchSupplierReview = ({
               type="file"
               accept=".xlsx,.xls"
               onChange={handleExcelChange}
-              disabled={importingExcel || isReadOnly}
+              disabled={busy || isReadOnly}
               className="hidden"
               id="quote-excel-upload"
             />
             <Button
               variant="outline"
               size="sm"
-              disabled={importingExcel || isReadOnly}
+              disabled={busy || isReadOnly}
               onClick={() => excelInputRef.current?.click()}
             >
               <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -262,10 +273,11 @@ const QuoteBatchSupplierReview = ({
                 onChange={(e) => setPastedTextValue(e.target.value)}
                 disabled={extracting || isReadOnly}
                 rows={6}
+                maxLength={20000}
               />
               <Button
                 size="sm"
-                disabled={extracting || pastedTextValue.trim() === '' || isReadOnly}
+                disabled={busy || pastedTextValue.trim() === '' || isReadOnly}
                 onClick={handleExtractFromText}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
