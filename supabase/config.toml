@@ -19,3 +19,6 @@ verify_jwt = false
 
 [functions.research-product]
 verify_jwt = false
+
+[functions.upload-image-from-url]
+verify_jwt = false
