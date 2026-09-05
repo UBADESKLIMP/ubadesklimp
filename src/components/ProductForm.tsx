@@ -113,9 +113,19 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
     }
   }, [formData.fragrances, product?.id]);
 
-  // Atualizar formData e lineType quando o produto mudar (após refetch)
+  // Atualizar formData e lineType quando o produto mudar — mas só quando é
+  // um produto DIFERENTE (id mudou), nunca quando é o mesmo produto com uma
+  // referência nova vinda de um refetch em background. `products` (em
+  // Admin.tsx) muda de referência depois de QUALQUER salvamento, de
+  // qualquer produto — sem essa trava, isso reconstruía o formData inteiro
+  // enquanto o usuário ainda editava, descartando alterações não salvas
+  // (ex: preço digitado sumia se um upload de imagem em andamento atrasasse
+  // o clique em Salvar até esse refetch chegar). Ver incidente 2026-09-05:
+  // preço de ~26 produtos zerou exatamente por essa janela de corrida.
+  const formSyncedForIdRef = useRef<string | undefined>(product?.id);
   useEffect(() => {
-    if (product) {
+    if (product && product.id !== formSyncedForIdRef.current) {
+      formSyncedForIdRef.current = product.id;
       setLineType(product.line_type || 'limpeza');
       setFormData({
         name: product.name || '',
@@ -229,7 +239,7 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
           <TabsTrigger
             value="variations"
             className="flex items-center space-x-2"
-            disabled={!formData.has_variations && !(aiSuggestions?.fragrances && aiSuggestions.fragrances.length > 0)}
+            disabled={!product?.id}
           >
             <Layers className="h-4 w-4" />
             <span>Variações</span>
@@ -624,11 +634,11 @@ const ProductForm = ({ product, onSave, onCancel, aiSuggestions }: ProductFormPr
                   id="has_variations"
                   checked={formData.has_variations}
                   onCheckedChange={(checked) => {
-                    setFormData({
-                      ...formData, 
-                      has_variations: checked,
-                      fragrances: checked ? formData.fragrances : []
-                    });
+                    // Variações (tamanhos) e fragrâncias são independentes —
+                    // um produto de tamanho único pode ter várias fragrâncias.
+                    // Desligar "tem variações" não pode apagar as fragrâncias
+                    // já cadastradas.
+                    setFormData({ ...formData, has_variations: checked });
                   }}
                 />
                 <span className="text-sm text-muted-foreground ml-2">
