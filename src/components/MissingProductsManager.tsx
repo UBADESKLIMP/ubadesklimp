@@ -293,7 +293,12 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
           title="Faltantes"
           description="Registre produtos que estão acabando e acompanhe o que ainda precisa ser resolvido."
           action={
-            <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+            // modal={false}: com modal (padrão), o lock de scroll do Radix Dialog
+            // bloqueia a rolagem via mouse wheel dentro do Popover do combobox de
+            // produto (ele é portalizado fora da árvore do Dialog, então fica de
+            // fora do "shard" liberado pelo lock). Overlay continua bloqueando
+            // clique fora normalmente.
+            <Dialog open={isReportOpen} onOpenChange={setIsReportOpen} modal={false}>
               <DialogTrigger asChild>
                 <Button onClick={openReportDialog}>
                   <Plus className="h-4 w-4 mr-2" />
