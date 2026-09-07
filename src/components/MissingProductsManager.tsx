@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -296,16 +297,26 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
             // modal={false}: com modal (padrão), o lock de scroll do Radix Dialog
             // bloqueia a rolagem via mouse wheel dentro do Popover do combobox de
             // produto (ele é portalizado fora da árvore do Dialog, então fica de
-            // fora do "shard" liberado pelo lock). Overlay continua bloqueando
-            // clique fora normalmente.
-            <Dialog open={isReportOpen} onOpenChange={setIsReportOpen} modal={false}>
-              <DialogTrigger asChild>
-                <Button onClick={openReportDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Reportar falta
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto overscroll-contain">
+            // fora do "shard" liberado pelo lock). Como modal=false também faz o
+            // DialogOverlay do Radix não renderizar (ele só existe quando modal),
+            // o fundo escurecido/embaçado é recriado manualmente abaixo.
+            <>
+              {isReportOpen &&
+                createPortal(
+                  <div
+                    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in-0 duration-300"
+                    onClick={() => setIsReportOpen(false)}
+                  />,
+                  document.body
+                )}
+              <Dialog open={isReportOpen} onOpenChange={setIsReportOpen} modal={false}>
+                <DialogTrigger asChild>
+                  <Button onClick={openReportDialog}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Reportar falta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] overflow-y-auto overscroll-contain">
                 <DialogHeader>
                   <DialogTitle>Reportar produtos faltando</DialogTitle>
                 </DialogHeader>
@@ -370,8 +381,9 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
                     {isSubmitting ? 'Enviando...' : 'Enviar'}
                   </Button>
                 </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </>
           }
         />
       </CardHeader>
