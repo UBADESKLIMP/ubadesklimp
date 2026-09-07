@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2 } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -182,6 +182,7 @@ const FragranceVariationFields = ({
 interface MissingProductsManagerProps {
   products: ProductWithVariations[];
   staffAccess: StaffAccess;
+  onGoToProduct?: (productId: string) => void;
 }
 
 // Uma linha com produto escolhido só está "completa" se as fragrâncias/
@@ -197,7 +198,7 @@ const isRowComplete = (row: ReportRow, productById: Map<string, ProductWithVaria
   return true;
 };
 
-const MissingProductsManager = ({ products, staffAccess }: MissingProductsManagerProps) => {
+const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: MissingProductsManagerProps) => {
   const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, cancelMissingProduct, displayNameStatus } =
     useMissingProducts();
   const { openItemIds } = useQuoteBatches();
@@ -209,6 +210,7 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
 
   const canResolve =
     staffAccess.isAdmin || (staffAccess.permissions.has('faltantes') && staffAccess.permissions.has('fornecedores'));
+  const canOpenProduct = staffAccess.isAdmin || staffAccess.permissions.has('produtos');
   const productById = new Map(products.map((p) => [p.id, p]));
   const hasChosenProduct = rows.some((row) => row.productId !== null);
   const hasIncompleteRow = rows.some((row) => row.productId !== null && !isRowComplete(row, productById));
@@ -385,6 +387,17 @@ const MissingProductsManager = ({ products, staffAccess }: MissingProductsManage
                     <p className="font-medium flex items-center gap-2 flex-wrap">
                       {displayName}
                       {inQuote && <Badge variant="secondary" className="text-xs">Em cotação</Badge>}
+                      {onGoToProduct && canOpenProduct && (
+                        <button
+                          type="button"
+                          aria-label="Abrir produto"
+                          title="Abrir produto"
+                          onClick={() => onGoToProduct(item.product_id)}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {item.stock_remaining !== null ? `${item.stock_remaining} restando` : 'Quantidade não informada'}

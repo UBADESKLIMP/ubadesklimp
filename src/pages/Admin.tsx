@@ -336,7 +336,21 @@ const Admin = () => {
         return <SupplierManager />;
 
       case 'missing':
-        return <MissingProductsManager products={products} staffAccess={staffAccess} />;
+        return (
+          <MissingProductsManager
+            products={products}
+            staffAccess={staffAccess}
+            onGoToProduct={(productId) => {
+              const product = products.find(p => p.id === productId);
+              if (product) {
+                setEditingProduct(product);
+                setAiSuggestions(null);
+                setIsDialogOpen(true);
+              }
+              setActiveSection('products');
+            }}
+          />
+        );
 
       case 'quotes':
         return <CotacoesManager products={products} />;
