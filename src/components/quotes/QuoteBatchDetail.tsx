@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRightLeft, Plus, X, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useQuoteBatchDetail } from '@/hooks/useQuoteBatchDetail';
 import { useSuppliers } from '@/hooks/useSuppliers';
-import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildMissingItemDisplayName, compareMissingItems } from '@/lib/missingProductDisplay';
 import { buildQuoteRequestExcel } from '@/lib/quoteExcel';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
@@ -101,6 +101,19 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
   const [isCancelling, setIsCancelling] = useState(false);
 
   const productById = new Map(products.map((p) => [p.id, p]));
+  // Agrupa variações do mesmo produto (fragrância/tamanho) lado a lado, em vez
+  // da ordem de inserção no banco — aplica tanto na tela quanto no Excel
+  // exportado e na revisão de cada fornecedor, que recebem esta mesma lista.
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort((a, b) =>
+        compareMissingItems(
+          { product: productById.get(a.product_id), fragranceId: a.fragrance_id, variationId: a.variation_id },
+          { product: productById.get(b.product_id), fragranceId: b.fragrance_id, variationId: b.variation_id }
+        )
+      ),
+    [items, products]
+  );
 
   if (selectedSupplierId) {
     const supplier = suppliers.find((s) => s.id === selectedSupplierId);
@@ -108,7 +121,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
       <QuoteBatchSupplierReview
         quoteBatchSupplierId={selectedSupplierId}
         supplierName={supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'Fornecedor'}
-        items={items}
+        items={sortedItems}
         products={products}
         batchStatus={batch.status}
         onBack={() => {
@@ -141,7 +154,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
   }
 
   const handleExportExcel = () => {
-    const rows = items.map((item) => ({
+    const rows = sortedItems.map((item) => ({
       id: item.id,
       displayName: buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id),
     }));
@@ -217,7 +230,7 @@ const QuoteBatchDetail = ({ batchId, products, onBack, onCompare }: QuoteBatchDe
             </Button>
           </div>
           <div className="space-y-1">
-            {items.map((item) => {
+            {sortedItems.map((item) => {
               const product = productById.get(item.product_id);
               const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
               return (

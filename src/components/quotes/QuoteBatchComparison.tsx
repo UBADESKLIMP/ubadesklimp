@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft, MessageCircle, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useQuoteBatchComparison } from '@/hooks/useQuoteBatchComparison';
-import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildMissingItemDisplayName, compareMissingItems } from '@/lib/missingProductDisplay';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { buildPurchaseOrderMessage, downloadPurchaseOrderPdf, PurchaseOrderItem } from '@/lib/purchaseOrder';
 import { ProductWithVariations } from '@/types/product';
@@ -51,6 +51,18 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   const [isFinalizing, setIsFinalizing] = useState(false);
   const productById = new Map(products.map((p) => [p.id, p]));
   const isReadOnly = batchStatus !== 'aberto';
+  // Agrupa variações do mesmo produto lado a lado (tabela, subtotais e pedido
+  // final), em vez da ordem de inserção no banco.
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort((a, b) =>
+        compareMissingItems(
+          { product: productById.get(a.product_id), fragranceId: a.fragrance_id, variationId: a.variation_id },
+          { product: productById.get(b.product_id), fragranceId: b.fragrance_id, variationId: b.variation_id }
+        )
+      ),
+    [items, products]
+  );
 
   const handleApplyCommand = async () => {
     const trimmed = command.trim();
@@ -87,7 +99,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     });
 
   const orderItemsBySupplier = new Map<string, PurchaseOrderItem[]>();
-  for (const item of items) {
+  for (const item of sortedItems) {
     const winnerId = winners.get(item.id);
     if (!winnerId) continue;
     const price = getPrice(item.id, winnerId);
@@ -150,7 +162,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => {
+              {sortedItems.map((item) => {
                 const product = productById.get(item.product_id);
                 const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                 const winnerId = winners.get(item.id);

@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMissingProducts, MissingProductReportItem } from '@/hooks/useMissingProducts';
-import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildMissingItemDisplayName, compareMissingItems } from '@/lib/missingProductDisplay';
 import { ProductWithVariations } from '@/types/product';
 import { StaffAccess } from '@/hooks/useStaffAccess';
 import AdminLoadingState from './admin/AdminLoadingState';
@@ -213,6 +213,16 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
     staffAccess.isAdmin || (staffAccess.permissions.has('faltantes') && staffAccess.permissions.has('fornecedores'));
   const canOpenProduct = staffAccess.isAdmin || staffAccess.permissions.has('produtos');
   const productById = new Map(products.map((p) => [p.id, p]));
+  // Prioridade continua sendo o mais reportado, mas dentro do mesmo report_count
+  // agrupa variações do mesmo produto lado a lado em vez de ficarem espalhadas
+  // na ordem em que cada uma foi reportada.
+  const sortedMissingProducts = [...missingProducts].sort((a, b) => {
+    if (b.report_count !== a.report_count) return b.report_count - a.report_count;
+    return compareMissingItems(
+      { product: productById.get(a.product_id), fragranceId: a.fragrance_id, variationId: a.variation_id },
+      { product: productById.get(b.product_id), fragranceId: b.fragrance_id, variationId: b.variation_id }
+    );
+  });
   const hasChosenProduct = rows.some((row) => row.productId !== null);
   const hasIncompleteRow = rows.some((row) => row.productId !== null && !isRowComplete(row, productById));
 
@@ -394,7 +404,7 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
           <AdminEmptyState icon={ClipboardCheck} title="Nenhum produto faltando no momento." tone="light" />
         ) : (
           <div className="space-y-3">
-            {missingProducts.map((item) => {
+            {sortedMissingProducts.map((item) => {
               const product = productById.get(item.product_id);
               const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
               const inQuote = openItemIds.has(item.id);
