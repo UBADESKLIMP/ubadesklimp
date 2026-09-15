@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink, PackageCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
 import { cn, normalizeText } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useQuoteBatches } from '@/hooks/useQuoteBatches';
 
 interface ReportRow {
@@ -200,8 +201,19 @@ const isRowComplete = (row: ReportRow, productById: Map<string, ProductWithVaria
 };
 
 const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: MissingProductsManagerProps) => {
-  const { missingProducts, loading, reportMissingProducts, resolveMissingProduct, cancelMissingProduct, displayNameStatus } =
-    useMissingProducts();
+  const {
+    missingProducts,
+    loading,
+    reportMissingProducts,
+    resolveMissingProduct,
+    cancelMissingProduct,
+    displayNameStatus,
+    orderedProducts,
+    ordersLoading,
+    supplierByMissingId,
+    confirmOrderReceived,
+    revertOrderToPending,
+  } = useMissingProducts();
   const { openItemIds } = useQuoteBatches();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
@@ -293,6 +305,32 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
       // erro já mostrado via toast dentro do hook
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
+
+  const handleConfirmReceived = async (id: string) => {
+    setConfirmingId(id);
+    try {
+      await confirmOrderReceived(id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
+  const handleRevertToPending = async (id: string) => {
+    if (!window.confirm('Fornecedor não tinha o produto? O item volta pra pendente.')) return;
+    setRevertingId(id);
+    try {
+      await revertOrderToPending(id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setRevertingId(null);
     }
   };
 
@@ -398,72 +436,135 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
         />
       </CardHeader>
       <CardContent className="pt-6">
-        {loading ? (
-          <AdminLoadingState rows={3} tone="light" />
-        ) : missingProducts.length === 0 ? (
-          <AdminEmptyState icon={ClipboardCheck} title="Nenhum produto faltando no momento." tone="light" />
-        ) : (
-          <div className="space-y-3">
-            {sortedMissingProducts.map((item) => {
-              const product = productById.get(item.product_id);
-              const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
-              const inQuote = openItemIds.has(item.id);
-              return (
-                <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium flex items-center gap-2 flex-wrap">
-                      {displayName}
-                      {inQuote && <Badge variant="secondary" className="text-xs">Em cotação</Badge>}
-                      {onGoToProduct && canOpenProduct && (
-                        <button
-                          type="button"
-                          aria-label="Abrir produto"
-                          title="Abrir produto"
-                          onClick={() => onGoToProduct(item.product_id)}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </button>
+        <Tabs defaultValue="pendente">
+          <TabsList className="mb-4">
+            <TabsTrigger value="pendente">Pendente</TabsTrigger>
+            <TabsTrigger value="aguardando">
+              Aguardando confirmação
+              {orderedProducts.length > 0 && (
+                <Badge variant="secondary" className="ml-2 text-[10px]">
+                  {orderedProducts.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="pendente">
+            {loading ? (
+              <AdminLoadingState rows={3} tone="light" />
+            ) : missingProducts.length === 0 ? (
+              <AdminEmptyState icon={ClipboardCheck} title="Nenhum produto faltando no momento." tone="light" />
+            ) : (
+              <div className="space-y-3">
+                {sortedMissingProducts.map((item) => {
+                  const product = productById.get(item.product_id);
+                  const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
+                  const inQuote = openItemIds.has(item.id);
+                  return (
+                    <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="font-medium flex items-center gap-2 flex-wrap">
+                          {displayName}
+                          {inQuote && <Badge variant="secondary" className="text-xs">Em cotação</Badge>}
+                          {onGoToProduct && canOpenProduct && (
+                            <button
+                              type="button"
+                              aria-label="Abrir produto"
+                              title="Abrir produto"
+                              onClick={() => onGoToProduct(item.product_id)}
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.stock_remaining !== null ? `${item.stock_remaining} restando` : 'Quantidade não informada'}
+                          {' · '}
+                          Reportado por {item.reported_by_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-xs font-medium bg-blue-100 text-blue-800 rounded-full px-2 py-1">
+                          pedido {item.report_count}x
+                        </span>
+                        {canResolve && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={resolvingId === item.id}
+                            onClick={() => handleResolve(item.id)}
+                          >
+                            Marcar como resolvido
+                          </Button>
+                        )}
+                        {canResolve && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            aria-label="Cancelar item (produto errado, não é uma compra resolvida)"
+                            disabled={cancellingId === item.id}
+                            onClick={() => handleCancel(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="aguardando">
+            {ordersLoading ? (
+              <AdminLoadingState rows={3} tone="light" />
+            ) : orderedProducts.length === 0 ? (
+              <AdminEmptyState icon={PackageCheck} title="Nenhum pedido aguardando confirmação." tone="light" />
+            ) : (
+              <div className="space-y-3">
+                {orderedProducts.map((item) => {
+                  const product = productById.get(item.product_id);
+                  const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
+                  const supplierName = supplierByMissingId[item.id];
+                  return (
+                    <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="font-medium">{displayName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {supplierName ? `Pedido em ${supplierName}` : 'Pedido gerado'}
+                          {item.order_sent_at &&
+                            ` · ${new Date(item.order_sent_at).toLocaleDateString('pt-BR')}`}
+                        </p>
+                      </div>
+                      {canResolve && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={confirmingId === item.id}
+                            onClick={() => handleConfirmReceived(item.id)}
+                          >
+                            Confirmar recebido
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            disabled={revertingId === item.id}
+                            onClick={() => handleRevertToPending(item.id)}
+                          >
+                            Fornecedor não tinha
+                          </Button>
+                        </div>
                       )}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.stock_remaining !== null ? `${item.stock_remaining} restando` : 'Quantidade não informada'}
-                      {' · '}
-                      Reportado por {item.reported_by_name}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-medium bg-blue-100 text-blue-800 rounded-full px-2 py-1">
-                      pedido {item.report_count}x
-                    </span>
-                    {canResolve && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={resolvingId === item.id}
-                        onClick={() => handleResolve(item.id)}
-                      >
-                        Marcar como resolvido
-                      </Button>
-                    )}
-                    {canResolve && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        aria-label="Cancelar item (produto errado, não é uma compra resolvida)"
-                        disabled={cancellingId === item.id}
-                        onClick={() => handleCancel(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
