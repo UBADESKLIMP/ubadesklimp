@@ -212,11 +212,8 @@ export const useQuoteBatchComparison = (batchId: string) => {
           if (currentWinnerExcluded) {
             if (cheapestSupplierId) {
               toUpdate.push({ quote_batch_item_id: item.id, quote_batch_supplier_id: cheapestSupplierId });
-              nextWinnerSources.set(item.id, 'auto');
             } else {
               toDelete.push(item.id);
-              nextWinners.delete(item.id);
-              nextWinnerSources.delete(item.id);
             }
             continue;
           }
@@ -257,6 +254,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
             continue;
           }
           nextWinners.set(row.quote_batch_item_id, row.quote_batch_supplier_id);
+          nextWinnerSources.set(row.quote_batch_item_id, 'auto');
         }
 
         if (toDelete.length > 0) {
@@ -266,6 +264,11 @@ export const useQuoteBatchComparison = (batchId: string) => {
             .in('quote_batch_item_id', toDelete);
           if (deleteWinnersError) {
             console.error('Error clearing quote winners with no valid price left:', deleteWinnersError);
+          } else {
+            for (const itemId of toDelete) {
+              nextWinners.delete(itemId);
+              nextWinnerSources.delete(itemId);
+            }
           }
         }
       }
