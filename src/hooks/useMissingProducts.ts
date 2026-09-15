@@ -11,13 +11,15 @@ export interface MissingProduct {
   variation_id: string | null;
   stock_remaining: number | null;
   report_count: number;
-  status: 'pendente' | 'resolvido' | 'cancelado';
+  status: 'pendente' | 'resolvido' | 'cancelado' | 'pedido_enviado';
   reported_by: string | null;
   reported_by_name: string;
   resolved_by: string | null;
   resolved_at: string | null;
   cancelled_by: string | null;
   cancelled_at: string | null;
+  order_sent_at: string | null;
+  order_sent_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,6 +42,9 @@ export const useMissingProducts = () => {
   const [missingProducts, setMissingProducts] = useState<MissingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { displayName: currentDisplayName, status: displayNameStatus } = useCurrentStaffName();
+  const [orderedProducts, setOrderedProducts] = useState<MissingProduct[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [supplierByMissingId, setSupplierByMissingId] = useState<Record<string, string>>({});
 
   const fetchMissingProducts = useCallback(async () => {
     setLoading(true);
@@ -61,6 +66,64 @@ export const useMissingProducts = () => {
       });
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // Busca os itens 'pedido_enviado' + o nome do fornecedor pra quem o
+  // pedido foi gerado, via quote_batch_items → quote_item_winners →
+  // quote_batch_suppliers → suppliers (mesmo padrão de embed reverso/forward
+  // já usado em useQuoteBatchComparison.ts). quote_item_winners vem como
+  // array (relação reversa a partir de quote_batch_items), mesmo sendo no
+  // máximo 1 por item — o unique constraint garante isso no banco, não no
+  // formato da resposta.
+  const fetchOrderedProducts = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('missing_products')
+        .select('*')
+        .eq('status', 'pedido_enviado')
+        .order('order_sent_at', { ascending: false });
+      if (error) throw error;
+      const rows = (data as MissingProduct[]) || [];
+      setOrderedProducts(rows);
+
+      if (rows.length === 0) {
+        setSupplierByMissingId({});
+        return;
+      }
+
+      const { data: winnerRows, error: winnerError } = await supabase
+        .from('quote_batch_items')
+        .select('missing_product_id, quote_item_winners(quote_batch_suppliers(suppliers(company_name)))')
+        .in(
+          'missing_product_id',
+          rows.map((row) => row.id)
+        );
+      if (winnerError) throw winnerError;
+
+      const typedWinnerRows = (winnerRows || []) as unknown as Array<{
+        missing_product_id: string;
+        quote_item_winners: Array<{
+          quote_batch_suppliers: { suppliers: { company_name: string } | null } | null;
+        }>;
+      }>;
+
+      const nextSupplierByMissingId: Record<string, string> = {};
+      for (const row of typedWinnerRows) {
+        const companyName = row.quote_item_winners[0]?.quote_batch_suppliers?.suppliers?.company_name;
+        if (companyName) nextSupplierByMissingId[row.missing_product_id] = companyName;
+      }
+      setSupplierByMissingId(nextSupplierByMissingId);
+    } catch (error) {
+      console.error('Error fetching ordered missing products:', error);
+      toast({
+        title: 'Erro ao carregar pedidos enviados',
+        description: 'Não foi possível carregar os itens aguardando confirmação.',
+        variant: 'destructive',
+      });
+    } finally {
+      setOrdersLoading(false);
     }
   }, []);
 
@@ -256,9 +319,56 @@ export const useMissingProducts = () => {
     }
   };
 
+  const confirmOrderReceived = async (id: string) => {
+    if (!user) throw new Error('Usuário não autenticado');
+    try {
+      const { error } = await supabase
+        .from('missing_products')
+        .update({ status: 'resolvido', resolved_by: user.id, resolved_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('status', 'pedido_enviado');
+      if (error) throw error;
+
+      setOrderedProducts((prev) => prev.filter((item) => item.id !== id));
+      toast({ title: 'Recebimento confirmado' });
+    } catch (error) {
+      console.error('Error confirming missing product order received:', error);
+      toast({
+        title: 'Erro ao confirmar',
+        description: 'Não foi possível marcar como recebido.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const revertOrderToPending = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('missing_products')
+        .update({ status: 'pendente', order_sent_at: null, order_sent_by: null })
+        .eq('id', id)
+        .eq('status', 'pedido_enviado');
+      if (error) throw error;
+
+      setOrderedProducts((prev) => prev.filter((item) => item.id !== id));
+      await fetchMissingProducts();
+      toast({ title: 'Item voltou pra pendente' });
+    } catch (error) {
+      console.error('Error reverting missing product order to pending:', error);
+      toast({
+        title: 'Erro ao reverter',
+        description: 'Não foi possível voltar este item pra pendente.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchMissingProducts();
-  }, [fetchMissingProducts]);
+    fetchOrderedProducts();
+  }, [fetchMissingProducts, fetchOrderedProducts]);
 
   return {
     missingProducts,
@@ -268,5 +378,11 @@ export const useMissingProducts = () => {
     cancelMissingProduct,
     refetch: fetchMissingProducts,
     displayNameStatus,
+    orderedProducts,
+    ordersLoading,
+    supplierByMissingId,
+    confirmOrderReceived,
+    revertOrderToPending,
+    refetchOrdered: fetchOrderedProducts,
   };
 };
