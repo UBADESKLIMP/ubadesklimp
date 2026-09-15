@@ -107,6 +107,41 @@ export const useStaffMembers = () => {
     }
   };
 
+  const updateDisplayName = async (userId: string, displayName: string) => {
+    try {
+      const { error } = await supabase
+        .from('staff_members')
+        .update({ display_name: displayName })
+        .eq('user_id', userId);
+      if (error) throw error;
+
+      toast({ title: 'Nome atualizado' });
+      await fetchStaffMembers();
+    } catch (error) {
+      console.error('Error updating staff display name:', error);
+      toast({
+        title: 'Erro ao atualizar nome',
+        description: 'Não foi possível salvar o nome de exibição.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const changePassword = async (userId: string, newPassword: string) => {
+    const { error } = await supabase.functions.invoke('alterar-senha-funcionario', {
+      body: { userId, newPassword },
+    });
+
+    if (error) {
+      const message = await extractFunctionErrorMessage(error, 'Não foi possível alterar a senha.');
+      toast({ title: 'Erro ao alterar senha', description: message, variant: 'destructive' });
+      throw error;
+    }
+
+    toast({ title: 'Senha alterada' });
+  };
+
   const deleteStaffMember = async (userId: string) => {
     const { data, error } = await supabase.functions.invoke('excluir-funcionario', {
       body: { userId },
@@ -126,5 +161,14 @@ export const useStaffMembers = () => {
     fetchStaffMembers();
   }, [fetchStaffMembers]);
 
-  return { staffMembers, loading, createStaffMember, updatePermissions, deleteStaffMember, refetch: fetchStaffMembers };
+  return {
+    staffMembers,
+    loading,
+    createStaffMember,
+    updatePermissions,
+    updateDisplayName,
+    changePassword,
+    deleteStaffMember,
+    refetch: fetchStaffMembers,
+  };
 };
