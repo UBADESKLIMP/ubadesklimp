@@ -60,6 +60,8 @@ export type Database = {
           created_at: string
           fragrance_id: string | null
           id: string
+          order_sent_at: string | null
+          order_sent_by: string | null
           product_id: string
           report_count: number
           reported_by: string | null
@@ -77,6 +79,8 @@ export type Database = {
           created_at?: string
           fragrance_id?: string | null
           id?: string
+          order_sent_at?: string | null
+          order_sent_by?: string | null
           product_id: string
           report_count?: number
           reported_by?: string | null
@@ -94,6 +98,8 @@ export type Database = {
           created_at?: string
           fragrance_id?: string | null
           id?: string
+          order_sent_at?: string | null
+          order_sent_by?: string | null
           product_id?: string
           report_count?: number
           reported_by?: string | null
@@ -119,6 +125,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "product_fragrances"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missing_products_order_sent_by_fkey"
+            columns: ["order_sent_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "missing_products_product_id_fkey"
@@ -480,6 +493,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          order_generated_at: string | null
+          order_generated_by: string | null
+          order_generated_by_name: string | null
           quote_batch_id: string
           status: string
           supplier_id: string
@@ -487,6 +503,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          order_generated_at?: string | null
+          order_generated_by?: string | null
+          order_generated_by_name?: string | null
           quote_batch_id: string
           status?: string
           supplier_id: string
@@ -494,11 +513,21 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          order_generated_at?: string | null
+          order_generated_by?: string | null
+          order_generated_by_name?: string | null
           quote_batch_id?: string
           status?: string
           supplier_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_batch_suppliers_order_generated_by_fkey"
+            columns: ["order_generated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "quote_batch_suppliers_quote_batch_id_fkey"
             columns: ["quote_batch_id"]
@@ -662,6 +691,10 @@ export type Database = {
       }
       quote_line_items: {
         Row: {
+          corrected_at: string | null
+          excluded_at: string | null
+          excluded_by: string | null
+          excluded_by_name: string | null
           id: string
           notes: string | null
           price: number | null
@@ -672,6 +705,10 @@ export type Database = {
           updated_by_name: string
         }
         Insert: {
+          corrected_at?: string | null
+          excluded_at?: string | null
+          excluded_by?: string | null
+          excluded_by_name?: string | null
           id?: string
           notes?: string | null
           price?: number | null
@@ -682,6 +719,10 @@ export type Database = {
           updated_by_name?: string
         }
         Update: {
+          corrected_at?: string | null
+          excluded_at?: string | null
+          excluded_by?: string | null
+          excluded_by_name?: string | null
           id?: string
           notes?: string | null
           price?: number | null
@@ -692,6 +733,13 @@ export type Database = {
           updated_by_name?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_line_items_excluded_by_fkey"
+            columns: ["excluded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "quote_line_items_quote_batch_item_id_fkey"
             columns: ["quote_batch_item_id"]
