@@ -204,7 +204,6 @@ export const useQuoteBatchComparison = (batchId: string) => {
                 set_by: user.id,
                 set_by_name: displayName,
               });
-              nextWinnerSources.set(item.id, 'auto');
             }
             continue;
           }
@@ -230,6 +229,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
           } else {
             for (const row of toInsert) {
               nextWinners.set(row.quote_batch_item_id, row.quote_batch_supplier_id);
+              nextWinnerSources.set(row.quote_batch_item_id, 'auto');
             }
           }
         }

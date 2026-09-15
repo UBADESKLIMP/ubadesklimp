@@ -343,13 +343,45 @@ export const useMissingProducts = () => {
   };
 
   const revertOrderToPending = async (id: string) => {
+    if (!user) throw new Error('Usuário não autenticado');
     try {
-      const { error } = await supabase
-        .from('missing_products')
-        .update({ status: 'pendente', order_sent_at: null, order_sent_by: null })
-        .eq('id', id)
-        .eq('status', 'pedido_enviado');
-      if (error) throw error;
+      const target = orderedProducts.find((item) => item.id === id);
+      if (!target) throw new Error('Item não encontrado na lista de pedidos enviados.');
+
+      const { data: existingPending, error: findError } = await findExistingPending(
+        target.product_id,
+        target.fragrance_id,
+        target.variation_id
+      );
+      if (findError) throw findError;
+
+      if (existingPending) {
+        // Já existe uma linha pendente pro mesmo produto (reportado de novo
+        // enquanto este item estava em "pedido enviado") — soma o
+        // report_count nela em vez de tentar voltar esta linha pra
+        // pendente, o que bateria no índice único de "1 pendente por
+        // produto" (missing_products_pending_item_idx).
+        const { error: incrementError } = await supabase
+          .from('missing_products')
+          .update({ report_count: existingPending.report_count + 1 })
+          .eq('id', existingPending.id)
+          .eq('status', 'pendente');
+        if (incrementError) throw incrementError;
+
+        const { error: mergeError } = await supabase
+          .from('missing_products')
+          .update({ status: 'cancelado', cancelled_by: user.id, cancelled_at: new Date().toISOString() })
+          .eq('id', id)
+          .eq('status', 'pedido_enviado');
+        if (mergeError) throw mergeError;
+      } else {
+        const { error } = await supabase
+          .from('missing_products')
+          .update({ status: 'pendente', order_sent_at: null, order_sent_by: null })
+          .eq('id', id)
+          .eq('status', 'pedido_enviado');
+        if (error) throw error;
+      }
 
       setOrderedProducts((prev) => prev.filter((item) => item.id !== id));
       await fetchMissingProducts();

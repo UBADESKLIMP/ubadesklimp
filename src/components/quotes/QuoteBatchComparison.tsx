@@ -364,6 +364,11 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
             {Array.from(orderItemsBySupplier.entries()).map(([supplierId, orderItems]) => {
               const supplier = suppliers.find((s) => s.id === supplierId);
               const total = orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+              // Lote arquivado (isReadOnly) sempre conta como "já enviado" mesmo
+              // sem order_generated_at — lotes concluídos antes desta coluna
+              // existir (sem backfill) não podem voltar a mostrar "Gerar
+              // pedido", que exigiria um lote aberto pra confirmar.
+              const alreadySent = Boolean(supplier?.order_generated_at) || isReadOnly;
               return (
                 <div key={supplierId} className="border rounded-lg p-4 space-y-2">
                   <p className="font-medium text-sm">
@@ -375,35 +380,44 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                       ` · Pedido gerado em ${new Date(supplier.order_generated_at).toLocaleDateString('pt-BR')}`}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    {!supplier?.order_generated_at ? (
-                      !isReadOnly && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" disabled={generatingSupplierId === supplierId}>
+                    {!alreadySent && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" disabled={generatingSupplierId === supplierId}>
+                            Gerar pedido
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Gerar pedido pra {supplier?.company_name ?? 'este fornecedor'}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Marca os {orderItems.length} item(ns) dele como pedido enviado em Faltantes. Os
+                              outros itens do lote continuam como estão.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleGenerateSupplierOrder(supplierId)}>
                               Gerar pedido
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Gerar pedido pra {supplier?.company_name ?? 'este fornecedor'}?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Marca os {orderItems.length} item(ns) dele como pedido enviado em Faltantes. Os
-                                outros itens do lote continuam como estão.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Voltar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleGenerateSupplierOrder(supplierId)}>
-                                Gerar pedido
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )
-                    ) : (
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    {alreadySent && (
                       <>
+                        {!isReadOnly && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={generatingSupplierId === supplierId}
+                            onClick={() => handleGenerateSupplierOrder(supplierId)}
+                          >
+                            Reenviar / atualizar pedido
+                          </Button>
+                        )}
                         <Button asChild size="sm" variant="outline">
                           <a
                             href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
