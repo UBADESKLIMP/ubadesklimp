@@ -46,7 +46,8 @@ const emptyForm = (): StaffFormState => ({
 });
 
 const StaffManager = () => {
-  const { staffMembers, loading, createStaffMember, updatePermissions, deleteStaffMember } = useStaffMembers();
+  const { staffMembers, loading, createStaffMember, updatePermissions, updateDisplayName, changePassword, deleteStaffMember } =
+    useStaffMembers();
   const adminCount = staffMembers.filter((m) => m.is_admin).length;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<StaffFormState>(emptyForm());
@@ -54,6 +55,10 @@ const StaffManager = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editPermissions, setEditPermissions] = useState<Set<StaffPermission>>(new Set());
   const [editIsAdmin, setEditIsAdmin] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [editNewPassword, setEditNewPassword] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const togglePermission = (set: Set<StaffPermission>, permission: StaffPermission): Set<StaffPermission> => {
     const next = new Set(set);
@@ -86,12 +91,38 @@ const StaffManager = () => {
     setEditingUserId(member.user_id);
     setEditIsAdmin(member.is_admin);
     setEditPermissions(new Set(member.permissions));
+    setEditDisplayName(member.display_name);
+    setEditNewPassword('');
   };
 
   const saveEditing = async () => {
     if (!editingUserId) return;
-    await updatePermissions(editingUserId, editIsAdmin, Array.from(editPermissions));
-    setEditingUserId(null);
+    setIsSavingProfile(true);
+    try {
+      const trimmedName = editDisplayName.trim();
+      await Promise.all([
+        updatePermissions(editingUserId, editIsAdmin, Array.from(editPermissions)),
+        trimmedName ? updateDisplayName(editingUserId, trimmedName) : Promise.resolve(),
+      ]);
+      setEditingUserId(null);
+    } catch {
+      // erro já mostrado via toast dentro dos hooks
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!editingUserId || !/^\d{4}$/.test(editNewPassword)) return;
+    setIsChangingPassword(true);
+    try {
+      await changePassword(editingUserId, editNewPassword);
+      setEditNewPassword('');
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleDelete = async (member: StaffMember) => {
@@ -237,6 +268,14 @@ const StaffManager = () => {
 
                 {editingUserId === member.user_id && (
                   <div className="border-t pt-3 space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor={`edit-display-name-${member.user_id}`}>Nome de exibição</Label>
+                      <Input
+                        id={`edit-display-name-${member.user_id}`}
+                        value={editDisplayName}
+                        onChange={(e) => setEditDisplayName(e.target.value)}
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id={`edit-is-admin-${member.user_id}`}
@@ -269,9 +308,32 @@ const StaffManager = () => {
                         ))}
                       </div>
                     )}
+                    <div className="border-t pt-3 space-y-2">
+                      <Label htmlFor={`edit-password-${member.user_id}`}>Alterar senha (novo PIN de 4 dígitos)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id={`edit-password-${member.user_id}`}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d{4}"
+                          maxLength={4}
+                          placeholder="0000"
+                          value={editNewPassword}
+                          onChange={(e) => setEditNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleChangePassword}
+                          disabled={isChangingPassword || !/^\d{4}$/.test(editNewPassword)}
+                        >
+                          {isChangingPassword ? 'Salvando...' : 'Salvar nova senha'}
+                        </Button>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={saveEditing}>
-                        Salvar
+                      <Button size="sm" onClick={saveEditing} disabled={isSavingProfile}>
+                        {isSavingProfile ? 'Salvando...' : 'Salvar'}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setEditingUserId(null)}>
                         Cancelar
