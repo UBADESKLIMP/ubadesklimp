@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, MessageCircle, FileDown } from 'lucide-react';
+import { ArrowLeft, MessageCircle, FileDown, Pencil, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,16 +39,25 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     suppliers,
     getPrice,
     getNote,
+    getExcluded,
+    getCorrected,
     winners,
     getWinnerSource,
     setWinner,
     applyCommand,
-    finalizeBatch,
+    setPriceExcluded,
+    correctPrice,
+    updateItemQuantity,
+    generateSupplierOrder,
+    archiveBatch,
   } = useQuoteBatchComparison(batchId);
   const [command, setCommand] = useState('');
   const [isApplyingCommand, setIsApplyingCommand] = useState(false);
   const [commandLog, setCommandLog] = useState<string[]>([]);
-  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [generatingSupplierId, setGeneratingSupplierId] = useState<string | null>(null);
+  const [editingCell, setEditingCell] = useState<{ itemId: string; supplierId: string } | null>(null);
+  const [editingPriceValue, setEditingPriceValue] = useState('');
   const productById = new Map(products.map((p) => [p.id, p]));
   const isReadOnly = batchStatus !== 'aberto';
   // Agrupa variações do mesmo produto lado a lado (tabela, subtotais e pedido
@@ -91,13 +100,6 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * (item.quantity ?? 1));
   }
 
-  const allItemsHaveWinner =
-    items.length > 0 &&
-    items.every((item) => {
-      const winnerId = winners.get(item.id);
-      return !!winnerId && getPrice(item.id, winnerId) !== null;
-    });
-
   const orderItemsBySupplier = new Map<string, PurchaseOrderItem[]>();
   for (const item of sortedItems) {
     const winnerId = winners.get(item.id);
@@ -113,13 +115,46 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     orderItemsBySupplier.set(winnerId, list);
   }
 
-  const handleFinalize = async () => {
-    setIsFinalizing(true);
+  const handleArchive = async () => {
+    setIsArchiving(true);
     try {
-      await finalizeBatch();
+      await archiveBatch();
     } finally {
-      setIsFinalizing(false);
+      setIsArchiving(false);
     }
+  };
+
+  const handleGenerateSupplierOrder = async (supplierId: string) => {
+    setGeneratingSupplierId(supplierId);
+    try {
+      await generateSupplierOrder(supplierId);
+    } finally {
+      setGeneratingSupplierId(null);
+    }
+  };
+
+  const handleQuantityBlur = (itemId: string, raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed === '') {
+      updateItemQuantity(itemId, null);
+      return;
+    }
+    const parsed = parseInt(trimmed, 10);
+    updateItemQuantity(itemId, !Number.isNaN(parsed) && parsed > 0 ? parsed : null);
+  };
+
+  const startEditingPrice = (itemId: string, supplierId: string, currentPrice: number) => {
+    setEditingCell({ itemId, supplierId });
+    setEditingPriceValue(String(currentPrice));
+  };
+
+  const saveEditingPrice = async () => {
+    const cell = editingCell;
+    setEditingCell(null);
+    if (!cell) return;
+    const parsed = parseFloat(editingPriceValue.replace(',', '.'));
+    if (Number.isNaN(parsed)) return;
+    await correctPrice(cell.itemId, cell.supplierId, parsed);
   };
 
   if (loading) {
@@ -170,41 +205,113 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
-                      {item.quantity ? `${item.quantity}x ` : ''}{displayName}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          key={item.id}
+                          type="number"
+                          min="1"
+                          disabled={isReadOnly}
+                          defaultValue={item.quantity ?? ''}
+                          placeholder="Qtd"
+                          className="h-7 w-16"
+                          onBlur={(e) => handleQuantityBlur(item.id, e.target.value)}
+                        />
+                        <span>{displayName}</span>
+                      </div>
                     </TableCell>
                     {suppliers.map((supplier) => {
                       const price = getPrice(item.id, supplier.id);
                       const note = getNote(item.id, supplier.id);
+                      const excluded = getExcluded(item.id, supplier.id);
+                      const corrected = getCorrected(item.id, supplier.id);
                       const isWinner = winnerId === supplier.id;
                       const isManualWinner = isWinner && winnerSource !== 'auto';
+                      const isEditingCell = editingCell?.itemId === item.id && editingCell?.supplierId === supplier.id;
                       return (
                         <TableCell key={supplier.id}>
                           {price === null ? (
                             <span className="text-muted-foreground">—</span>
+                          ) : isEditingCell ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              autoFocus
+                              className="h-7 w-24"
+                              value={editingPriceValue}
+                              onChange={(e) => setEditingPriceValue(e.target.value)}
+                              onBlur={saveEditingPrice}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.currentTarget.blur();
+                                if (e.key === 'Escape') setEditingCell(null);
+                              }}
+                            />
                           ) : (
-                            <>
+                            <div className="group flex items-center gap-1">
                               <button
                                 type="button"
-                                disabled={isReadOnly}
+                                disabled={isReadOnly || excluded}
                                 onClick={() => setWinner(item.id, supplier.id)}
                                 className={`text-sm px-2 py-1 rounded ${
-                                  isManualWinner
-                                    ? 'bg-amber-600 text-white font-semibold'
-                                    : isWinner
-                                      ? 'bg-emerald-600 text-white font-semibold'
-                                      : 'hover:bg-muted/50'
-                                } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
+                                  excluded
+                                    ? 'text-muted-foreground line-through'
+                                    : isManualWinner
+                                      ? 'bg-amber-600 text-white font-semibold'
+                                      : isWinner
+                                        ? 'bg-emerald-600 text-white font-semibold'
+                                        : 'hover:bg-muted/50'
+                                } ${isReadOnly || excluded ? 'cursor-default' : 'cursor-pointer'}`}
                               >
                                 {formatPrice(price)}
-                                {isWinner && (
+                                {isWinner && !excluded && (
                                   <Badge variant="secondary" className="ml-2 text-[10px]">
                                     {isManualWinner ? 'Manual' : 'Mais barato'}
                                   </Badge>
                                 )}
+                                {corrected && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-2 text-[10px] bg-blue-600 text-white hover:bg-blue-600"
+                                  >
+                                    Editado
+                                  </Badge>
+                                )}
                               </button>
-                              {note && <p className="text-xs text-muted-foreground px-2">{note}</p>}
-                            </>
+                              {!isReadOnly &&
+                                (excluded ? (
+                                  <button
+                                    type="button"
+                                    aria-label="Restaurar preço"
+                                    title="Restaurar preço"
+                                    onClick={() => setPriceExcluded(item.id, supplier.id, false)}
+                                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      aria-label="Editar preço"
+                                      title="Editar preço"
+                                      onClick={() => startEditingPrice(item.id, supplier.id, price)}
+                                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label="Excluir preço da comparação"
+                                      title="Excluir preço da comparação"
+                                      onClick={() => setPriceExcluded(item.id, supplier.id, true)}
+                                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                ))}
+                            </div>
                           )}
+                          {note && <p className="text-xs text-muted-foreground px-2">{note}</p>}
                         </TableCell>
                       );
                     })}
@@ -250,30 +357,8 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
             )}
           </div>
         )}
-        {batchStatus === 'aberto' && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button disabled={!allItemsHaveWinner || isFinalizing} className="w-full">
-                Gerar pedidos de compra
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Gerar pedidos de compra?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Isso fecha este lote de cotação e marca os itens de Faltantes correspondentes como resolvidos. Não
-                  tem como desfazer.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Voltar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleFinalize}>Gerar pedidos</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
 
-        {batchStatus === 'concluido' && orderItemsBySupplier.size > 0 && (
+        {batchStatus !== 'cancelado' && orderItemsBySupplier.size > 0 && (
           <div className="space-y-3">
             <p className="text-sm font-medium">Pedidos de compra</p>
             {Array.from(orderItemsBySupplier.entries()).map(([supplierId, orderItems]) => {
@@ -286,36 +371,92 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {orderItems.length} item(ns) · Total: {formatPrice(total)}
+                    {supplier?.order_generated_at &&
+                      ` · Pedido gerado em ${new Date(supplier.order_generated_at).toLocaleDateString('pt-BR')}`}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Button asChild size="sm" variant="outline">
-                      <a
-                        href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        WhatsApp
-                      </a>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        downloadPurchaseOrderPdf(
-                          supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'fornecedor',
-                          orderItems
-                        )
-                      }
-                    >
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Baixar PDF
-                    </Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {!supplier?.order_generated_at ? (
+                      !isReadOnly && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" disabled={generatingSupplierId === supplierId}>
+                              Gerar pedido
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Gerar pedido pra {supplier?.company_name ?? 'este fornecedor'}?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Marca os {orderItems.length} item(ns) dele como pedido enviado em Faltantes. Os
+                                outros itens do lote continuam como estão.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Voltar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleGenerateSupplierOrder(supplierId)}>
+                                Gerar pedido
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )
+                    ) : (
+                      <>
+                        <Button asChild size="sm" variant="outline">
+                          <a
+                            href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            WhatsApp
+                          </a>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            downloadPurchaseOrderPdf(
+                              supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'fornecedor',
+                              orderItems
+                            )
+                          }
+                        >
+                          <FileDown className="h-4 w-4 mr-2" />
+                          Baixar PDF
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
+        )}
+
+        {batchStatus === 'aberto' && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={isArchiving} className="w-full">
+                Arquivar lote
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Arquivar este lote?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Só organiza a lista de lotes — itens ainda sem vencedor continuam pendentes em Faltantes
+                  normalmente, sem mudança. Não tem como desarquivar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Voltar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleArchive}>Arquivar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardContent>
     </Card>
