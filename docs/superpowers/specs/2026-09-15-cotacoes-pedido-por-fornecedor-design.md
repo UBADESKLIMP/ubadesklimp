@@ -19,13 +19,23 @@ e impossível descartar um preço claramente errado sem apagar o histórico.
 
 ## 1. Modelo de dados
 
-### `quote_line_items` — excluir preço da disputa
+### `quote_line_items` — excluir preço da disputa e marcar edição manual
 
 | Campo | Tipo | Descrição |
 |---|---|---|
 | `excluded_at` | timestamptz, nullable | Quando o preço foi excluído da comparação. `null` = preço válido, entra na disputa normalmente. |
 | `excluded_by` | uuid, FK → `staff_members(user_id)` on delete set null, nullable | |
 | `excluded_by_name` | text, nullable | |
+| `corrected_at` | timestamptz, nullable | Quando o preço foi editado manualmente **na tela de comparação** (esta parte). `null` = preço nunca foi corrigido ali. |
+
+`updated_by`/`updated_by_name`/`updated_at` (já existentes) continuam sendo
+gravados por qualquer escrita de preço — extração por IA, revisão do
+fornecedor, ou esta edição nova — então não servem sozinhos pra saber se um
+preço foi "corrigido" (praticamente todo preço tem esses campos preenchidos,
+já que não existe outro jeito de gravar preço). `corrected_at` é o sinal
+específico só desta tela, usado pra decidir se mostra o badge "Editado":
+gravado só quando a edição vem da tela de comparação, nunca pela extração por
+IA nem pela revisão do fornecedor.
 
 Preço excluído continua no banco (nunca é apagado) — só passa a ser ignorado no
 cálculo de "mais barato" e não pode ser escolhido como vencedor enquanto excluído.
@@ -102,7 +112,9 @@ lugar do "×" (`excluded_at = null` reverte). Preço excluído:
 aparece em célula excluída — precisa desfazer a exclusão primeiro pra editar).
 Clicar abre um input numérico inline; salvar faz o mesmo `update quote_line_items
 set price, updated_by, updated_by_name` que a tela de revisão do fornecedor
-(`useQuoteSupplierReview.ts`) já usa hoje — mesmo padrão, reaproveitado.
+(`useQuoteSupplierReview.ts`) já usa hoje — mesmo padrão, reaproveitado — mais
+`corrected_at = now()`, que é o que diferencia esta edição das outras formas de
+gravar preço (ver seção 1).
 
 Célula com preço editado ganha um badge próprio, cor azul, texto "Editado" —
 visualmente distinto do verde "Mais barato" e do amarelo "Manual" (que indicam o
