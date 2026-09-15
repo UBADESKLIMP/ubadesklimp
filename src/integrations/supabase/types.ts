@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -55,6 +55,8 @@ export type Database = {
       }
       missing_products: {
         Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           fragrance_id: string | null
           id: string
@@ -70,6 +72,8 @@ export type Database = {
           variation_id: string | null
         }
         Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           fragrance_id?: string | null
           id?: string
@@ -85,6 +89,8 @@ export type Database = {
           variation_id?: string | null
         }
         Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           fragrance_id?: string | null
           id?: string
@@ -100,6 +106,13 @@ export type Database = {
           variation_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "missing_products_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "missing_products_fragrance_id_fkey"
             columns: ["fragrance_id"]
@@ -287,10 +300,11 @@ export type Database = {
           price_position: string | null
           priority: boolean
           priority_order: number | null
-          purchase_min_quantity: string | null
           purchase_max_quantity: string | null
+          purchase_min_quantity: string | null
           purchase_notes: string | null
           size_unit: string | null
+          slug: string
           specifications: string | null
           updated_at: string
           validity: string | null
@@ -319,10 +333,11 @@ export type Database = {
           price_position?: string | null
           priority?: boolean
           priority_order?: number | null
-          purchase_min_quantity?: string | null
           purchase_max_quantity?: string | null
+          purchase_min_quantity?: string | null
           purchase_notes?: string | null
           size_unit?: string | null
+          slug: string
           specifications?: string | null
           updated_at?: string
           validity?: string | null
@@ -351,10 +366,11 @@ export type Database = {
           price_position?: string | null
           priority?: boolean
           priority_order?: number | null
-          purchase_min_quantity?: string | null
           purchase_max_quantity?: string | null
+          purchase_min_quantity?: string | null
           purchase_notes?: string | null
           size_unit?: string | null
+          slug?: string
           specifications?: string | null
           updated_at?: string
           validity?: string | null
@@ -426,21 +442,21 @@ export type Database = {
           created_at: string
           id: string
           missing_product_id: string
-          quantity: number
+          quantity: number | null
           quote_batch_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           missing_product_id: string
-          quantity?: number
+          quantity?: number | null
           quote_batch_id: string
         }
         Update: {
           created_at?: string
           id?: string
           missing_product_id?: string
-          quantity?: number
+          quantity?: number | null
           quote_batch_id?: string
         }
         Relationships: [
@@ -647,6 +663,7 @@ export type Database = {
       quote_line_items: {
         Row: {
           id: string
+          notes: string | null
           price: number | null
           quote_batch_item_id: string
           quote_batch_supplier_id: string
@@ -656,6 +673,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          notes?: string | null
           price?: number | null
           quote_batch_item_id: string
           quote_batch_supplier_id: string
@@ -665,6 +683,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          notes?: string | null
           price?: number | null
           quote_batch_item_id?: string
           quote_batch_supplier_id?: string
@@ -808,6 +827,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_product_slug: { Args: { product_name: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -820,6 +840,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff_admin: { Args: never; Returns: boolean }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -839,12 +860,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -868,11 +889,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -893,11 +914,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -918,11 +939,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -935,11 +956,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
