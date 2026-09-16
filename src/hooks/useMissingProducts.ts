@@ -279,6 +279,30 @@ export const useMissingProducts = () => {
 
       if (error) throw error;
 
+      // Se este item estava num lote de cotação aberto, tira a linha dele de
+      // lá — resolvido por outro caminho não deve continuar aparecendo na
+      // tabela de comparação. quote_line_items/quote_item_winners cascateiam
+      // via FK (on delete cascade), então basta apagar quote_batch_items.
+      const { data: openItems, error: openItemsError } = await supabase
+        .from('quote_batch_items')
+        .select('id, quote_batches!inner(status)')
+        .eq('missing_product_id', id)
+        .eq('quote_batches.status', 'aberto');
+      if (openItemsError) {
+        console.error('Error checking open quote batch items after resolve:', openItemsError);
+      } else if (openItems && openItems.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('quote_batch_items')
+          .delete()
+          .in(
+            'id',
+            openItems.map((row) => row.id)
+          );
+        if (deleteError) {
+          console.error('Error removing resolved item from open quote batch:', deleteError);
+        }
+      }
+
       setMissingProducts((prev) => prev.filter((item) => item.id !== id));
       toast({ title: 'Faltante resolvida' });
     } catch (error) {
