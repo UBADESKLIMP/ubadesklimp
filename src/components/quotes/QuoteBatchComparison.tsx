@@ -145,10 +145,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
 
   const startEditingPrice = (itemId: string, supplierId: string, currentPrice: number) => {
     setEditingCell({ itemId, supplierId });
-    // Mesmo formato de exibição do resto da tela (formatPrice, sem o "R$" —
-    // esse prefixo já fica fixo ao lado do campo) — editar "12.5" confundia,
-    // já que em nenhum outro lugar da tela o preço aparece com ponto.
-    setEditingPriceValue(currentPrice.toFixed(2).replace('.', ','));
+    setEditingPriceValue(String(currentPrice));
   };
 
   const saveEditingPrice = async () => {
@@ -235,24 +232,19 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                           {price === null ? (
                             <span className="text-muted-foreground">—</span>
                           ) : isEditingCell ? (
-                            <div className="flex h-7 w-24 items-center gap-1 rounded-md border border-input bg-background px-2 text-sm focus-within:ring-1 focus-within:ring-ring">
-                              <span className="text-muted-foreground">R$</span>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                autoFocus
-                                placeholder="0,00"
-                                className="w-full min-w-0 border-0 bg-transparent p-0 outline-none focus-visible:outline-none"
-                                value={editingPriceValue}
-                                onChange={(e) => setEditingPriceValue(e.target.value)}
-                                onFocus={(e) => e.currentTarget.select()}
-                                onBlur={saveEditingPrice}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') e.currentTarget.blur();
-                                  if (e.key === 'Escape') setEditingCell(null);
-                                }}
-                              />
-                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              autoFocus
+                              className="h-7 w-24"
+                              value={editingPriceValue}
+                              onChange={(e) => setEditingPriceValue(e.target.value)}
+                              onBlur={saveEditingPrice}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.currentTarget.blur();
+                                if (e.key === 'Escape') setEditingCell(null);
+                              }}
+                            />
                           ) : (
                             <div className="group flex items-center gap-1">
                               <button
