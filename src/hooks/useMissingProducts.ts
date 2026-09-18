@@ -20,6 +20,8 @@ export interface MissingProduct {
   cancelled_at: string | null;
   order_sent_at: string | null;
   order_sent_by: string | null;
+  order_supplier_name: string | null;
+  order_quantity: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -44,7 +46,6 @@ export const useMissingProducts = () => {
   const { displayName: currentDisplayName, status: displayNameStatus } = useCurrentStaffName();
   const [orderedProducts, setOrderedProducts] = useState<MissingProduct[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [supplierByMissingId, setSupplierByMissingId] = useState<Record<string, string>>({});
 
   const fetchMissingProducts = useCallback(async () => {
     setLoading(true);
@@ -69,13 +70,10 @@ export const useMissingProducts = () => {
     }
   }, []);
 
-  // Busca os itens 'pedido_enviado' + o nome do fornecedor pra quem o
-  // pedido foi gerado, via quote_batch_items → quote_item_winners →
-  // quote_batch_suppliers → suppliers (mesmo padrão de embed reverso/forward
-  // já usado em useQuoteBatchComparison.ts). quote_item_winners vem como
-  // array (relação reversa a partir de quote_batch_items), mesmo sendo no
-  // máximo 1 por item — o unique constraint garante isso no banco, não no
-  // formato da resposta.
+  // Busca os itens 'pedido_enviado'. O nome do fornecedor já vem pronto em
+  // order_supplier_name (gravado no momento do pedido, tanto pelo fluxo de
+  // cotação quanto pelo fluxo direto de marca exclusiva) — não precisa mais
+  // cruzar com quote_batch_items/quote_item_winners.
   const fetchOrderedProducts = useCallback(async () => {
     setOrdersLoading(true);
     try {
@@ -85,36 +83,7 @@ export const useMissingProducts = () => {
         .eq('status', 'pedido_enviado')
         .order('order_sent_at', { ascending: false });
       if (error) throw error;
-      const rows = (data as MissingProduct[]) || [];
-      setOrderedProducts(rows);
-
-      if (rows.length === 0) {
-        setSupplierByMissingId({});
-        return;
-      }
-
-      const { data: winnerRows, error: winnerError } = await supabase
-        .from('quote_batch_items')
-        .select('missing_product_id, quote_item_winners(quote_batch_suppliers(suppliers(company_name)))')
-        .in(
-          'missing_product_id',
-          rows.map((row) => row.id)
-        );
-      if (winnerError) throw winnerError;
-
-      const typedWinnerRows = (winnerRows || []) as unknown as Array<{
-        missing_product_id: string;
-        quote_item_winners: Array<{
-          quote_batch_suppliers: { suppliers: { company_name: string } | null } | null;
-        }>;
-      }>;
-
-      const nextSupplierByMissingId: Record<string, string> = {};
-      for (const row of typedWinnerRows) {
-        const companyName = row.quote_item_winners[0]?.quote_batch_suppliers?.suppliers?.company_name;
-        if (companyName) nextSupplierByMissingId[row.missing_product_id] = companyName;
-      }
-      setSupplierByMissingId(nextSupplierByMissingId);
+      setOrderedProducts((data as MissingProduct[]) || []);
     } catch (error) {
       console.error('Error fetching ordered missing products:', error);
       toast({
@@ -316,6 +285,61 @@ export const useMissingProducts = () => {
     }
   };
 
+  const updateMissingProduct = async (
+    id: string,
+    input: {
+      productId: string;
+      fragranceId: string | null;
+      variationId: string | null;
+      stockRemaining: number | null;
+    }
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('missing_products')
+        .update({
+          product_id: input.productId,
+          fragrance_id: input.fragranceId,
+          variation_id: input.variationId,
+          stock_remaining: input.stockRemaining,
+        })
+        .eq('id', id)
+        .eq('status', 'pendente');
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error(
+            'Já existe uma faltante pendente pra esse mesmo produto — resolva o conflito antes de editar.'
+          );
+        }
+        throw error;
+      }
+
+      setMissingProducts((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                product_id: input.productId,
+                fragrance_id: input.fragranceId,
+                variation_id: input.variationId,
+                stock_remaining: input.stockRemaining,
+              }
+            : item
+        )
+      );
+      toast({ title: 'Faltante atualizada' });
+    } catch (error) {
+      console.error('Error updating missing product:', error);
+      toast({
+        title: 'Erro ao editar',
+        description: error instanceof Error ? error.message : 'Não foi possível salvar as mudanças.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const cancelMissingProduct = async (id: string) => {
     if (!user) throw new Error('Usuário não autenticado');
     try {
@@ -337,6 +361,55 @@ export const useMissingProducts = () => {
       toast({
         title: 'Erro ao cancelar',
         description: 'Não foi possível cancelar este item.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const updateOrderQuantity = async (id: string, quantity: number | null) => {
+    try {
+      const { error } = await supabase.from('missing_products').update({ order_quantity: quantity }).eq('id', id);
+      if (error) throw error;
+      setMissingProducts((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, order_quantity: quantity } : item))
+      );
+    } catch (error) {
+      console.error('Error updating missing product order quantity:', error);
+      toast({
+        title: 'Erro ao salvar quantidade',
+        description: 'Não foi possível salvar esse valor.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Fluxo direto de marca exclusiva: sem cotação, sem quote_batch — marca
+  // os itens escolhidos direto como pedido_enviado, com o nome do
+  // fornecedor gravado ali mesmo (mesmo campo que o fluxo de cotação usa).
+  const sendExclusiveSupplierOrder = async (itemIds: string[], supplierName: string) => {
+    if (!user) throw new Error('Usuário não autenticado');
+    try {
+      const { error } = await supabase
+        .from('missing_products')
+        .update({
+          status: 'pedido_enviado',
+          order_sent_at: new Date().toISOString(),
+          order_sent_by: user.id,
+          order_supplier_name: supplierName,
+        })
+        .in('id', itemIds)
+        .eq('status', 'pendente');
+      if (error) throw error;
+
+      setMissingProducts((prev) => prev.filter((item) => !itemIds.includes(item.id)));
+      await fetchOrderedProducts();
+      toast({ title: 'Pedido enviado', description: `${itemIds.length} item(ns) marcados como pedido enviado.` });
+    } catch (error) {
+      console.error('Error sending exclusive supplier order:', error);
+      toast({
+        title: 'Erro ao enviar pedido',
+        description: 'Não foi possível marcar os itens como pedido enviado.',
         variant: 'destructive',
       });
       throw error;
@@ -432,11 +505,13 @@ export const useMissingProducts = () => {
     reportMissingProducts,
     resolveMissingProduct,
     cancelMissingProduct,
+    updateMissingProduct,
+    updateOrderQuantity,
+    sendExclusiveSupplierOrder,
     refetch: fetchMissingProducts,
     displayNameStatus,
     orderedProducts,
     ordersLoading,
-    supplierByMissingId,
     confirmOrderReceived,
     revertOrderToPending,
     refetchOrdered: fetchOrderedProducts,
