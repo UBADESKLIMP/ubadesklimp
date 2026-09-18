@@ -60,8 +60,10 @@ export type Database = {
           created_at: string
           fragrance_id: string | null
           id: string
+          order_quantity: number | null
           order_sent_at: string | null
           order_sent_by: string | null
+          order_supplier_name: string | null
           product_id: string
           report_count: number
           reported_by: string | null
@@ -79,8 +81,10 @@ export type Database = {
           created_at?: string
           fragrance_id?: string | null
           id?: string
+          order_quantity?: number | null
           order_sent_at?: string | null
           order_sent_by?: string | null
+          order_supplier_name?: string | null
           product_id: string
           report_count?: number
           reported_by?: string | null
@@ -98,8 +102,10 @@ export type Database = {
           created_at?: string
           fragrance_id?: string | null
           id?: string
+          order_quantity?: number | null
           order_sent_at?: string | null
           order_sent_by?: string | null
+          order_supplier_name?: string | null
           product_id?: string
           report_count?: number
           reported_by?: string | null
@@ -810,6 +816,35 @@ export type Database = {
           },
         ]
       }
+      supplier_exclusive_brands: {
+        Row: {
+          brand: string
+          created_at: string
+          id: string
+          supplier_id: string
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          id?: string
+          supplier_id: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_exclusive_brands_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           avg_delivery_days: number | null
@@ -887,6 +922,7 @@ export type Database = {
         Args: { perm: Database["public"]["Enums"]["staff_permission"] }
         Returns: boolean
       }
+      immutable_unaccent: { Args: { "": string }; Returns: string }
       is_staff_admin: { Args: never; Returns: boolean }
       unaccent: { Args: { "": string }; Returns: string }
     }

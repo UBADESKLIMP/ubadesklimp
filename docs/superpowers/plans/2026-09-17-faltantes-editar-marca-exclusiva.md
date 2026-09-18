@@ -54,6 +54,21 @@ shadcn/ui, lucide-react.
 ```sql
 begin;
 
+-- unaccent() nativo é STABLE (depende de configuração de dicionário), e
+-- Postgres não deixa usar função STABLE em expressão de índice — só
+-- IMMUTABLE. Este wrapper (padrão documentado no wiki do Postgres/Supabase
+-- pra esse exato problema) fixa o dicionário explicitamente e assume a
+-- garantia de imutabilidade, o que é seguro aqui porque o mapeamento de
+-- acentuação não muda.
+create or replace function public.immutable_unaccent(text)
+returns text
+language sql
+immutable
+parallel safe
+as $$
+  select public.unaccent('public.unaccent'::regdictionary, $1);
+$$;
+
 create table public.supplier_exclusive_brands (
   id uuid primary key default gen_random_uuid(),
   supplier_id uuid not null references public.suppliers(id) on delete cascade,
@@ -61,10 +76,9 @@ create table public.supplier_exclusive_brands (
   created_at timestamptz not null default now()
 );
 
--- Uma marca só pode ser exclusiva de 1 fornecedor por vez. unaccent() já
--- está disponível no banco (usado em generate_product_slug).
+-- Uma marca só pode ser exclusiva de 1 fornecedor por vez.
 create unique index supplier_exclusive_brands_brand_idx
-  on public.supplier_exclusive_brands (lower(unaccent(brand)));
+  on public.supplier_exclusive_brands (lower(public.immutable_unaccent(brand)));
 
 alter table public.supplier_exclusive_brands enable row level security;
 
