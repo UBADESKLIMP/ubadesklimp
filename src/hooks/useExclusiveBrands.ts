@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { normalizeText } from '@/lib/utils';
 
 export interface ExclusiveBrand {
   id: string;
@@ -62,7 +63,20 @@ export const useExclusiveBrands = () => {
   // existir noutro fornecedor), depois insere a lista nova.
   const setSupplierBrands = async (supplierId: string, brands: string[]) => {
     try {
-      const uniqueBrands = [...new Set(brands.map((b) => b.trim()).filter(Boolean))];
+      // Dedup preservando a primeira grafia digitada, mas comparando de
+      // forma normalizada (sem acento/caixa) — mesmo critério do índice
+      // único do banco (lower(immutable_unaccent(brand))). Sem isso, "Omo"
+      // e "omo" juntos nesta mesma chamada colidiriam no insert abaixo.
+      const uniqueBrands: string[] = [];
+      const seenNormalized = new Set<string>();
+      for (const raw of brands) {
+        const trimmed = raw.trim();
+        if (!trimmed) continue;
+        const key = normalizeText(trimmed);
+        if (seenNormalized.has(key)) continue;
+        seenNormalized.add(key);
+        uniqueBrands.push(trimmed);
+      }
 
       const { error: deleteOwnError } = await supabase
         .from('supplier_exclusive_brands')
@@ -71,11 +85,27 @@ export const useExclusiveBrands = () => {
       if (deleteOwnError) throw deleteOwnError;
 
       if (uniqueBrands.length > 0) {
-        const { error: deleteOthersError } = await supabase
+        // Apaga qualquer cadastro dessas marcas em OUTRO fornecedor,
+        // comparando normalizado — não só string exata, senão "Ypê"
+        // cadastrado antes sobrevive a uma tentativa de mover pra
+        // "ype"/"YPÊ" e a inserção abaixo colide com o índice único do
+        // banco (que também é normalizado).
+        const { data: existingRows, error: fetchError } = await supabase
           .from('supplier_exclusive_brands')
-          .delete()
-          .in('brand', uniqueBrands);
-        if (deleteOthersError) throw deleteOthersError;
+          .select('id, brand');
+        if (fetchError) throw fetchError;
+
+        const idsToDelete = (existingRows || [])
+          .filter((row) => seenNormalized.has(normalizeText(row.brand)))
+          .map((row) => row.id);
+
+        if (idsToDelete.length > 0) {
+          const { error: deleteOthersError } = await supabase
+            .from('supplier_exclusive_brands')
+            .delete()
+            .in('id', idsToDelete);
+          if (deleteOthersError) throw deleteOthersError;
+        }
 
         const { error: insertError } = await supabase
           .from('supplier_exclusive_brands')
