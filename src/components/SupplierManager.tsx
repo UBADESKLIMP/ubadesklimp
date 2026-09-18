@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Pencil, Truck, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Pencil, Truck, MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
 import { normalizeText } from '@/lib/utils';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
+import { Badge } from '@/components/ui/badge';
+import { useExclusiveBrands } from '@/hooks/useExclusiveBrands';
 
 interface SupplierFormState {
   contactName: string;
@@ -28,6 +30,7 @@ interface SupplierFormState {
   avgDeliveryDays: string;
   maxInstallments: string;
   notes: string;
+  exclusiveBrands: string[];
 }
 
 const emptyForm = (): SupplierFormState => ({
@@ -38,6 +41,7 @@ const emptyForm = (): SupplierFormState => ({
   avgDeliveryDays: '',
   maxInstallments: '',
   notes: '',
+  exclusiveBrands: [],
 });
 
 const toNullableInt = (value: string): number | null => {
@@ -66,7 +70,25 @@ interface SupplierFormFieldsProps {
   idPrefix: string;
 }
 
-const SupplierFormFields = ({ form, onChange, idPrefix }: SupplierFormFieldsProps) => (
+const SupplierFormFields = ({ form, onChange, idPrefix }: SupplierFormFieldsProps) => {
+  const [newBrand, setNewBrand] = useState('');
+
+  const addBrand = () => {
+    const trimmed = newBrand.trim();
+    if (!trimmed) return;
+    if (form.exclusiveBrands.some((b) => normalizeText(b) === normalizeText(trimmed))) {
+      setNewBrand('');
+      return;
+    }
+    onChange((f) => ({ ...f, exclusiveBrands: [...f.exclusiveBrands, trimmed] }));
+    setNewBrand('');
+  };
+
+  const removeBrand = (brand: string) => {
+    onChange((f) => ({ ...f, exclusiveBrands: f.exclusiveBrands.filter((b) => b !== brand) }));
+  };
+
+  return (
   <div className="space-y-4">
     <div className="space-y-2">
       <Label htmlFor={`${idPrefix}-contact-name`}>Nome do contato</Label>
@@ -138,11 +160,54 @@ const SupplierFormFields = ({ form, onChange, idPrefix }: SupplierFormFieldsProp
         onChange={(e) => onChange((f) => ({ ...f, notes: e.target.value }))}
       />
     </div>
+    <div className="space-y-2">
+      <Label htmlFor={`${idPrefix}-exclusive-brand`}>Marcas exclusivas (opcional)</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          id={`${idPrefix}-exclusive-brand`}
+          placeholder="Ex: Yoma"
+          value={newBrand}
+          onChange={(e) => setNewBrand(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addBrand();
+            }
+          }}
+        />
+        <Button type="button" variant="outline" onClick={addBrand}>
+          Adicionar
+        </Button>
+      </div>
+      {form.exclusiveBrands.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {form.exclusiveBrands.map((brand) => (
+            <Badge key={brand} variant="secondary" className="gap-1">
+              {brand}
+              <button
+                type="button"
+                aria-label={`Remover marca ${brand}`}
+                onClick={() => removeBrand(brand)}
+                className="ml-1 hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">
+        Produtos dessas marcas saem da lista normal de Faltantes e vão direto
+        pra esse fornecedor, sem cotação.
+      </p>
+    </div>
   </div>
-);
+  );
+};
 
 const SupplierManager = () => {
   const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier } = useSuppliers();
+  const { brandsForSupplier, setSupplierBrands } = useExclusiveBrands();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<SupplierFormState>(emptyForm());
@@ -164,11 +229,14 @@ const SupplierManager = () => {
     if (!isFormValid(createForm)) return;
     setIsSubmitting(true);
     try {
-      await createSupplier(formToInput(createForm));
+      const created = await createSupplier(formToInput(createForm));
+      if (created && createForm.exclusiveBrands.length > 0) {
+        await setSupplierBrands(created.id, createForm.exclusiveBrands);
+      }
       setCreateForm(emptyForm());
       setIsCreateOpen(false);
     } catch {
-      // erro já mostrado via toast dentro do hook
+      // erro já mostrado via toast dentro dos hooks
     } finally {
       setIsSubmitting(false);
     }
@@ -184,6 +252,7 @@ const SupplierManager = () => {
       avgDeliveryDays: supplier.avg_delivery_days?.toString() || '',
       maxInstallments: supplier.max_installments?.toString() || '',
       notes: supplier.notes || '',
+      exclusiveBrands: brandsForSupplier(supplier.id),
     });
   };
 
@@ -191,10 +260,13 @@ const SupplierManager = () => {
     if (!editingId || !isFormValid(editForm) || isSavingEdit) return;
     setIsSavingEdit(true);
     try {
-      await updateSupplier(editingId, formToInput(editForm));
+      await Promise.all([
+        updateSupplier(editingId, formToInput(editForm)),
+        setSupplierBrands(editingId, editForm.exclusiveBrands),
+      ]);
       setEditingId(null);
     } catch {
-      // erro já mostrado via toast dentro do hook
+      // erro já mostrado via toast dentro dos hooks
     } finally {
       setIsSavingEdit(false);
     }
@@ -275,6 +347,11 @@ const SupplierManager = () => {
                         {supplier.avg_delivery_days != null && `Entrega em ~${supplier.avg_delivery_days} dias`}
                         {supplier.avg_delivery_days != null && supplier.max_installments != null && ' · '}
                         {supplier.max_installments != null && `Até ${supplier.max_installments}x`}
+                      </p>
+                    )}
+                    {brandsForSupplier(supplier.id).length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Marcas exclusivas: {brandsForSupplier(supplier.id).join(', ')}
                       </p>
                     )}
                   </div>
