@@ -455,6 +455,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
           status: 'pedido_enviado',
           order_sent_at: new Date().toISOString(),
           order_sent_by: user.id,
+          order_supplier_name: `${supplier.company_name} (${supplier.contact_name})`,
         })
         .in('id', missingProductIds)
         .eq('status', 'pendente');
