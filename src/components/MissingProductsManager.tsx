@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink, PackageCheck } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink, PackageCheck, Pencil, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,9 @@ import { cn, normalizeText } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useQuoteBatches } from '@/hooks/useQuoteBatches';
+import { useExclusiveBrands } from '@/hooks/useExclusiveBrands';
+import { buildWhatsAppLink } from '@/lib/whatsapp';
+import { buildDirectOrderMessage } from '@/lib/purchaseOrder';
 
 interface ReportRow {
   key: string;
@@ -207,14 +210,17 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
     reportMissingProducts,
     resolveMissingProduct,
     cancelMissingProduct,
+    updateMissingProduct,
+    updateOrderQuantity,
+    sendExclusiveSupplierOrder,
     displayNameStatus,
     orderedProducts,
     ordersLoading,
-    supplierByMissingId,
     confirmOrderReceived,
     revertOrderToPending,
   } = useMissingProducts();
   const { openItemIds } = useQuoteBatches();
+  const { exclusiveBrands } = useExclusiveBrands();
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -237,6 +243,41 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
   });
   const hasChosenProduct = rows.some((row) => row.productId !== null);
   const hasIncompleteRow = rows.some((row) => row.productId !== null && !isRowComplete(row, productById));
+
+  // Marca exclusiva: item sai da lista normal de Pendente e entra numa aba
+  // própria, agrupado por fornecedor. Comparação por normalizeText ignora
+  // acento/caixa entre products.brand e o texto cadastrado em Fornecedores.
+  const exclusiveBrandByNormalized = new Map(exclusiveBrands.map((eb) => [normalizeText(eb.brand), eb]));
+  const isExclusiveBrandItem = (item: (typeof sortedMissingProducts)[number]) => {
+    const brand = productById.get(item.product_id)?.brand;
+    return !!(brand && exclusiveBrandByNormalized.has(normalizeText(brand)));
+  };
+  const pendingNormalItems = sortedMissingProducts.filter((item) => !isExclusiveBrandItem(item));
+  const pendingExclusiveItems = sortedMissingProducts.filter((item) => isExclusiveBrandItem(item));
+
+  const exclusiveGroupsBySupplier = new Map<
+    string,
+    { supplierId: string; companyName: string; contactName: string; phone: string; items: typeof pendingExclusiveItems }
+  >();
+  for (const item of pendingExclusiveItems) {
+    const brand = productById.get(item.product_id)?.brand ?? '';
+    const eb = exclusiveBrandByNormalized.get(normalizeText(brand));
+    if (!eb) continue;
+    const group =
+      exclusiveGroupsBySupplier.get(eb.supplier_id) ??
+      {
+        supplierId: eb.supplier_id,
+        companyName: eb.supplier_company_name,
+        contactName: eb.supplier_contact_name,
+        phone: eb.supplier_phone,
+        items: [],
+      };
+    group.items.push(item);
+    exclusiveGroupsBySupplier.set(eb.supplier_id, group);
+  }
+  const sortedExclusiveGroups = Array.from(exclusiveGroupsBySupplier.values()).sort((a, b) =>
+    a.companyName.localeCompare(b.companyName, 'pt-BR')
+  );
 
   const updateRow = (key: string, updater: (row: ReportRow) => ReportRow) => {
     setRows((prev) => prev.map((row) => (row.key === key ? updater(row) : row)));
@@ -305,6 +346,74 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
       // erro já mostrado via toast dentro do hook
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const [editingItem, setEditingItem] = useState<(typeof sortedMissingProducts)[number] | null>(null);
+  const [editRow, setEditRow] = useState<ReportRow>(emptyRow());
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [sendingSupplierId, setSendingSupplierId] = useState<string | null>(null);
+
+  const startEditingItem = (item: (typeof sortedMissingProducts)[number]) => {
+    setEditingItem(item);
+    setEditRow({
+      key: item.id,
+      productId: item.product_id,
+      fragranceId: item.fragrance_id,
+      variationId: item.variation_id,
+      stockRemaining: item.stock_remaining !== null ? String(item.stock_remaining) : '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem || !editRow.productId || !isRowComplete(editRow, productById)) return;
+    setIsSavingEdit(true);
+    try {
+      await updateMissingProduct(editingItem.id, {
+        productId: editRow.productId,
+        fragranceId: editRow.fragranceId,
+        variationId: editRow.variationId,
+        stockRemaining: toNullableInt(editRow.stockRemaining),
+      });
+      setEditingItem(null);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleOrderQuantityBlur = (id: string, raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed === '') {
+      updateOrderQuantity(id, null);
+      return;
+    }
+    const parsed = parseInt(trimmed, 10);
+    updateOrderQuantity(id, !Number.isNaN(parsed) && parsed > 0 ? parsed : null);
+  };
+
+  const handleSendExclusiveOrder = async (group: (typeof sortedExclusiveGroups)[number]) => {
+    if (group.items.length === 0) return;
+    setSendingSupplierId(group.supplierId);
+    try {
+      const supplierLabel = `${group.companyName} (${group.contactName})`;
+      const messageItems = group.items.map((item) => ({
+        name: buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id),
+        quantity: item.order_quantity,
+      }));
+      // Abrir a aba do WhatsApp ANTES do await — alguns navegadores bloqueiam
+      // window.open chamado depois de uma pausa assíncrona (tratam como
+      // popup não-solicitado).
+      window.open(buildWhatsAppLink(group.phone, buildDirectOrderMessage(messageItems)), '_blank', 'noopener,noreferrer');
+      await sendExclusiveSupplierOrder(
+        group.items.map((item) => item.id),
+        supplierLabel
+      );
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setSendingSupplierId(null);
     }
   };
 
@@ -434,11 +543,69 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
             </>
           }
         />
+        {editingItem &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in-0 duration-300"
+              onClick={() => setEditingItem(null)}
+            />,
+            document.body
+          )}
+        <Dialog open={editingItem !== null} onOpenChange={(open) => !open && setEditingItem(null)} modal={false}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto overscroll-contain">
+            <DialogHeader>
+              <DialogTitle>Editar faltante</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              <ProductPicker
+                products={products}
+                value={editRow.productId}
+                onChange={(productId) => setEditRow((r) => ({ ...r, productId, fragranceId: null, variationId: null }))}
+              />
+              <FragranceVariationFields
+                product={editRow.productId ? productById.get(editRow.productId) : undefined}
+                fragranceId={editRow.fragranceId}
+                variationId={editRow.variationId}
+                onFragranceChange={(fragranceId) => setEditRow((r) => ({ ...r, fragranceId, variationId: null }))}
+                onVariationChange={(variationId) => setEditRow((r) => ({ ...r, variationId }))}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="edit-stock-remaining" className="text-xs text-muted-foreground">
+                  Quantos ainda tem (opcional)
+                </Label>
+                <Input
+                  id="edit-stock-remaining"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={editRow.stockRemaining}
+                  onChange={(e) => setEditRow((r) => ({ ...r, stockRemaining: e.target.value }))}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit || !editRow.productId || !isRowComplete(editRow, productById)}
+              >
+                {isSavingEdit ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="pt-6">
         <Tabs defaultValue="pendente">
           <TabsList className="mb-4">
             <TabsTrigger value="pendente">Pendente</TabsTrigger>
+            <TabsTrigger value="exclusivo">
+              Fornecedor exclusivo
+              {pendingExclusiveItems.length > 0 && (
+                <Badge variant="secondary" className="ml-2 text-[10px]">
+                  {pendingExclusiveItems.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="aguardando">
               Aguardando confirmação
               {orderedProducts.length > 0 && (
@@ -451,11 +618,11 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
           <TabsContent value="pendente">
             {loading ? (
               <AdminLoadingState rows={3} tone="light" />
-            ) : missingProducts.length === 0 ? (
+            ) : pendingNormalItems.length === 0 ? (
               <AdminEmptyState icon={ClipboardCheck} title="Nenhum produto faltando no momento." tone="light" />
             ) : (
               <div className="space-y-3">
-                {sortedMissingProducts.map((item) => {
+                {pendingNormalItems.map((item) => {
                   const product = productById.get(item.product_id);
                   const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                   const inQuote = openItemIds.has(item.id);
@@ -487,6 +654,14 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
                         <span className="text-xs font-medium bg-blue-100 text-blue-800 rounded-full px-2 py-1">
                           pedido {item.report_count}x
                         </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          aria-label="Editar faltante"
+                          onClick={() => startEditingItem(item)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         {canResolve && (
                           <Button
                             size="sm"
@@ -516,6 +691,66 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
               </div>
             )}
           </TabsContent>
+          <TabsContent value="exclusivo">
+            {loading ? (
+              <AdminLoadingState rows={3} tone="light" />
+            ) : sortedExclusiveGroups.length === 0 ? (
+              <AdminEmptyState icon={Truck} title="Nenhum item de marca exclusiva no momento." tone="light" />
+            ) : (
+              <div className="space-y-4">
+                {sortedExclusiveGroups.map((group) => (
+                  <div key={group.supplierId} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="font-medium">
+                        {group.companyName} ({group.contactName})
+                      </p>
+                      {canResolve && (
+                        <Button
+                          size="sm"
+                          disabled={sendingSupplierId === group.supplierId}
+                          onClick={() => handleSendExclusiveOrder(group)}
+                        >
+                          Enviar pedido
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {group.items.map((item) => {
+                        const displayName = buildMissingItemDisplayName(
+                          productById.get(item.product_id),
+                          item.fragrance_id,
+                          item.variation_id
+                        );
+                        return (
+                          <div key={item.id} className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-medium">{displayName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.stock_remaining !== null
+                                  ? `${item.stock_remaining} restando`
+                                  : 'Quantidade não informada'}
+                              </p>
+                            </div>
+                            {canResolve && (
+                              <Input
+                                key={item.id}
+                                type="number"
+                                min="1"
+                                placeholder="Qtd"
+                                className="h-8 w-20"
+                                defaultValue={item.order_quantity ?? ''}
+                                onBlur={(e) => handleOrderQuantityBlur(item.id, e.target.value)}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
           <TabsContent value="aguardando">
             {ordersLoading ? (
               <AdminLoadingState rows={3} tone="light" />
@@ -526,13 +761,12 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
                 {orderedProducts.map((item) => {
                   const product = productById.get(item.product_id);
                   const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
-                  const supplierName = supplierByMissingId[item.id];
                   return (
                     <div key={item.id} className="border rounded-lg p-4 flex items-center justify-between gap-2">
                       <div>
                         <p className="font-medium">{displayName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {supplierName ? `Pedido em ${supplierName}` : 'Pedido gerado'}
+                          {item.order_supplier_name ? `Pedido em ${item.order_supplier_name}` : 'Pedido gerado'}
                           {item.order_sent_at &&
                             ` · ${new Date(item.order_sent_at).toLocaleDateString('pt-BR')}`}
                         </p>

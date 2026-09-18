@@ -63,3 +63,17 @@ export const downloadPurchaseOrderPdf = (supplierName: string, items: PurchaseOr
   const safeName = supplierName.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
   doc.save(`pedido-${safeName}.pdf`);
 };
+
+export interface DirectOrderItem {
+  name: string;
+  quantity: number | null;
+}
+
+// Mensagem do fluxo direto de marca exclusiva — sem preço, já que não teve
+// cotação (só existe 1 fornecedor possível pra essas marcas).
+export const buildDirectOrderMessage = (items: DirectOrderItem[]): string => {
+  const lines = items.map((item) =>
+    item.quantity ? `• ${item.quantity}x ${item.name}` : `• ${item.name} (quantidade a combinar)`
+  );
+  return `Olá! Preciso desses itens:\n\n${lines.join('\n')}`;
+};
