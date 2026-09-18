@@ -474,7 +474,13 @@ export const useMissingProducts = () => {
       } else {
         const { error } = await supabase
           .from('missing_products')
-          .update({ status: 'pendente', order_sent_at: null, order_sent_by: null })
+          .update({
+            status: 'pendente',
+            order_sent_at: null,
+            order_sent_by: null,
+            order_supplier_name: null,
+            order_quantity: null,
+          })
           .eq('id', id)
           .eq('status', 'pedido_enviado');
         if (error) throw error;

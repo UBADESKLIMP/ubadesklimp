@@ -207,7 +207,7 @@ const SupplierFormFields = ({ form, onChange, idPrefix }: SupplierFormFieldsProp
 
 const SupplierManager = () => {
   const { suppliers, loading, createSupplier, updateSupplier, deleteSupplier } = useSuppliers();
-  const { brandsForSupplier, setSupplierBrands } = useExclusiveBrands();
+  const { loading: brandsLoading, brandsForSupplier, setSupplierBrands } = useExclusiveBrands();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<SupplierFormState>(emptyForm());
@@ -365,6 +365,8 @@ const SupplierManager = () => {
                       variant="outline"
                       size="icon"
                       aria-label="Editar fornecedor"
+                      disabled={brandsLoading}
+                      title={brandsLoading ? 'Carregando marcas exclusivas...' : undefined}
                       onClick={() => startEditing(supplier)}
                     >
                       <Pencil className="h-4 w-4" />

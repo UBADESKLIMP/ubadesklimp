@@ -394,11 +394,15 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
   };
 
   const handleSendExclusiveOrder = async (group: (typeof sortedExclusiveGroups)[number]) => {
-    if (group.items.length === 0) return;
+    // Itens que já estão num lote de cotação aberto ficam de fora — mandar
+    // pedido direto pra eles duplicaria o pedido quando aquele lote fosse
+    // concluído depois (mesmo item, dois fornecedores diferentes).
+    const sendableItems = group.items.filter((item) => !openItemIds.has(item.id));
+    if (sendableItems.length === 0) return;
     setSendingSupplierId(group.supplierId);
     try {
       const supplierLabel = `${group.companyName} (${group.contactName})`;
-      const messageItems = group.items.map((item) => ({
+      const messageItems = sendableItems.map((item) => ({
         name: buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id),
         quantity: item.order_quantity,
       }));
@@ -407,7 +411,7 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
       // popup não-solicitado).
       window.open(buildWhatsAppLink(group.phone, buildDirectOrderMessage(messageItems)), '_blank', 'noopener,noreferrer');
       await sendExclusiveSupplierOrder(
-        group.items.map((item) => item.id),
+        sendableItems.map((item) => item.id),
         supplierLabel
       );
     } catch {
@@ -698,56 +702,67 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
               <AdminEmptyState icon={Truck} title="Nenhum item de marca exclusiva no momento." tone="light" />
             ) : (
               <div className="space-y-4">
-                {sortedExclusiveGroups.map((group) => (
-                  <div key={group.supplierId} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <p className="font-medium">
-                        {group.companyName} ({group.contactName})
-                      </p>
-                      {canResolve && (
-                        <Button
-                          size="sm"
-                          disabled={sendingSupplierId === group.supplierId}
-                          onClick={() => handleSendExclusiveOrder(group)}
-                        >
-                          Enviar pedido
-                        </Button>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      {group.items.map((item) => {
-                        const displayName = buildMissingItemDisplayName(
-                          productById.get(item.product_id),
-                          item.fragrance_id,
-                          item.variation_id
-                        );
-                        return (
-                          <div key={item.id} className="flex items-center justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-medium">{displayName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.stock_remaining !== null
-                                  ? `${item.stock_remaining} restando`
-                                  : 'Quantidade não informada'}
-                              </p>
+                {sortedExclusiveGroups.map((group) => {
+                  const allInQuote = group.items.every((item) => openItemIds.has(item.id));
+                  return (
+                    <div key={group.supplierId} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="font-medium">
+                          {group.companyName} ({group.contactName})
+                        </p>
+                        {canResolve && (
+                          <Button
+                            size="sm"
+                            disabled={sendingSupplierId === group.supplierId || allInQuote}
+                            onClick={() => handleSendExclusiveOrder(group)}
+                          >
+                            Enviar pedido
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {group.items.map((item) => {
+                          const displayName = buildMissingItemDisplayName(
+                            productById.get(item.product_id),
+                            item.fragrance_id,
+                            item.variation_id
+                          );
+                          const inQuote = openItemIds.has(item.id);
+                          return (
+                            <div key={item.id} className="flex items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-medium flex items-center gap-2 flex-wrap">
+                                  {displayName}
+                                  {inQuote && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Em cotação
+                                    </Badge>
+                                  )}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.stock_remaining !== null
+                                    ? `${item.stock_remaining} restando`
+                                    : 'Quantidade não informada'}
+                                </p>
+                              </div>
+                              {canResolve && !inQuote && (
+                                <Input
+                                  key={item.id}
+                                  type="number"
+                                  min="1"
+                                  placeholder="Qtd"
+                                  className="h-8 w-20"
+                                  defaultValue={item.order_quantity ?? ''}
+                                  onBlur={(e) => handleOrderQuantityBlur(item.id, e.target.value)}
+                                />
+                              )}
                             </div>
-                            {canResolve && (
-                              <Input
-                                key={item.id}
-                                type="number"
-                                min="1"
-                                placeholder="Qtd"
-                                className="h-8 w-20"
-                                defaultValue={item.order_quantity ?? ''}
-                                onBlur={(e) => handleOrderQuantityBlur(item.id, e.target.value)}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
