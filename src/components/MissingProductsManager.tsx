@@ -745,17 +745,27 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
                                     : 'Quantidade não informada'}
                                 </p>
                               </div>
-                              {canResolve && !inQuote && (
-                                <Input
-                                  key={item.id}
-                                  type="number"
-                                  min="1"
-                                  placeholder="Qtd"
-                                  className="h-8 w-20"
-                                  defaultValue={item.order_quantity ?? ''}
-                                  onBlur={(e) => handleOrderQuantityBlur(item.id, e.target.value)}
-                                />
-                              )}
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  aria-label="Editar faltante"
+                                  onClick={() => startEditingItem(item)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                {canResolve && !inQuote && (
+                                  <Input
+                                    key={item.id}
+                                    type="number"
+                                    min="1"
+                                    placeholder="Qtd"
+                                    className="h-8 w-20"
+                                    defaultValue={item.order_quantity ?? ''}
+                                    onBlur={(e) => handleOrderQuantityBlur(item.id, e.target.value)}
+                                  />
+                                )}
+                              </div>
                             </div>
                           );
                         })}
