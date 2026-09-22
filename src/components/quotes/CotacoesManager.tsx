@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Receipt } from 'lucide-react';
+import { Plus, Receipt, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -235,10 +235,23 @@ interface CotacoesManagerProps {
 }
 
 const CotacoesManager = ({ products }: CotacoesManagerProps) => {
-  const { batches, loading, refetch } = useQuoteBatches();
+  const { batches, loading, deleteBatch, refetch } = useQuoteBatches();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [compareBatchId, setCompareBatchId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (batch: (typeof batches)[number]) => {
+    if (!window.confirm('Excluir essa cotação cancelada? Essa ação não pode ser desfeita.')) return;
+    setDeletingId(batch.id);
+    try {
+      await deleteBatch(batch.id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (compareBatchId) {
     return (
@@ -281,12 +294,11 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
     });
 
   const renderBatchCard = (batch: (typeof batches)[number]) => (
-    <button
+    <div
       key={batch.id}
-      onClick={() => setSelectedBatchId(batch.id)}
-      className="w-full text-left border rounded-lg p-4 flex items-center justify-between gap-2 hover:bg-muted/50 transition-colors"
+      className="w-full border rounded-lg p-4 flex items-center justify-between gap-2 hover:bg-muted/50 transition-colors"
     >
-      <div>
+      <button onClick={() => setSelectedBatchId(batch.id)} className="flex-1 text-left min-w-0">
         <p className="font-medium">
           {batch.item_count} item(ns) · {batch.supplier_count} fornecedor(es)
         </p>
@@ -294,10 +306,23 @@ const CotacoesManager = ({ products }: CotacoesManagerProps) => {
           Criado por {batch.created_by_name} em {formatDate(batch.created_at)} ·{' '}
           {batch.suppliers_reviewed_count} de {batch.supplier_count} revisado(s)
         </p>
+      </button>
+      <div className="flex items-center gap-2 shrink-0">
+        {batch.status === 'cancelado' && <Badge variant="outline">Cancelado</Badge>}
+        {batch.status === 'concluido' && <Badge>Concluído</Badge>}
+        {batch.status === 'cancelado' && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Excluir cotação cancelada"
+            disabled={deletingId === batch.id}
+            onClick={() => handleDelete(batch)}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        )}
       </div>
-      {batch.status === 'cancelado' && <Badge variant="outline">Cancelado</Badge>}
-      {batch.status === 'concluido' && <Badge>Concluído</Badge>}
-    </button>
+    </div>
   );
 
   return (

@@ -183,5 +183,27 @@ export const useQuoteBatches = () => {
     }
   };
 
-  return { batches, openItemIds, loading, displayNameStatus, createBatch, refetch };
+  // Só faz sentido apagar lote cancelado — aberto/concluído são histórico
+  // real de compra/cotação em andamento. quote_batch_items/quote_batch_suppliers
+  // (e por tabela, quote_line_items/quote_item_winners/quote_files) cascateiam
+  // via FK (on delete cascade), então apagar o lote já limpa tudo.
+  const deleteBatch = async (id: string) => {
+    try {
+      const { error } = await supabase.from('quote_batches').delete().eq('id', id).eq('status', 'cancelado');
+      if (error) throw error;
+
+      setBatches((prev) => prev.filter((batch) => batch.id !== id));
+      toast({ title: 'Cotação excluída' });
+    } catch (error) {
+      console.error('Error deleting quote batch:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir essa cotação.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  return { batches, openItemIds, loading, displayNameStatus, createBatch, deleteBatch, refetch };
 };
