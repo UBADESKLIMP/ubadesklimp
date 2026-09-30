@@ -1,0 +1,25 @@
+# Módulo Equipe — Parte 1 (Atrasos & Advertências) — Design
+
+## Contexto
+
+PRD completo em `.superpowers/prd-equipe-atrasos-advertencias.md` (decisões já fechadas — não repetido aqui, só o que muda ao mapear pro schema real). Recon feito e aprovado pelo usuário: `staff_members`/`staff_permissions` já existem, login de equipe é Supabase Auth com PIN de 4 dígitos + sufixo fixo (hash interno do Auth, nunca texto puro). Não existe tabela `empresas`. RLS hoje usa `is_staff_admin()`/`has_staff_permission()` SECURITY DEFINER — mesmo padrão seguido aqui.
+
+Esta spec cobre só a **Etapa 1 (banco)**. Front (Etapa 2), PDF (Etapa 3) e Parte 2/Justificativa de Ponto (Etapa 4) ficam para specs/planos separados.
+
+## Decisões de mapeamento (PRD → schema real)
+
+- **"Funcionários existente"** = `staff_members`. Colunas novas do PRD (`empresa_id`, `escala_id`, `almoco_previsto`, `duracao_almoco_min`, `termo_adesao_path`, `termo_assinado_em`, `tentativas_login`, `bloqueado_em`) entram via `ALTER TABLE staff_members`.
+- **Papéis de equipe são um sistema à parte** de `staff_permission` (que continua controlando Compras/Produtos/Financeiro/Fornecedores). `equipe_papeis` é `(user_id, papel)` — um papel por pessoa. Quem já é `staff_members.is_admin = true` (dono/João) é automaticamente admin de equipe também (`is_equipe_admin()` cai pra `is_staff_admin()` como fallback) — evita cadastrar o dono duas vezes.
+- **Multiempresa do gestor**: tabela extra `equipe_gestor_empresas (user_id, empresa_id)`, N:N. Colaborador só pertence a uma empresa (`staff_members.empresa_id`, direto do PRD).
+- **R2 (tolerância) exige recálculo retroativo do dia**: quando uma 3ª marcação estoura a soma de 10 min, as marcações já lançadas daquele dia precisam mudar de "dentro da tolerância" pra "atraso integral". Isso não cabe só num `BEFORE INSERT` (que só vê a própria linha) — split em duas funções:
+  - `equipe_trg_calcular_atraso` (`BEFORE INSERT`): calcula `horario_referencia` e a variação bruta da própria linha (coluna nova, `variacao_bruta_min`, não estava no PRD — necessária pra guardar o valor "cru" antes da tolerância, porque o valor pode ser reclassificado depois).
+  - `equipe_recalcular_tolerancia_dia` (`AFTER INSERT`): re-soma as variações brutas do dia (ignorando linhas já `substituido`) e atualiza `minutos_atraso`/`dentro_tolerancia` de todas as linhas do dia daquele colaborador que **ainda não têm ciência dada nem medida vinculada** — uma linha com ciência já registrada (ou vinculada a medida) fica congelada mesmo que uma marcação nova do mesmo dia mude a soma, porque o hash da ciência já foi assinado em cima do valor antigo (mudar o número depois invalidaria a ciência).
+  - Implicação pro front (Etapa 2): depois de `insert` numa marcação, o valor definitivo só existe após o trigger `AFTER INSERT` — a cliente precisa dar `select` de novo (o `RETURNING` do insert não reflete a atualização retroativa dos triggers `AFTER`). Documentado aqui pra não virar bug de "número errado na tela" depois.
+- **R1.1 (almoço) com intervalo reduzido**: a Parte 2 (`intervalo_reduzido_empresa`) ainda não existe nesta etapa. Adiciono a coluna `duracao_almoco_override_min` (nullable) em `equipe_atrasos` agora — quando presente, o cálculo usa ela no lugar de `staff_members.duracao_almoco_min`. A Parte 2 (Etapa 4) só precisa popular essa coluna ao aprovar um intervalo reduzido; nenhum schema novo necessário depois. Testável já na Etapa 1 (critério A26) setando a coluna manualmente.
+- **Login com bloqueio (A19)**: hoje o login de funcionário chama `supabase.auth.signInWithPassword` **direto do cliente** (`AuthContext.tsx`) — não passa por nenhuma função nossa, então não há onde interceptar tentativa errada em SQL puro. Decisão: nova Edge Function `equipe-login`, usada só pelas telas do módulo Equipe (Etapa 2), que checa `bloqueado_em`/`tentativas_login` antes de chamar o Auth e atualiza os contadores depois. O login genérico do admin (`AuthContext.tsx`, usado por Compras/Produtos/Financeiro) **não muda** — ninguém autorizou mexer nele, e o PRD só pede a trava pro contexto de Equipe.
+- **Termo de adesão visível só pro admin (A18)**: RLS é por linha, não por coluna, e todo mundo autenticado cai na mesma role (`authenticated`) no PostgREST — não dá pra usar `GRANT`/`REVOKE` por coluna pra diferenciar admin de gestor. Decisão: `staff_members` continua guardando `termo_adesao_path`, mas o gestor consulta uma view (`equipe_funcionarios_gestor`) que expõe `termo_assinado_em is not null as termo_assinado` sem o path. Geração de signed URL do arquivo é uma Edge Function só-admin — isso é Etapa 2/3 (precisa de tela), citado aqui só pra registrar a decisão de arquitetura.
+- **Auditoria jurídica**: trigger genérico de audit log (`equipe_audit_log`) anexado em toda tabela `equipe_*` via `AFTER INSERT OR UPDATE OR DELETE`, gravando `dados_antes`/`dados_depois` em jsonb.
+
+## Fora de escopo desta etapa
+
+PDF, telas, Parte 2, integração de `justificativa_ponto_id` (fica como coluna nullable em `equipe_atrasos`, sem FK ainda — a tabela alvo só existe na Etapa 4).
