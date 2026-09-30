@@ -19,6 +19,9 @@ import SupplierManager from '@/components/SupplierManager';
 import MissingProductsManager from '@/components/MissingProductsManager';
 import CotacoesManager from '@/components/quotes/CotacoesManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
+import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import EquipeManager from '@/components/equipe/EquipeManager';
+import MeusRegistros from '@/components/equipe/MeusRegistros';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import NonPublicProductsSection from '@/components/NonPublicProductsSection';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
@@ -34,9 +37,13 @@ const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();
+  const equipeAccess = useEquipeAccess();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('home');
-  const visibleNavItems = useMemo(() => getVisibleNavItems(staffAccess), [staffAccess]);
+  const visibleNavItems = useMemo(
+    () => getVisibleNavItems(staffAccess, equipeAccess),
+    [staffAccess, equipeAccess]
+  );
 
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -357,6 +364,12 @@ const Admin = () => {
 
       case 'staff':
         return <StaffManager />;
+
+      case 'equipe':
+        return <EquipeManager />;
+
+      case 'meus-registros':
+        return <MeusRegistros />;
 
       default:
         return null;

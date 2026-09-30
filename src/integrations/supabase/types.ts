@@ -1671,6 +1671,29 @@ export type Database = {
       }
     }
     Functions: {
+      equipe_calcular_atraso: {
+        Args: {
+          p_colaborador_id: string
+          p_data: string
+          p_duracao_almoco_override_min?: number
+          p_empresa_id: string
+          p_estava_na_porta?: boolean
+          p_hora_chegada: string
+          p_hora_chegada_porta?: string
+          p_marcacao: Database["public"]["Enums"]["equipe_marcacao"]
+          p_saida_almoco_real?: string
+        }
+        Returns: {
+          abertura_atrasada: boolean
+          dentro_tolerancia: boolean
+          desvio_saida_almoco_min: number
+          horario_previsto: string
+          horario_referencia: string
+          minutos_atraso: number
+          soma_dia_min: number
+          variacao_bruta_min: number
+        }[]
+      }
       equipe_checar_login: { Args: { p_user_id: string }; Returns: boolean }
       equipe_contar_atrasos_mes: {
         Args: { p_colaborador_id: string; p_referencia: string }

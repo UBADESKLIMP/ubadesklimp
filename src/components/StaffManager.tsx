@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import EquipeFuncionarioFields from '@/components/equipe/EquipeFuncionarioFields';
 import { Plus, Trash2, Shield, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -331,6 +332,7 @@ const StaffManager = () => {
                         </Button>
                       </div>
                     </div>
+                    <EquipeFuncionarioFields userId={member.user_id} />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={saveEditing} disabled={isSavingProfile}>
                         {isSavingProfile ? 'Salvando...' : 'Salvar'}

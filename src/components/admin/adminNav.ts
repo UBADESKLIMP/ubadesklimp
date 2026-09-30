@@ -10,9 +10,12 @@ import {
   ClipboardCheck,
   Shield,
   Receipt,
+  Users,
+  ClipboardCheck as ClipboardCheckIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { StaffAccess, StaffPermission } from '@/hooks/useStaffAccess';
+import type { EquipeAccess } from '@/hooks/useEquipeAccess';
 
 export type AdminSection =
   | 'home'
@@ -25,7 +28,9 @@ export type AdminSection =
   | 'suppliers'
   | 'missing'
   | 'quotes'
-  | 'staff';
+  | 'staff'
+  | 'equipe'
+  | 'meus-registros';
 
 export type AdminNavGroup = 'catalogo' | 'operacao' | 'equipe';
 
@@ -37,6 +42,12 @@ export interface AdminNavItem {
   adminOnly?: boolean;
   comingSoon?: boolean;
   group?: AdminNavGroup;
+  /**
+   * Papéis do módulo Equipe que veem este item. É um eixo separado das
+   * staff_permission (que controlam Catálogo/Operação/Financeiro) — um
+   * colaborador pode ver "Meus registros" sem ter nenhuma permissão de módulo.
+   */
+  equipeAcesso?: 'gestor_ou_admin' | 'qualquer_papel';
 }
 
 export const ADMIN_NAV_GROUP_LABELS: Record<AdminNavGroup, string> = {
@@ -59,20 +70,41 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, permission: 'faltantes', group: 'operacao' },
   { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
+  { key: 'equipe', label: 'Atrasos', icon: Users, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
+  {
+    key: 'meus-registros',
+    label: 'Meus registros',
+    icon: ClipboardCheckIcon,
+    equipeAcesso: 'qualquer_papel',
+    group: 'equipe',
+  },
 ];
 
 // Itens "em breve" aparecem pra qualquer staff. Itens adminOnly só pra admin.
 // Itens sem permission (hoje só 'home') aparecem pra qualquer staff.
-export const canSeeNavItem = (item: AdminNavItem, staffAccess: StaffAccess): boolean => {
+// Itens com equipeAcesso dependem do papel de equipe, não das staff_permission.
+export const canSeeNavItem = (
+  item: AdminNavItem,
+  staffAccess: StaffAccess,
+  equipeAccess?: EquipeAccess
+): boolean => {
   if (item.comingSoon) return true;
+  if (item.equipeAcesso) {
+    if (!equipeAccess) return false;
+    return item.equipeAcesso === 'gestor_ou_admin'
+      ? equipeAccess.isGestorOuAdmin
+      : equipeAccess.isEquipe;
+  }
   if (item.adminOnly) return staffAccess.isAdmin;
   if (!item.permission) return true;
   const required = Array.isArray(item.permission) ? item.permission : [item.permission];
   return staffAccess.isAdmin || required.every((perm) => staffAccess.permissions.has(perm));
 };
 
-export const getVisibleNavItems = (staffAccess: StaffAccess): AdminNavItem[] =>
-  ADMIN_NAV_ITEMS.filter((item) => canSeeNavItem(item, staffAccess));
+export const getVisibleNavItems = (
+  staffAccess: StaffAccess,
+  equipeAccess?: EquipeAccess
+): AdminNavItem[] => ADMIN_NAV_ITEMS.filter((item) => canSeeNavItem(item, staffAccess, equipeAccess));
 
 const MOBILE_BAR_PRIORITY: AdminSection[] = ['home', 'products', 'orders', 'financeiro'];
 
