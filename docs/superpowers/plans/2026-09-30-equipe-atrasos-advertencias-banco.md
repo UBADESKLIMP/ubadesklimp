@@ -817,8 +817,9 @@ begin
   select minutos_atraso into v_min2 from equipe_atrasos where id = v_id2;
   if v_min2 <> 0 then raise exception 'FAIL A6 (etapa 2): esperado 0 (soma 8<=10), veio %', v_min2; end if;
 
+  -- terceira variação: 3 min (saída 16:00 + 120min = referência 18:00, chegou 18:03)
   insert into equipe_atrasos (colaborador_id, empresa_id, data, marcacao, saida_almoco_real, hora_chegada, criado_por)
-  values (v_colab, v_empresa, date '2026-10-07', 'retorno_almoco', time '15:00', time '15:03', v_colab)
+  values (v_colab, v_empresa, date '2026-10-07', 'retorno_almoco', time '16:00', time '18:03', v_colab)
   returning id into v_id3;
 
   select minutos_atraso into v_min1 from equipe_atrasos where id = v_id1;
