@@ -42,10 +42,11 @@ const EquipeConfig = () => {
   const [novoCnpj, setNovoCnpj] = useState('');
 
   const [escalaEmpresaId, setEscalaEmpresaId] = useState<string | null>(null);
+  // Jornada real da loja: 08:00 às 18:00 com 2h de almoço.
   const [novaEscala, setNovaEscala] = useState({
     nome: '',
     entrada: '08:00',
-    saida: '17:00',
+    saida: '18:00',
     tol_marcacao_min: '5',
     tol_dia_min: '10',
   });

@@ -224,6 +224,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipe_atrasos_justificativa_ponto_fkey"
+            columns: ["justificativa_ponto_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_justificativas_ponto"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "equipe_atrasos_substitui_id_fkey"
             columns: ["substitui_id"]
             isOneToOne: false
@@ -407,6 +414,107 @@ export type Database = {
           },
         ]
       }
+      equipe_eventos_falha: {
+        Row: {
+          created_at: string
+          criado_por: string
+          data: string
+          descricao: string
+          empresa_id: string
+          fim: string | null
+          id: string
+          inicio: string | null
+        }
+        Insert: {
+          created_at?: string
+          criado_por: string
+          data: string
+          descricao: string
+          empresa_id: string
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string
+          data?: string
+          descricao?: string
+          empresa_id?: string
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_eventos_falha_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_eventos_falha_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_eventos_falha_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipe_fechamentos: {
+        Row: {
+          competencia: string
+          empresa_id: string
+          fechado_em: string
+          fechado_por: string
+          id: string
+        }
+        Insert: {
+          competencia: string
+          empresa_id: string
+          fechado_em?: string
+          fechado_por: string
+          id?: string
+        }
+        Update: {
+          competencia?: string
+          empresa_id?: string
+          fechado_em?: string
+          fechado_por?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_fechamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_fechamentos_fechado_por_fkey"
+            columns: ["fechado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_fechamentos_fechado_por_fkey"
+            columns: ["fechado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       equipe_gestor_empresas: {
         Row: {
           empresa_id: string
@@ -434,6 +542,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "equipe_papeis"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      equipe_justificativa_marcacoes: {
+        Row: {
+          horario: string
+          id: string
+          justificativa_id: string
+          marcacao: Database["public"]["Enums"]["equipe_marcacao_ponto"]
+        }
+        Insert: {
+          horario: string
+          id?: string
+          justificativa_id: string
+          marcacao: Database["public"]["Enums"]["equipe_marcacao_ponto"]
+        }
+        Update: {
+          horario?: string
+          id?: string
+          justificativa_id?: string
+          marcacao?: Database["public"]["Enums"]["equipe_marcacao_ponto"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_justificativa_marcacoes_justificativa_id_fkey"
+            columns: ["justificativa_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_justificativas_ponto"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -492,6 +629,146 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      equipe_justificativas_ponto: {
+        Row: {
+          anexo_path: string | null
+          atraso_id: string | null
+          colaborador_id: string
+          created_at: string
+          criado_por: string
+          data: string
+          decidido_em: string | null
+          decidido_por: string | null
+          empresa_id: string
+          evento_falha_id: string | null
+          id: string
+          intervalo_calculado_min: number | null
+          minutos_compensados: number | null
+          minutos_suprimidos: number | null
+          motivo: string
+          motivo_rejeicao: string | null
+          status: Database["public"]["Enums"]["equipe_justificativa_status"]
+          substitui_id: string | null
+          tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
+          valor_pago: number | null
+        }
+        Insert: {
+          anexo_path?: string | null
+          atraso_id?: string | null
+          colaborador_id: string
+          created_at?: string
+          criado_por: string
+          data: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          empresa_id: string
+          evento_falha_id?: string | null
+          id?: string
+          intervalo_calculado_min?: number | null
+          minutos_compensados?: number | null
+          minutos_suprimidos?: number | null
+          motivo: string
+          motivo_rejeicao?: string | null
+          status?: Database["public"]["Enums"]["equipe_justificativa_status"]
+          substitui_id?: string | null
+          tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
+          valor_pago?: number | null
+        }
+        Update: {
+          anexo_path?: string | null
+          atraso_id?: string | null
+          colaborador_id?: string
+          created_at?: string
+          criado_por?: string
+          data?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          empresa_id?: string
+          evento_falha_id?: string | null
+          id?: string
+          intervalo_calculado_min?: number | null
+          minutos_compensados?: number | null
+          minutos_suprimidos?: number | null
+          motivo?: string
+          motivo_rejeicao?: string | null
+          status?: Database["public"]["Enums"]["equipe_justificativa_status"]
+          substitui_id?: string | null
+          tipo?: Database["public"]["Enums"]["equipe_justificativa_tipo"]
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_justificativas_ponto_atraso_id_fkey"
+            columns: ["atraso_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_atrasos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_evento_falha_id_fkey"
+            columns: ["evento_falha_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_eventos_falha"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_substitui_id_fkey"
+            columns: ["substitui_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_justificativas_ponto"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1447,6 +1724,7 @@ export type Database = {
           empresa_id: string | null
           escala_id: string | null
           is_admin: boolean
+          salario_hora: number | null
           tentativas_login: number
           termo_adesao_path: string | null
           termo_assinado_em: string | null
@@ -1462,6 +1740,7 @@ export type Database = {
           empresa_id?: string | null
           escala_id?: string | null
           is_admin?: boolean
+          salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
           termo_assinado_em?: string | null
@@ -1477,6 +1756,7 @@ export type Database = {
           empresa_id?: string | null
           escala_id?: string | null
           is_admin?: boolean
+          salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
           termo_assinado_em?: string | null
@@ -1671,6 +1951,14 @@ export type Database = {
       }
     }
     Functions: {
+      equipe_alertas_intervalo_reduzido: {
+        Args: { p_justificativa_id: string }
+        Returns: Json
+      }
+      equipe_aplicar_efeitos_justificativa: {
+        Args: { p_justificativa_id: string }
+        Returns: undefined
+      }
       equipe_calcular_atraso: {
         Args: {
           p_colaborador_id: string
@@ -1695,6 +1983,10 @@ export type Database = {
         }[]
       }
       equipe_checar_login: { Args: { p_user_id: string }; Returns: boolean }
+      equipe_config_int: {
+        Args: { p_chave: string; p_empresa_id: string; p_padrao: number }
+        Returns: number
+      }
       equipe_contagem_funcionarios: {
         Args: { p_empresa_id: string }
         Returns: number
@@ -1702,6 +1994,30 @@ export type Database = {
       equipe_contar_atrasos_mes: {
         Args: { p_colaborador_id: string; p_referencia: string }
         Returns: number
+      }
+      equipe_criar_evento_falha: {
+        Args: {
+          p_data: string
+          p_descricao: string
+          p_empresa_id: string
+          p_fim?: string
+          p_grade: Json
+          p_inicio?: string
+        }
+        Returns: string
+      }
+      equipe_criar_justificativa_ponto: {
+        Args: {
+          p_anexo_path?: string
+          p_atraso_id?: string
+          p_colaborador_id: string
+          p_data: string
+          p_marcacoes: Json
+          p_motivo: string
+          p_tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
+          p_valor_pago?: number
+        }
+        Returns: string
       }
       equipe_dados_advertencia: { Args: { p_medida_id: string }; Returns: Json }
       equipe_decidir_justificativa: {
@@ -1712,7 +2028,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      equipe_decidir_justificativa_ponto: {
+        Args: {
+          p_aprovar: boolean
+          p_justificativa_id: string
+          p_motivo_rejeicao?: string
+        }
+        Returns: undefined
+      }
+      equipe_dias_uteis: {
+        Args: { p_ate: string; p_de: string }
+        Returns: number
+      }
       equipe_empresas_visiveis: { Args: never; Returns: string[] }
+      equipe_fechar_competencia: {
+        Args: { p_competencia: string; p_empresa_id: string }
+        Returns: string
+      }
       equipe_recalcular_tolerancia_dia: {
         Args: { p_colaborador_id: string; p_data: string }
         Returns: undefined
@@ -1754,6 +2086,10 @@ export type Database = {
         Args: { p_colaborador_id: string; p_referencia: string }
         Returns: Database["public"]["Enums"]["equipe_medida_tipo"]
       }
+      equipe_validar_justificativa: {
+        Args: { p_justificativa_id: string }
+        Returns: undefined
+      }
       generate_product_slug: { Args: { product_name: string }; Returns: string }
       has_role: {
         Args: {
@@ -1783,9 +2119,34 @@ export type Database = {
         | "compensado"
         | "substituido"
       equipe_ciencia_acao: "ciente" | "recusa"
-      equipe_ciencia_alvo: "atraso" | "medida" | "fechamento"
+      equipe_ciencia_alvo: "atraso" | "medida" | "fechamento" | "justificativa"
       equipe_justificativa_decisao: "pendente" | "abonado" | "rejeitado"
+      equipe_justificativa_status:
+        | "pendente"
+        | "aprovada"
+        | "rejeitada"
+        | "aguardando_ciencia"
+        | "concluida"
+        | "substituida"
+      equipe_justificativa_tipo:
+        | "falha_sistema"
+        | "esquecimento"
+        | "marcacao_incorreta"
+        | "servico_externo"
+        | "consulta_atestado"
+        | "troca_turno_autorizada"
+        | "compensacao_atraso"
+        | "intervalo_reduzido_empresa"
       equipe_marcacao: "entrada" | "retorno_almoco"
+      equipe_marcacao_ponto:
+        | "entrada"
+        | "saida_almoco"
+        | "retorno_almoco"
+        | "saida"
+        | "hora_extra_inicio"
+        | "hora_extra_saida"
+        | "saida_intermediaria"
+        | "retorno_intermediario"
       equipe_medida_status:
         | "rascunho"
         | "aguardando_assinatura"
@@ -1936,9 +2297,37 @@ export const Constants = {
         "substituido",
       ],
       equipe_ciencia_acao: ["ciente", "recusa"],
-      equipe_ciencia_alvo: ["atraso", "medida", "fechamento"],
+      equipe_ciencia_alvo: ["atraso", "medida", "fechamento", "justificativa"],
       equipe_justificativa_decisao: ["pendente", "abonado", "rejeitado"],
+      equipe_justificativa_status: [
+        "pendente",
+        "aprovada",
+        "rejeitada",
+        "aguardando_ciencia",
+        "concluida",
+        "substituida",
+      ],
+      equipe_justificativa_tipo: [
+        "falha_sistema",
+        "esquecimento",
+        "marcacao_incorreta",
+        "servico_externo",
+        "consulta_atestado",
+        "troca_turno_autorizada",
+        "compensacao_atraso",
+        "intervalo_reduzido_empresa",
+      ],
       equipe_marcacao: ["entrada", "retorno_almoco"],
+      equipe_marcacao_ponto: [
+        "entrada",
+        "saida_almoco",
+        "retorno_almoco",
+        "saida",
+        "hora_extra_inicio",
+        "hora_extra_saida",
+        "saida_intermediaria",
+        "retorno_intermediario",
+      ],
       equipe_medida_status: [
         "rascunho",
         "aguardando_assinatura",

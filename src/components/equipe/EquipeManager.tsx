@@ -21,6 +21,8 @@ import LancarAtrasoDialog from './LancarAtrasoDialog';
 import FichaColaboradorDialog from './FichaColaboradorDialog';
 import EquipeRelatorio from './EquipeRelatorio';
 import EquipeConfig from './EquipeConfig';
+import AprovacoesPonto from './AprovacoesPonto';
+import { useJustificativasPonto } from '@/hooks/useJustificativaPonto';
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
@@ -45,12 +47,18 @@ const EquipeManager = () => {
   const { colaboradores, loading: loadingColaboradores } = useEquipeColaboradores(empresaIds);
   const { atrasos, loading: loadingAtrasos, pedirPrevia, lancarAtraso } = useEquipeAtrasos(empresaIds);
   const { horaAbertura, registrarAbertura, salvando } = useAberturaDoDia(empresaAtiva);
+  const {
+    justificativas,
+    loading: loadingJustificativas,
+    decidir: decidirJustificativa,
+  } = useJustificativasPonto(empresaIds);
 
   const hoje = hojeISO();
   const atrasosHoje = atrasos.filter((a) => a.data === hoje);
   const semCiencia = atrasos.filter((a) => a.status === 'pendente_ciencia');
   const justificando = atrasos.filter((a) => a.status === 'justificativa_pendente');
   const foraDaTolerancia = atrasosHoje.filter((a) => a.dentro_tolerancia === false);
+  const ajustesPendentes = justificativas.filter((j) => j.status === 'pendente').length;
 
   const nomePorId = useMemo(
     () => new Map(colaboradores.map((c) => [c.user_id, c.display_name])),
@@ -238,6 +246,12 @@ const EquipeManager = () => {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="aprovacoes">
+            Ajustes de ponto
+            {ajustesPendentes > 0 && (
+              <span className="ml-2 font-mono text-[10px] text-[#f0b429]">{ajustesPendentes}</span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="equipe">Colaboradores</TabsTrigger>
           <TabsTrigger value="relatorio">Relatório</TabsTrigger>
           {equipeAccess.isEquipeAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
@@ -328,6 +342,15 @@ const EquipeManager = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="aprovacoes">
+          <AprovacoesPonto
+            justificativas={justificativas}
+            loading={loadingJustificativas}
+            nomePorId={nomePorId}
+            onDecidir={decidirJustificativa}
+          />
+        </TabsContent>
+
         <TabsContent value="relatorio">
           <EquipeRelatorio empresaId={empresaAtiva} />
         </TabsContent>

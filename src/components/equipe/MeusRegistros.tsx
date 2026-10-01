@@ -13,6 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useMeusRegistros } from '@/hooks/useEquipe';
 import { EquipeStatusBadge, EquipeMedidaBadge, MinutosAtraso } from './EquipeStatusBadge';
 import { downloadAdvertenciaPdf, type DadosAdvertencia } from '@/lib/equipeAdvertencia';
+import JustificarPontoDialog from './JustificarPontoDialog';
+import { STATUS_LABEL, TIPO_LABEL, useJustificativasPonto } from '@/hooks/useJustificativaPonto';
+import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type MedidaTipo = Database['public']['Enums']['equipe_medida_tipo'];
@@ -30,6 +34,14 @@ const MeusRegistros = () => {
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [baixando, setBaixando] = useState<string | null>(null);
+  const [justificandoPonto, setJustificandoPonto] = useState(false);
+  const equipeAccess = useEquipeAccess();
+  const { user } = useAuth();
+  const {
+    justificativas,
+    criar: criarJustificativaPonto,
+    darCiencia: darCienciaJustificativa,
+  } = useJustificativasPonto([], true);
   const [medidas, setMedidas] = useState<
     { id: string; tipo: MedidaTipo; data_aplicacao: string; fundamento: string; status: string }[]
   >([]);
@@ -109,6 +121,7 @@ const MeusRegistros = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
+          <TabsTrigger value="ponto">Ajustes de ponto</TabsTrigger>
           <TabsTrigger value="medidas">Minhas medidas</TabsTrigger>
         </TabsList>
 
@@ -203,6 +216,67 @@ const MeusRegistros = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="ponto">
+          <Card className="bg-[#12121a] border-blue-500/20">
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-blue-300/60">
+                  Esqueceu de bater, bateu errado ou saiu a serviço? Registre aqui em vez do
+                  caderno.
+                </p>
+                <Button
+                  onClick={() => setJustificandoPonto(true)}
+                  className="bg-blue-600 hover:bg-blue-500 h-11"
+                >
+                  Justificar ponto
+                </Button>
+              </div>
+
+              {justificativas.length === 0 ? (
+                <p className="text-sm text-blue-300/60 py-2">Nenhuma solicitação enviada.</p>
+              ) : (
+                <div className="divide-y divide-blue-500/10">
+                  {justificativas.map((j) => (
+                    <div key={j.id} className="py-3 space-y-2 first:pt-0 last:pb-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-mono text-xs text-blue-300/60 tabular-nums">
+                          {formatarData(j.data)}
+                        </span>
+                        <span className="text-xs text-blue-300/70">{TIPO_LABEL[j.tipo]}</span>
+                        {j.intervalo_calculado_min != null && (
+                          <span className="font-mono text-xs text-blue-300/50">
+                            intervalo {j.intervalo_calculado_min} min
+                          </span>
+                        )}
+                        <span className="ml-auto text-[10px] uppercase tracking-wider text-blue-300/60 border-2 border-blue-500/30 bg-blue-500/10 rounded-[3px] px-2 py-0.5 -rotate-[1.5deg]">
+                          {STATUS_LABEL[j.status]}
+                        </span>
+                      </div>
+
+                      {j.motivo_rejeicao && (
+                        <p className="text-xs text-[#C0392B] border-l-2 border-[#C0392B]/40 pl-3">
+                          Rejeitada: {j.motivo_rejeicao}
+                        </p>
+                      )}
+
+                      {j.status === 'aguardando_ciencia' && (
+                        <Button
+                          size="sm"
+                          onClick={() => darCienciaJustificativa(j.id)}
+                          className="h-10 bg-blue-600 hover:bg-blue-500"
+                        >
+                          <FileSignature className="h-3.5 w-3.5 mr-2" />
+                          Confirmo que os horários estão certos
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="medidas">
           <Card className="bg-[#12121a] border-blue-500/20">
             <CardContent className="pt-6">
@@ -255,6 +329,15 @@ const MeusRegistros = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <JustificarPontoDialog
+        open={justificandoPonto}
+        onOpenChange={setJustificandoPonto}
+        colaboradorId={user?.id ?? ''}
+        isGestor={equipeAccess.isGestorOuAdmin}
+        atrasos={atrasos}
+        onCriar={criarJustificativaPonto}
+      />
 
       <Dialog open={Boolean(justificandoId)} onOpenChange={(open) => !open && setJustificandoId(null)}>
         <DialogContent className="bg-[#12121a] border-blue-500/20 text-white max-w-md">
