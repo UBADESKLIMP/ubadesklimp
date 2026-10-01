@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldAlert, FileDown, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useEscalonamento, type EquipeAtraso } from '@/hooks/useEquipe';
 import { EquipeStatusBadge, EquipeMedidaBadge, MinutosAtraso, MEDIDA_LABEL } from './EquipeStatusBadge';
+import { downloadAdvertenciaPdf, type DadosAdvertencia } from '@/lib/equipeAdvertencia';
 import type { Database } from '@/integrations/supabase/types';
 
 type MedidaTipo = Database['public']['Enums']['equipe_medida_tipo'];
@@ -32,6 +33,8 @@ const FichaColaboradorDialog = ({ colaboradorId, nome, atrasos, isEquipeAdmin, o
     { id: string; tipo: MedidaTipo; data_aplicacao: string; fundamento: string; status: string }[]
   >([]);
   const [aplicando, setAplicando] = useState(false);
+  const [gerandoPdfDe, setGerandoPdfDe] = useState<string | null>(null);
+  const [subindoDe, setSubindoDe] = useState<string | null>(null);
   const [modoMedida, setModoMedida] = useState<MedidaTipo | null>(null);
   const [fundamento, setFundamento] = useState('');
   const [diasSuspensao, setDiasSuspensao] = useState('');
@@ -128,6 +131,66 @@ const FichaColaboradorDialog = ({ colaboradorId, nome, atrasos, isEquipeAdmin, o
     setMedidasAplicadas(data ?? []);
   };
 
+  // Os dados do PDF vêm inteiros do banco (equipe_dados_advertencia): empresa
+  // correta, fatos, histórico e hashes. O front só desenha.
+  const gerarPdf = async (medidaId: string) => {
+    setGerandoPdfDe(medidaId);
+    const { data, error } = await supabase.rpc('equipe_dados_advertencia', { p_medida_id: medidaId });
+    setGerandoPdfDe(null);
+
+    if (error || !data) {
+      toast({
+        title: 'Não foi possível gerar o PDF',
+        description: error?.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    downloadAdvertenciaPdf(data as unknown as DadosAdvertencia);
+  };
+
+  const subirScanAssinado = async (medidaId: string, arquivo: File) => {
+    setSubindoDe(medidaId);
+    const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? 'pdf';
+    const caminho = `medidas/${medidaId}/assinado.${extensao}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('equipe-docs')
+      .upload(caminho, arquivo, { upsert: true });
+
+    if (uploadError) {
+      setSubindoDe(null);
+      toast({ title: 'Falha no upload', description: uploadError.message, variant: 'destructive' });
+      return;
+    }
+
+    const { error: rpcError } = await supabase.rpc('equipe_registrar_assinatura_medida', {
+      p_medida_id: medidaId,
+      p_assinado_path: caminho,
+    });
+    setSubindoDe(null);
+
+    if (rpcError) {
+      toast({
+        title: 'Arquivo enviado, mas a medida não foi fechada',
+        description: rpcError.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Medida aplicada', description: 'Documento assinado anexado.' });
+    if (colaboradorId) {
+      const { data } = await supabase
+        .from('equipe_medidas')
+        .select('id, tipo, data_aplicacao, fundamento, status')
+        .eq('colaborador_id', colaboradorId)
+        .order('data_aplicacao', { ascending: false });
+      setMedidasAplicadas(data ?? []);
+    }
+  };
+
   const toggleAtraso = (id: string) => {
     setSelecionados((prev) => {
       const next = new Set(prev);
@@ -194,15 +257,74 @@ const FichaColaboradorDialog = ({ colaboradorId, nome, atrasos, isEquipeAdmin, o
               <h4 className="text-sm font-medium text-white mb-2">Medidas anteriores</h4>
               <div className="rounded-lg border border-blue-500/20 divide-y divide-blue-500/10">
                 {medidasAplicadas.map((m) => (
-                  <div key={m.id} className="flex flex-wrap items-center gap-3 p-3">
-                    <span className="font-mono text-xs text-blue-300/60 tabular-nums">
-                      {formatarData(m.data_aplicacao)}
-                    </span>
-                    <EquipeMedidaBadge tipo={m.tipo} />
-                    <span className="text-xs text-blue-300/50 flex-1 min-w-[10rem]">{m.fundamento}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-blue-300/40">
-                      {m.status.replace('_', ' ')}
-                    </span>
+                  <div key={m.id} className="p-3 space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-mono text-xs text-blue-300/60 tabular-nums">
+                        {formatarData(m.data_aplicacao)}
+                      </span>
+                      <EquipeMedidaBadge tipo={m.tipo} />
+                      <span className="text-xs text-blue-300/50 flex-1 min-w-[10rem]">
+                        {m.fundamento}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-blue-300/40">
+                        {m.status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+
+                    {/* Verbal não gera PDF (PRD 5.4) — fica só com a ciência eletrônica. */}
+                    {m.tipo !== 'orientacao_verbal' && m.tipo !== 'orientacao_verbal_coletiva' && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => gerarPdf(m.id)}
+                          disabled={gerandoPdfDe === m.id}
+                          className="h-9 border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
+                        >
+                          {gerandoPdfDe === m.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+                          ) : (
+                            <FileDown className="h-3.5 w-3.5 mr-2" />
+                          )}
+                          Gerar PDF
+                        </Button>
+
+                        {m.status !== 'aplicada' && (
+                          <label className="inline-flex">
+                            <input
+                              type="file"
+                              accept="application/pdf,image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const arquivo = e.target.files?.[0];
+                                if (arquivo) subirScanAssinado(m.id, arquivo);
+                                e.target.value = '';
+                              }}
+                            />
+                            <span
+                              className={cn(
+                                'inline-flex items-center h-9 px-3 rounded-md border text-xs cursor-pointer transition-colors',
+                                'border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white',
+                                subindoDe === m.id && 'opacity-60 pointer-events-none'
+                              )}
+                            >
+                              {subindoDe === m.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5 mr-2" />
+                              )}
+                              Subir assinado
+                            </span>
+                          </label>
+                        )}
+
+                        {m.status !== 'aplicada' && (
+                          <span className="text-[11px] text-blue-300/40">
+                            A medida só fica aplicada depois do documento assinado.
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

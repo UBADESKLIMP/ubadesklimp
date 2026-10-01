@@ -1699,6 +1699,7 @@ export type Database = {
         Args: { p_colaborador_id: string; p_referencia: string }
         Returns: number
       }
+      equipe_dados_advertencia: { Args: { p_medida_id: string }; Returns: Json }
       equipe_decidir_justificativa: {
         Args: {
           p_decisao: Database["public"]["Enums"]["equipe_justificativa_decisao"]
@@ -1710,6 +1711,10 @@ export type Database = {
       equipe_empresas_visiveis: { Args: never; Returns: string[] }
       equipe_recalcular_tolerancia_dia: {
         Args: { p_colaborador_id: string; p_data: string }
+        Returns: undefined
+      }
+      equipe_registrar_assinatura_medida: {
+        Args: { p_assinado_path: string; p_medida_id: string }
         Returns: undefined
       }
       equipe_registrar_ciencia: {

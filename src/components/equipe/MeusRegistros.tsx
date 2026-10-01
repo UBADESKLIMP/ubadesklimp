@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ClipboardCheck, Loader2, FileSignature } from 'lucide-react';
+import { ClipboardCheck, Loader2, FileSignature, FileDown } from 'lucide-react';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { useMeusRegistros } from '@/hooks/useEquipe';
 import { EquipeStatusBadge, EquipeMedidaBadge, MinutosAtraso } from './EquipeStatusBadge';
+import { downloadAdvertenciaPdf, type DadosAdvertencia } from '@/lib/equipeAdvertencia';
 import type { Database } from '@/integrations/supabase/types';
 
 type MedidaTipo = Database['public']['Enums']['equipe_medida_tipo'];
@@ -22,21 +24,51 @@ const TEXTO_CIENCIA =
   'Declaro que fui informado(a) deste registro e tive a oportunidade de apresentar justificativa.';
 
 const MeusRegistros = () => {
+  const { toast } = useToast();
   const { atrasos, loading, darCiencia, justificar } = useMeusRegistros();
   const [justificandoId, setJustificandoId] = useState<string | null>(null);
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [baixando, setBaixando] = useState<string | null>(null);
   const [medidas, setMedidas] = useState<
     { id: string; tipo: MedidaTipo; data_aplicacao: string; fundamento: string; status: string }[]
   >([]);
 
-  useEffect(() => {
+  const carregarMedidas = () =>
     supabase
       .from('equipe_medidas')
       .select('id, tipo, data_aplicacao, fundamento, status')
       .order('data_aplicacao', { ascending: false })
       .then(({ data }) => setMedidas(data ?? []));
+
+  useEffect(() => {
+    carregarMedidas();
   }, []);
+
+  const baixarPdf = async (medidaId: string) => {
+    setBaixando(medidaId);
+    const { data, error } = await supabase.rpc('equipe_dados_advertencia', { p_medida_id: medidaId });
+    setBaixando(null);
+    if (error || !data) {
+      toast({ title: 'Não foi possível baixar', description: error?.message, variant: 'destructive' });
+      return;
+    }
+    downloadAdvertenciaPdf(data as unknown as DadosAdvertencia);
+  };
+
+  const darCienciaMedida = async (medidaId: string) => {
+    const { error } = await supabase.rpc('equipe_registrar_ciencia', {
+      p_alvo_tipo: 'medida',
+      p_alvo_id: medidaId,
+      p_acao: 'ciente',
+    });
+    if (error) {
+      toast({ title: 'Não foi possível registrar a ciência', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Ciência registrada' });
+    await carregarMedidas();
+  };
 
   const pendentes = atrasos.filter((a) => a.status === 'pendente_ciencia');
   const historico = atrasos.filter((a) => a.status !== 'pendente_ciencia');
@@ -178,15 +210,44 @@ const MeusRegistros = () => {
                 <p className="text-sm text-blue-300/60 py-4">Nenhuma medida registrada.</p>
               ) : (
                 medidas.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex flex-wrap items-center gap-3 border-b border-blue-500/10 py-3 last:border-0"
-                  >
-                    <span className="font-mono text-xs text-blue-300/60 tabular-nums">
-                      {formatarData(m.data_aplicacao)}
-                    </span>
-                    <EquipeMedidaBadge tipo={m.tipo} />
-                    <span className="text-xs text-blue-300/60 flex-1 min-w-[10rem]">{m.fundamento}</span>
+                  <div key={m.id} className="border-b border-blue-500/10 py-3 last:border-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-mono text-xs text-blue-300/60 tabular-nums">
+                        {formatarData(m.data_aplicacao)}
+                      </span>
+                      <EquipeMedidaBadge tipo={m.tipo} />
+                      <span className="text-xs text-blue-300/60 flex-1 min-w-[10rem]">{m.fundamento}</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {m.tipo !== 'orientacao_verbal' && m.tipo !== 'orientacao_verbal_coletiva' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => baixarPdf(m.id)}
+                          disabled={baixando === m.id}
+                          className="h-9 border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
+                        >
+                          {baixando === m.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+                          ) : (
+                            <FileDown className="h-3.5 w-3.5 mr-2" />
+                          )}
+                          Baixar PDF
+                        </Button>
+                      )}
+
+                      {m.tipo === 'orientacao_verbal' && m.status !== 'aplicada' && (
+                        <Button
+                          size="sm"
+                          onClick={() => darCienciaMedida(m.id)}
+                          className="h-9 bg-blue-600 hover:bg-blue-500"
+                        >
+                          <FileSignature className="h-3.5 w-3.5 mr-2" />
+                          Estou ciente
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
