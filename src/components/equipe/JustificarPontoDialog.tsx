@@ -68,13 +68,22 @@ const JustificarPontoDialog = ({
   useEffect(() => {
     if (open) {
       setData(hojeISO());
-      setTipo('esquecimento');
+      setTipo('atraso');
       setMotivo('');
-      setMarcacoes([]);
+      setMarcacoes([{ marcacao: 'entrada', horario: '' }]);
       setAtrasoId('');
       setValorPago('30');
     }
   }, [open]);
+
+  // "Cheguei atrasado" só precisa da hora de entrada. Já deixa a linha pronta
+  // em vez de a pessoa ter que descobrir que precisa adicionar uma marcação.
+  useEffect(() => {
+    if (!open) return;
+    if (tipo === 'atraso' && marcacoes.length === 0) {
+      setMarcacoes([{ marcacao: 'entrada', horario: '' }]);
+    }
+  }, [tipo, open, marcacoes.length]);
 
   const tiposDisponiveis = isGestor
     ? ([...TIPOS_DO_COLABORADOR, 'intervalo_reduzido_empresa', 'falha_sistema'] as JustificativaTipo[])
@@ -134,7 +143,7 @@ const JustificarPontoDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#12121a] border-blue-500/20 text-white max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading">Justificar ponto</DialogTitle>
+          <DialogTitle className="font-heading">Reportar o que aconteceu</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -283,7 +292,7 @@ const JustificarPontoDialog = ({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-blue-300/70 text-xs">O que aconteceu?</Label>
+            <Label className="text-blue-300/70 text-xs">Conte com as suas palavras</Label>
             <Textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}

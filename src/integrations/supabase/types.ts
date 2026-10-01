@@ -2204,6 +2204,8 @@ export type Database = {
         | "troca_turno_autorizada"
         | "compensacao_atraso"
         | "intervalo_reduzido_empresa"
+        | "atraso"
+        | "marcacao_duplicada"
       equipe_marcacao: "entrada" | "retorno_almoco"
       equipe_marcacao_ponto:
         | "entrada"
@@ -2383,6 +2385,8 @@ export const Constants = {
         "troca_turno_autorizada",
         "compensacao_atraso",
         "intervalo_reduzido_empresa",
+        "atraso",
+        "marcacao_duplicada",
       ],
       equipe_marcacao: ["entrada", "retorno_almoco"],
       equipe_marcacao_ponto: [

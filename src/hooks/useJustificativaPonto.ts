@@ -29,13 +29,16 @@ export interface JustificativaPonto {
   created_at: string;
 }
 
+// Escrito como o funcionário fala, não como o sistema guarda.
 export const TIPO_LABEL: Record<JustificativaTipo, string> = {
-  falha_sistema: 'Falha no sistema',
+  atraso: 'Cheguei atrasado',
   esquecimento: 'Esqueci de bater',
   marcacao_incorreta: 'Bati errado',
-  servico_externo: 'Serviço externo',
+  marcacao_duplicada: 'Bati duas vezes',
+  falha_sistema: 'O ponto não funcionou',
+  servico_externo: 'Saí a serviço',
   consulta_atestado: 'Consulta médica',
-  troca_turno_autorizada: 'Troca de turno',
+  troca_turno_autorizada: 'Troquei de turno',
   compensacao_atraso: 'Compensar atraso',
   intervalo_reduzido_empresa: 'Almoço reduzido (pedido da empresa)',
 };
@@ -60,10 +63,16 @@ export const STATUS_LABEL: Record<JustificativaStatus, string> = {
   substituida: 'substituída',
 };
 
-/** Tipos que o colaborador pode escolher — intervalo reduzido é só do gestor. */
+/**
+ * O que o funcionário pode reportar, na ordem do que mais acontece.
+ * Intervalo reduzido fica de fora: é pedido da empresa, só o gestor lança.
+ */
 export const TIPOS_DO_COLABORADOR: JustificativaTipo[] = [
+  'atraso',
   'esquecimento',
   'marcacao_incorreta',
+  'marcacao_duplicada',
+  'falha_sistema',
   'servico_externo',
   'consulta_atestado',
   'troca_turno_autorizada',

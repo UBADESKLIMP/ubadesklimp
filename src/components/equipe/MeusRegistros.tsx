@@ -220,15 +220,15 @@ const MeusRegistros = () => {
           <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-blue-300/60">
-                  Esqueceu de bater, bateu errado ou saiu a serviço? Registre aqui em vez do
-                  caderno.
+                <p className="text-sm text-blue-300/60 flex-1 min-w-[14rem]">
+                  Chegou atrasado, esqueceu de bater, bateu errado ou bateu duas vezes? Conte aqui
+                  o que aconteceu, com as suas palavras. O gestor confere depois.
                 </p>
                 <Button
                   onClick={() => setJustificandoPonto(true)}
-                  className="bg-blue-600 hover:bg-blue-500 h-11"
+                  className="bg-blue-600 hover:bg-blue-500 h-12 px-5 text-base"
                 >
-                  Justificar ponto
+                  Reportar o que aconteceu
                 </Button>
               </div>
 
