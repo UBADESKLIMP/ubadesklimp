@@ -22,6 +22,7 @@ import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { buildPurchaseOrderMessage, downloadPurchaseOrderPdf, PurchaseOrderItem } from '@/lib/purchaseOrder';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
+import ConfirmarQuantidadesDialog, { type ItemDoPedido } from './ConfirmarQuantidadesDialog';
 
 interface QuoteBatchComparisonProps {
   batchId: string;
@@ -59,6 +60,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   const [editingCell, setEditingCell] = useState<{ itemId: string; supplierId: string } | null>(null);
   const [editingPriceValue, setEditingPriceValue] = useState('');
   const productById = new Map(products.map((p) => [p.id, p]));
+  const [confirmandoSupplierId, setConfirmandoSupplierId] = useState<string | null>(null);
   const isReadOnly = batchStatus !== 'aberto';
   // Agrupa variações do mesmo produto lado a lado (tabela, subtotais e pedido
   // final), em vez da ordem de inserção no banco.
@@ -100,7 +102,9 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * (item.quantity ?? 1));
   }
 
-  const orderItemsBySupplier = new Map<string, PurchaseOrderItem[]>();
+  // Guarda o itemId junto: a tela de confirmar quantidades precisa dele pra
+  // gravar a quantidade de cada item antes de disparar o pedido.
+  const orderDetailsBySupplier = new Map<string, ItemDoPedido[]>();
   for (const item of sortedItems) {
     const winnerId = winners.get(item.id);
     if (!winnerId) continue;
@@ -108,12 +112,15 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     if (price === null) continue;
     const product = productById.get(item.product_id);
     const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
-    const list = orderItemsBySupplier.get(winnerId) ?? [];
-    // Pedido final precisa de uma quantidade real pro fornecedor — cotação
-    // pode ficar sem quantidade definida, mas o pedido assume 1 nesse caso.
-    list.push({ name: displayName, quantity: item.quantity ?? 1, unitPrice: price });
-    orderItemsBySupplier.set(winnerId, list);
+    const list = orderDetailsBySupplier.get(winnerId) ?? [];
+    list.push({ itemId: item.id, name: displayName, unitPrice: price, quantity: item.quantity });
+    orderDetailsBySupplier.set(winnerId, list);
   }
+
+  // Pro WhatsApp e pro PDF, que não precisam do id. Quantidade já confirmada
+  // na hora de gerar o pedido; o fallback de 1 só cobre lote antigo.
+  const orderItemsOf = (detalhes: ItemDoPedido[]): PurchaseOrderItem[] =>
+    detalhes.map((d) => ({ name: d.name, quantity: d.quantity ?? 1, unitPrice: d.unitPrice }));
 
   const handleArchive = async () => {
     setIsArchiving(true);
@@ -127,6 +134,22 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   const handleGenerateSupplierOrder = async (supplierId: string) => {
     setGeneratingSupplierId(supplierId);
     try {
+      await generateSupplierOrder(supplierId);
+    } finally {
+      setGeneratingSupplierId(null);
+    }
+  };
+
+  // Grava as quantidades confirmadas e só então dispara o pedido.
+  const handleConfirmarQuantidades = async (
+    supplierId: string,
+    quantidades: Record<string, number>
+  ) => {
+    setGeneratingSupplierId(supplierId);
+    try {
+      for (const [itemId, quantidade] of Object.entries(quantidades)) {
+        await updateItemQuantity(itemId, quantidade);
+      }
       await generateSupplierOrder(supplierId);
     } finally {
       setGeneratingSupplierId(null);
@@ -358,10 +381,11 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
           </div>
         )}
 
-        {batchStatus !== 'cancelado' && orderItemsBySupplier.size > 0 && (
+        {batchStatus !== 'cancelado' && orderDetailsBySupplier.size > 0 && (
           <div className="space-y-3">
             <p className="text-sm font-medium">Pedidos de compra</p>
-            {Array.from(orderItemsBySupplier.entries()).map(([supplierId, orderItems]) => {
+            {Array.from(orderDetailsBySupplier.entries()).map(([supplierId, orderDetails]) => {
+              const orderItems = orderItemsOf(orderDetails);
               const supplier = suppliers.find((s) => s.id === supplierId);
               const total = orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
               // Lote arquivado (isReadOnly) sempre conta como "já enviado" mesmo
@@ -381,30 +405,13 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
                     {!alreadySent && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" disabled={generatingSupplierId === supplierId}>
-                            Gerar pedido
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Gerar pedido pra {supplier?.company_name ?? 'este fornecedor'}?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Marca os {orderItems.length} item(ns) dele como pedido enviado em Faltantes. Os
-                              outros itens do lote continuam como estão.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleGenerateSupplierOrder(supplierId)}>
-                              Gerar pedido
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        size="sm"
+                        disabled={generatingSupplierId === supplierId}
+                        onClick={() => setConfirmandoSupplierId(supplierId)}
+                      >
+                        Definir quantidades e gerar pedido
+                      </Button>
                     )}
                     {alreadySent && (
                       <>
@@ -444,6 +451,16 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                       </>
                     )}
                   </div>
+
+                  <ConfirmarQuantidadesDialog
+                    open={confirmandoSupplierId === supplierId}
+                    onOpenChange={(aberto) => setConfirmandoSupplierId(aberto ? supplierId : null)}
+                    fornecedor={supplier?.company_name ?? 'Este fornecedor'}
+                    itens={orderDetails}
+                    onConfirmar={(quantidades) =>
+                      handleConfirmarQuantidades(supplierId, quantidades)
+                    }
+                  />
                 </div>
               );
             })}
