@@ -1422,6 +1422,7 @@ export type Database = {
           missing_product_id: string
           quantity: number | null
           quote_batch_id: string
+          unidade_compra: string
         }
         Insert: {
           created_at?: string
@@ -1429,6 +1430,7 @@ export type Database = {
           missing_product_id: string
           quantity?: number | null
           quote_batch_id: string
+          unidade_compra?: string
         }
         Update: {
           created_at?: string
@@ -1436,6 +1438,7 @@ export type Database = {
           missing_product_id?: string
           quantity?: number | null
           quote_batch_id?: string
+          unidade_compra?: string
         }
         Relationships: [
           {

@@ -11,11 +11,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 
+export type UnidadeCompra = 'unidade' | 'caixa';
+
 export interface ItemDoPedido {
   itemId: string;
   name: string;
   unitPrice: number;
   quantity: number | null;
+  unidadeCompra: UnidadeCompra;
+}
+
+export interface LinhaConfirmada {
+  quantidade: number;
+  unidadeCompra: UnidadeCompra;
 }
 
 interface Props {
@@ -23,8 +31,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   fornecedor: string;
   itens: ItemDoPedido[];
-  /** Salva as quantidades e gera o pedido. */
-  onConfirmar: (quantidades: Record<string, number>) => Promise<void>;
+  /** Já foi gerado antes: muda o texto, porque aqui é correção. */
+  jaGerado?: boolean;
+  /** Salva quantidades e unidades, depois gera o pedido. */
+  onConfirmar: (linhas: Record<string, LinhaConfirmada>) => Promise<void>;
 }
 
 const formatPrice = (value: number) =>
@@ -43,9 +53,11 @@ const ConfirmarQuantidadesDialog = ({
   onOpenChange,
   fornecedor,
   itens,
+  jaGerado = false,
   onConfirmar,
 }: Props) => {
   const [quantidades, setQuantidades] = useState<Record<string, string>>({});
+  const [unidades, setUnidades] = useState<Record<string, UnidadeCompra>>({});
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -53,6 +65,7 @@ const ConfirmarQuantidadesDialog = ({
     setQuantidades(
       Object.fromEntries(itens.map((i) => [i.itemId, i.quantity ? String(i.quantity) : '']))
     );
+    setUnidades(Object.fromEntries(itens.map((i) => [i.itemId, i.unidadeCompra])));
   }, [open, itens]);
 
   const parsed = useMemo(() => {
@@ -71,7 +84,11 @@ const ConfirmarQuantidadesDialog = ({
     if (faltando.length > 0) return;
     setSalvando(true);
     try {
-      await onConfirmar(parsed);
+      const linhas: Record<string, LinhaConfirmada> = {};
+      for (const [itemId, quantidade] of Object.entries(parsed)) {
+        linhas[itemId] = { quantidade, unidadeCompra: unidades[itemId] ?? 'unidade' };
+      }
+      await onConfirmar(linhas);
       onOpenChange(false);
     } finally {
       setSalvando(false);
@@ -82,10 +99,13 @@ const ConfirmarQuantidadesDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Quantidades do pedido</DialogTitle>
+          <DialogTitle>
+            {jaGerado ? 'Corrigir o pedido' : 'Quantidades do pedido'}
+          </DialogTitle>
           <DialogDescription>
-            {fornecedor} ganhou {itens.length} item(ns). Informe quanto pedir de cada um antes de
-            enviar.
+            {jaGerado
+              ? `Ajuste o que precisar e gere o pedido de novo pra ${fornecedor}. O WhatsApp e o PDF passam a sair com os valores novos.`
+              : `${fornecedor} ganhou ${itens.length} item(ns). Informe quanto pedir de cada um antes de enviar.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -102,7 +122,9 @@ const ConfirmarQuantidadesDialog = ({
                   <p className="text-sm truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatPrice(item.unitPrice)} cada
-                    {qtd ? ` · ${formatPrice(qtd * item.unitPrice)}` : ''}
+                    {qtd
+                      ? ` · ${qtd} ${(unidades[item.itemId] ?? 'unidade') === 'caixa' ? 'cx' : 'un'} = ${formatPrice(qtd * item.unitPrice)}`
+                      : ''}
                   </p>
                 </div>
                 <Input
@@ -116,6 +138,29 @@ const ConfirmarQuantidadesDialog = ({
                   }
                   className="h-10 w-20 shrink-0"
                 />
+
+                {/* "10" sozinho é ambíguo pro fornecedor: 10 frascos ou 10 caixas? */}
+                <div className="flex shrink-0 rounded-md border overflow-hidden">
+                  {(['unidade', 'caixa'] as UnidadeCompra[]).map((opcao) => {
+                    const ativo = (unidades[item.itemId] ?? 'unidade') === opcao;
+                    return (
+                      <button
+                        key={opcao}
+                        type="button"
+                        onClick={() =>
+                          setUnidades((prev) => ({ ...prev, [item.itemId]: opcao }))
+                        }
+                        className={`h-10 w-11 text-xs font-medium transition-colors ${
+                          ativo
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-background text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {opcao === 'caixa' ? 'cx' : 'un'}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
@@ -136,7 +181,7 @@ const ConfirmarQuantidadesDialog = ({
           </Button>
           <Button onClick={confirmar} disabled={faltando.length > 0 || salvando}>
             {salvando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Gerar pedido
+            {jaGerado ? 'Salvar e gerar de novo' : 'Gerar pedido'}
           </Button>
         </DialogFooter>
       </DialogContent>

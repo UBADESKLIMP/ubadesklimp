@@ -22,7 +22,10 @@ import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { buildPurchaseOrderMessage, downloadPurchaseOrderPdf, PurchaseOrderItem } from '@/lib/purchaseOrder';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
-import ConfirmarQuantidadesDialog, { type ItemDoPedido } from './ConfirmarQuantidadesDialog';
+import ConfirmarQuantidadesDialog, {
+  type ItemDoPedido,
+  type LinhaConfirmada,
+} from './ConfirmarQuantidadesDialog';
 
 interface QuoteBatchComparisonProps {
   batchId: string;
@@ -49,6 +52,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     setPriceExcluded,
     correctPrice,
     updateItemQuantity,
+    updateItemPedido,
     generateSupplierOrder,
     archiveBatch,
   } = useQuoteBatchComparison(batchId);
@@ -113,14 +117,25 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     const product = productById.get(item.product_id);
     const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
     const list = orderDetailsBySupplier.get(winnerId) ?? [];
-    list.push({ itemId: item.id, name: displayName, unitPrice: price, quantity: item.quantity });
+    list.push({
+      itemId: item.id,
+      name: displayName,
+      unitPrice: price,
+      quantity: item.quantity,
+      unidadeCompra: item.unidade_compra,
+    });
     orderDetailsBySupplier.set(winnerId, list);
   }
 
   // Pro WhatsApp e pro PDF, que não precisam do id. Quantidade já confirmada
   // na hora de gerar o pedido; o fallback de 1 só cobre lote antigo.
   const orderItemsOf = (detalhes: ItemDoPedido[]): PurchaseOrderItem[] =>
-    detalhes.map((d) => ({ name: d.name, quantity: d.quantity ?? 1, unitPrice: d.unitPrice }));
+    detalhes.map((d) => ({
+      name: d.name,
+      quantity: d.quantity ?? 1,
+      unitPrice: d.unitPrice,
+      unidadeCompra: d.unidadeCompra,
+    }));
 
   const handleArchive = async () => {
     setIsArchiving(true);
@@ -143,12 +158,12 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   // Grava as quantidades confirmadas e só então dispara o pedido.
   const handleConfirmarQuantidades = async (
     supplierId: string,
-    quantidades: Record<string, number>
+    linhas: Record<string, LinhaConfirmada>
   ) => {
     setGeneratingSupplierId(supplierId);
     try {
-      for (const [itemId, quantidade] of Object.entries(quantidades)) {
-        await updateItemQuantity(itemId, quantidade);
+      for (const [itemId, linha] of Object.entries(linhas)) {
+        await updateItemPedido(itemId, linha.quantidade, linha.unidadeCompra);
       }
       await generateSupplierOrder(supplierId);
     } finally {
@@ -420,9 +435,9 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                             size="sm"
                             variant="outline"
                             disabled={generatingSupplierId === supplierId}
-                            onClick={() => handleGenerateSupplierOrder(supplierId)}
+                            onClick={() => setConfirmandoSupplierId(supplierId)}
                           >
-                            Reenviar / atualizar pedido
+                            Corrigir quantidades / reenviar
                           </Button>
                         )}
                         <Button asChild size="sm" variant="outline">
@@ -457,6 +472,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                     onOpenChange={(aberto) => setConfirmandoSupplierId(aberto ? supplierId : null)}
                     fornecedor={supplier?.company_name ?? 'Este fornecedor'}
                     itens={orderDetails}
+                    jaGerado={alreadySent}
                     onConfirmar={(quantidades) =>
                       handleConfirmarQuantidades(supplierId, quantidades)
                     }

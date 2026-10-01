@@ -12,7 +12,10 @@ export interface ComparisonItem {
   fragrance_id: string | null;
   variation_id: string | null;
   quantity: number | null;
+  unidade_compra: UnidadeCompra;
 }
+
+export type UnidadeCompra = 'unidade' | 'caixa';
 
 export interface ComparisonSupplier {
   id: string;
@@ -73,7 +76,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
 
       const { data: itemRows, error: itemsError } = await supabase
         .from('quote_batch_items')
-        .select('id, missing_product_id, quantity, missing_products(product_id, fragrance_id, variation_id)')
+        .select('id, missing_product_id, quantity, unidade_compra, missing_products(product_id, fragrance_id, variation_id)')
         .eq('quote_batch_id', batchId);
       if (itemsError) throw itemsError;
 
@@ -81,6 +84,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
         id: string;
         missing_product_id: string;
         quantity: number | null;
+        unidade_compra: UnidadeCompra;
         missing_products: { product_id: string; fragrance_id: string | null; variation_id: string | null } | null;
       }>;
       const nextItems: ComparisonItem[] = typedItemRows.map((row) => ({
@@ -90,6 +94,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
         fragrance_id: row.missing_products?.fragrance_id ?? null,
         variation_id: row.missing_products?.variation_id ?? null,
         quantity: row.quantity,
+        unidade_compra: row.unidade_compra ?? 'unidade',
       }));
       setItems(nextItems);
 
@@ -439,6 +444,33 @@ export const useQuoteBatchComparison = (batchId: string) => {
     }
   };
 
+  const updateItemPedido = async (
+    itemId: string,
+    quantity: number,
+    unidadeCompra: UnidadeCompra
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('quote_batch_items')
+        .update({ quantity, unidade_compra: unidadeCompra })
+        .eq('id', itemId);
+      if (error) throw error;
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, quantity, unidade_compra: unidadeCompra } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error updating quote batch item:', error);
+      toast({
+        title: 'Erro ao salvar o item',
+        description: 'Não foi possível salvar a quantidade desse item.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   // Gera o pedido de um fornecedor: marca a primeira geração em
   // quote_batch_suppliers e move pra 'pedido_enviado' todo missing_product
   // ligado a um item em que ele é vencedor atual. Não exige que o lote
@@ -545,6 +577,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
     setPriceExcluded,
     correctPrice,
     updateItemQuantity,
+    updateItemPedido,
     generateSupplierOrder,
     archiveBatch,
     refetch: fetchData,

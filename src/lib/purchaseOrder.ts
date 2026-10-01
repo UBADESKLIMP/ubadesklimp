@@ -4,7 +4,13 @@ export interface PurchaseOrderItem {
   name: string;
   quantity: number;
   unitPrice: number;
+  /** 'unidade' ou 'caixa' — pedir "10" sem isso é ambíguo pro fornecedor. */
+  unidadeCompra?: 'unidade' | 'caixa';
 }
+
+/** "2 cx" / "5 un" — abreviado porque aparece em linha de pedido. */
+export const formatQuantity = (item: PurchaseOrderItem): string =>
+  `${item.quantity} ${item.unidadeCompra === 'caixa' ? 'cx' : 'un'}`;
 
 const itemTotal = (item: PurchaseOrderItem) => item.quantity * item.unitPrice;
 const orderTotal = (items: PurchaseOrderItem[]) => items.reduce((sum, item) => sum + itemTotal(item), 0);
@@ -13,7 +19,8 @@ const formatCurrency = (value: number) => `R$ ${value.toFixed(2).replace('.', ',
 
 export const buildPurchaseOrderMessage = (items: PurchaseOrderItem[]): string => {
   const lines = items.map(
-    (item) => `• ${item.quantity}x ${item.name} — ${formatCurrency(item.unitPrice)} (${formatCurrency(itemTotal(item))})`
+    (item) =>
+      `• ${formatQuantity(item)} — ${item.name} — ${formatCurrency(item.unitPrice)} cada (${formatCurrency(itemTotal(item))})`
   );
   return `Olá! Gostaríamos de fazer o seguinte pedido:\n\n${lines.join('\n')}\n\nTotal: ${formatCurrency(orderTotal(items))}`;
 };
@@ -48,7 +55,7 @@ export const downloadPurchaseOrderPdf = (supplierName: string, items: PurchaseOr
       y = 20;
     }
     doc.text(item.name, marginX, y, { maxWidth: 100 });
-    doc.text(String(item.quantity), 120, y);
+    doc.text(formatQuantity(item), 120, y);
     doc.text(formatCurrency(item.unitPrice), 140, y);
     doc.text(formatCurrency(itemTotal(item)), 175, y);
     y += 8;
