@@ -135,7 +135,7 @@ const MeusRegistros = () => {
           ) : (
             <div className="space-y-4">
               {pendentes.map((a) => (
-                <Card key={a.id} className="bg-[#12121a] border-blue-500/20">
+                <Card key={a.id} className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="font-mono text-sm text-white tabular-nums">
@@ -191,7 +191,7 @@ const MeusRegistros = () => {
         </TabsContent>
 
         <TabsContent value="historico">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6">
               {historico.length === 0 ? (
                 <p className="text-sm text-blue-300/60 py-4">Nenhum registro no histórico.</p>
@@ -217,7 +217,7 @@ const MeusRegistros = () => {
         </TabsContent>
 
         <TabsContent value="ponto">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-blue-300/60">
@@ -278,7 +278,7 @@ const MeusRegistros = () => {
         </TabsContent>
 
         <TabsContent value="medidas">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6">
               {medidas.length === 0 ? (
                 <p className="text-sm text-blue-300/60 py-4">Nenhuma medida registrada.</p>
@@ -351,7 +351,7 @@ const MeusRegistros = () => {
               onChange={(e) => setTexto(e.target.value)}
               rows={5}
               placeholder="Explique o motivo. O gestor vai avaliar e decidir se abona."
-              className="bg-[#0c0c14] border-blue-500/20"
+              className="bg-[#0c0c14] border-blue-500/20 text-white placeholder:text-blue-300/40"
             />
             <p className="text-xs text-blue-300/50">Mínimo de 10 caracteres.</p>
           </div>

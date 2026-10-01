@@ -366,7 +366,7 @@ const FichaColaboradorDialog = ({ colaboradorId, nome, atrasos, isEquipeAdmin, o
                     inputMode="numeric"
                     value={diasSuspensao}
                     onChange={(e) => setDiasSuspensao(e.target.value.replace(/\D/g, ''))}
-                    className="bg-[#12121a] border-blue-500/20 h-11 font-mono w-24"
+                    className="bg-[#12121a] border-blue-500/20 h-11 font-mono w-24 [color-scheme:dark] text-white placeholder:text-blue-300/40"
                   />
                 </div>
               </div>
@@ -407,7 +407,7 @@ const FichaColaboradorDialog = ({ colaboradorId, nome, atrasos, isEquipeAdmin, o
                 onChange={(e) => setFundamento(e.target.value)}
                 rows={3}
                 placeholder="Descreva os fatos e a base da medida."
-                className="bg-[#12121a] border-blue-500/20"
+                className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40"
               />
             </div>
 

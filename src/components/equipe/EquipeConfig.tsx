@@ -164,7 +164,7 @@ const EquipeConfig = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[#12121a] border-blue-500/20">
+      <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
         <CardContent className="pt-6 space-y-4">
           <div>
             <h3 className="text-sm font-medium text-white">Nova empresa</h3>
@@ -181,7 +181,7 @@ const EquipeConfig = () => {
                 value={novaRazao}
                 onChange={(e) => setNovaRazao(e.target.value)}
                 placeholder="Ubadesklimp Comércio LTDA"
-                className="bg-[#0c0c14] border-blue-500/20 h-11"
+                className="bg-[#0c0c14] border-blue-500/20 h-11 text-white placeholder:text-blue-300/40"
               />
             </div>
             <div className="space-y-1">
@@ -191,7 +191,7 @@ const EquipeConfig = () => {
                 onChange={(e) => setNovoCnpj(somenteDigitos(e.target.value).slice(0, 14))}
                 inputMode="numeric"
                 placeholder="00.000.000/0001-00"
-                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono"
+                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
               />
             </div>
             <div className="flex items-end">
@@ -209,7 +209,7 @@ const EquipeConfig = () => {
       </Card>
 
       {empresas.length === 0 ? (
-        <Card className="bg-[#12121a] border-blue-500/20">
+        <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
           <CardContent className="py-10 text-center">
             <Building2 className="h-10 w-10 text-blue-500/40 mx-auto mb-3" />
             <p className="text-sm text-blue-300/60">
@@ -224,7 +224,7 @@ const EquipeConfig = () => {
           const passouDoLimite = empresa.funcionarios > LIMITE_PONTO_OBRIGATORIO;
 
           return (
-            <Card key={empresa.id} className="bg-[#12121a] border-blue-500/20">
+            <Card key={empresa.id} className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
               <CardContent className="pt-6 space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -315,7 +315,7 @@ const EquipeConfig = () => {
                             value={novaEscala.nome}
                             onChange={(e) => setNovaEscala({ ...novaEscala, nome: e.target.value })}
                             placeholder="Padrão 08h-17h"
-                            className="bg-[#12121a] border-blue-500/20 h-11"
+                            className="bg-[#12121a] border-blue-500/20 h-11 text-white placeholder:text-blue-300/40"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -326,7 +326,7 @@ const EquipeConfig = () => {
                               inputMode="numeric"
                               value={novaEscala.entrada}
                               onChange={(e) => setNovaEscala({ ...novaEscala, entrada: e.target.value })}
-                              className="bg-[#12121a] border-blue-500/20 h-11 font-mono"
+                              className="bg-[#12121a] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
                             />
                           </div>
                           <div className="space-y-1">
@@ -336,7 +336,7 @@ const EquipeConfig = () => {
                               inputMode="numeric"
                               value={novaEscala.saida}
                               onChange={(e) => setNovaEscala({ ...novaEscala, saida: e.target.value })}
-                              className="bg-[#12121a] border-blue-500/20 h-11 font-mono"
+                              className="bg-[#12121a] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
                             />
                           </div>
                         </div>
@@ -353,7 +353,7 @@ const EquipeConfig = () => {
                                 tol_marcacao_min: e.target.value.replace(/\D/g, '').slice(0, 2),
                               })
                             }
-                            className="bg-[#12121a] border-blue-500/20 h-11 font-mono"
+                            className="bg-[#12121a] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
                           />
                         </div>
                         <div className="space-y-1">
@@ -367,7 +367,7 @@ const EquipeConfig = () => {
                                 tol_dia_min: e.target.value.replace(/\D/g, '').slice(0, 2),
                               })
                             }
-                            className="bg-[#12121a] border-blue-500/20 h-11 font-mono"
+                            className="bg-[#12121a] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
                           />
                         </div>
                       </div>

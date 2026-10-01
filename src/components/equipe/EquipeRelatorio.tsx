@@ -93,7 +93,7 @@ const EquipeRelatorio = ({ empresaId }: { empresaId: string | null }) => {
   const temDados = linhas.some((l) => l.ocorrencias > 0 || l.ocorrencias_na_tolerancia > 0);
 
   return (
-    <Card className="bg-[#12121a] border-blue-500/20">
+    <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
       <CardContent className="pt-6 space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-1">
@@ -102,7 +102,7 @@ const EquipeRelatorio = ({ empresaId }: { empresaId: string | null }) => {
               type="month"
               value={competencia}
               onChange={(e) => setCompetencia(e.target.value)}
-              className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-[11rem]"
+              className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-[11rem] [color-scheme:dark] text-white placeholder:text-blue-300/40"
             />
           </div>
 

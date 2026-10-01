@@ -145,13 +145,13 @@ const JustificarPontoDialog = ({
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono"
+                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
               />
             </div>
             <div className="space-y-1">
               <Label className="text-blue-300/70 text-xs">Tipo</Label>
               <Select value={tipo} onValueChange={(v) => setTipo(v as JustificativaTipo)}>
-                <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11">
+                <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11 text-white placeholder:text-blue-300/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
@@ -175,7 +175,7 @@ const JustificarPontoDialog = ({
                 </p>
               ) : (
                 <Select value={atrasoId} onValueChange={setAtrasoId}>
-                  <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11">
+                  <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11 text-white placeholder:text-blue-300/40">
                     <SelectValue placeholder="Escolha o atraso" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
@@ -198,7 +198,7 @@ const JustificarPontoDialog = ({
                 inputMode="decimal"
                 value={valorPago}
                 onChange={(e) => setValorPago(e.target.value.replace(/[^\d.,]/g, ''))}
-                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-32"
+                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-32 [color-scheme:dark] text-white placeholder:text-blue-300/40"
               />
               <p className="text-xs text-blue-300/50">
                 Entra no relatório como rubrica própria, pra ser pago no holerite — não por fora.
@@ -234,7 +234,7 @@ const JustificarPontoDialog = ({
                   value={m.marcacao}
                   onValueChange={(v) => atualizarMarcacao(i, 'marcacao', v)}
                 >
-                  <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11 flex-1">
+                  <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11 flex-1 text-white placeholder:text-blue-300/40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
@@ -250,7 +250,7 @@ const JustificarPontoDialog = ({
                   inputMode="numeric"
                   value={m.horario}
                   onChange={(e) => atualizarMarcacao(i, 'horario', e.target.value)}
-                  className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-28"
+                  className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-28 [color-scheme:dark] text-white placeholder:text-blue-300/40"
                 />
                 <Button
                   type="button"
@@ -289,7 +289,7 @@ const JustificarPontoDialog = ({
               onChange={(e) => setMotivo(e.target.value)}
               rows={3}
               placeholder="Ex.: o sistema de ponto não ligou e anotamos no caderno."
-              className="bg-[#0c0c14] border-blue-500/20"
+              className="bg-[#0c0c14] border-blue-500/20 text-white placeholder:text-blue-300/40"
             />
           </div>
         </div>

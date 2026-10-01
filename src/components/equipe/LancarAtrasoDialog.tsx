@@ -155,7 +155,7 @@ const LancarAtrasoDialog = ({
           <div className="space-y-2">
             <Label className="text-blue-300/70">Colaborador</Label>
             <Select value={colaboradorId} onValueChange={setColaboradorId}>
-              <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11">
+              <SelectTrigger className="bg-[#0c0c14] border-blue-500/20 h-11 text-white placeholder:text-blue-300/40">
                 <SelectValue placeholder="Quem chegou atrasado?" />
               </SelectTrigger>
               <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
@@ -197,7 +197,7 @@ const LancarAtrasoDialog = ({
                 inputMode="numeric"
                 value={saidaAlmocoReal}
                 onChange={(e) => setSaidaAlmocoReal(e.target.value)}
-                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono"
+                className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
               />
               <p className="text-xs text-blue-300/50">
                 O retorno esperado sai daqui + a duração do almoço do cadastro, não de um horário fixo.
@@ -214,7 +214,7 @@ const LancarAtrasoDialog = ({
               inputMode="numeric"
               value={horaChegada}
               onChange={(e) => setHoraChegada(e.target.value)}
-              className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono text-lg"
+              className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono text-lg [color-scheme:dark] text-white placeholder:text-blue-300/40"
             />
           </div>
 
@@ -238,7 +238,7 @@ const LancarAtrasoDialog = ({
                     inputMode="numeric"
                     value={horaChegadaPorta}
                     onChange={(e) => setHoraChegadaPorta(e.target.value)}
-                    className="bg-[#12121a] border-blue-500/20 h-11 font-mono"
+                    className="bg-[#12121a] border-blue-500/20 h-11 font-mono [color-scheme:dark] text-white placeholder:text-blue-300/40"
                   />
                   <p className="text-xs text-blue-300/50">
                     Sem isso, a referência passa a ser a hora da abertura.

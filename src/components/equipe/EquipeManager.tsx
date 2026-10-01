@@ -159,7 +159,7 @@ const EquipeManager = () => {
         <div className="mb-6 max-w-xs">
           <Label className="text-blue-300/70 text-xs">Empresa</Label>
           <Select value={empresaAtiva ?? ''} onValueChange={setEmpresaSelecionada}>
-            <SelectTrigger className="bg-[#12121a] border-blue-500/20 mt-1">
+            <SelectTrigger className="bg-[#12121a] border-blue-500/20 mt-1 text-white placeholder:text-blue-300/40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
@@ -185,7 +185,7 @@ const EquipeManager = () => {
         <AdminStatCard icon={DoorOpen} label="Justificativas" value={justificando.length} hint="para decidir" />
       </div>
 
-      <Card className="bg-[#12121a] border-blue-500/20 mb-6">
+      <Card className="bg-[#12121a] border-blue-500/20 mb-6 text-white placeholder:text-blue-300/40">
         <CardContent className="pt-6">
           {horaAbertura ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -218,7 +218,7 @@ const EquipeManager = () => {
                     inputMode="numeric"
                     value={horaAberturaInput}
                     onChange={(e) => setHoraAberturaInput(e.target.value)}
-                    className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-[7.5rem]"
+                    className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-[7.5rem] [color-scheme:dark] text-white placeholder:text-blue-300/40"
                   />
                 </div>
                 <Button
@@ -258,7 +258,7 @@ const EquipeManager = () => {
         </TabsList>
 
         <TabsContent value="hoje">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6">
               {loadingAtrasos ? (
                 <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
@@ -274,7 +274,7 @@ const EquipeManager = () => {
         </TabsContent>
 
         <TabsContent value="pendencias">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6">
               {[...justificando, ...semCiencia].length === 0 ? (
                 <p className="text-sm text-blue-300/60 py-4">Nada pendente.</p>
@@ -286,7 +286,7 @@ const EquipeManager = () => {
         </TabsContent>
 
         <TabsContent value="equipe">
-          <Card className="bg-[#12121a] border-blue-500/20">
+          <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
             <CardContent className="pt-6">
               {loadingColaboradores ? (
                 <Loader2 className="h-5 w-5 animate-spin text-blue-400" />

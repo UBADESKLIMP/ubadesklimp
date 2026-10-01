@@ -45,7 +45,7 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
 
   if (loading) {
     return (
-      <Card className="bg-[#12121a] border-blue-500/20">
+      <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
         <CardContent className="pt-6">
           <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
         </CardContent>
@@ -54,7 +54,7 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
   }
 
   return (
-    <Card className="bg-[#12121a] border-blue-500/20">
+    <Card className="bg-[#12121a] border-blue-500/20 text-white placeholder:text-blue-300/40">
       <CardContent className="pt-6">
         {pendentes.length === 0 ? (
           <p className="text-sm text-blue-300/60 py-4">
@@ -101,7 +101,7 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
                       value={motivo}
                       onChange={(e) => setMotivo(e.target.value)}
                       placeholder="Por que está rejeitando?"
-                      className="bg-[#0c0c14] border-blue-500/20 h-10 flex-1 min-w-[12rem]"
+                      className="bg-[#0c0c14] border-blue-500/20 h-10 flex-1 min-w-[12rem] text-white placeholder:text-blue-300/40"
                     />
                     <Button
                       size="sm"
