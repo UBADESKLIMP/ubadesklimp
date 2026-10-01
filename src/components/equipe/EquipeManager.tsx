@@ -19,6 +19,7 @@ import {
 import { EquipeStatusBadge, MinutosAtraso } from './EquipeStatusBadge';
 import LancarAtrasoDialog from './LancarAtrasoDialog';
 import FichaColaboradorDialog from './FichaColaboradorDialog';
+import PresentesNaPorta from './PresentesNaPorta';
 import EquipeRelatorio from './EquipeRelatorio';
 import EquipeConfig from './EquipeConfig';
 import AprovacoesPonto from './AprovacoesPonto';
@@ -46,7 +47,8 @@ const EquipeManager = () => {
   const empresas = useEquipeEmpresas(equipeAccess.empresaIds);
   const { colaboradores, loading: loadingColaboradores } = useEquipeColaboradores(empresaIds);
   const { atrasos, loading: loadingAtrasos, pedirPrevia, lancarAtraso } = useEquipeAtrasos(empresaIds);
-  const { horaAbertura, registrarAbertura, salvando } = useAberturaDoDia(empresaAtiva);
+  const { horaAbertura, presentes, registrarAbertura, registrarPresentes, salvando } =
+    useAberturaDoDia(empresaAtiva);
   const {
     justificativas,
     loading: loadingJustificativas,
@@ -188,19 +190,29 @@ const EquipeManager = () => {
       <Card className="bg-[#12121a] border-blue-500/20 mb-6 text-white placeholder:text-blue-300/40">
         <CardContent className="pt-6">
           {horaAbertura ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm text-white">
-                  Hoje a loja abriu às{' '}
-                  <span className="font-mono font-semibold text-[#f0b429]">
-                    {horaAbertura.slice(0, 5)}
-                  </span>
-                </p>
-                <p className="text-xs text-blue-300/50 mt-1">
-                  Quem estava na porta na hora da abertura tem a referência ajustada.
-                </p>
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-white">
+                    Hoje a loja abriu às{' '}
+                    <span className="font-mono font-semibold text-[#f0b429]">
+                      {horaAbertura.slice(0, 5)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-blue-300/50 mt-1">
+                    Quem estava na porta na hora da abertura tem a referência ajustada.
+                  </p>
+                </div>
+                <span className="text-xs text-blue-300/40">registrado</span>
               </div>
-              <span className="text-xs text-blue-300/40">registrado</span>
+
+              <PresentesNaPorta
+                colaboradores={colaboradores}
+                presentes={presentes}
+                horaAbertura={horaAbertura}
+                salvando={salvando}
+                onSalvar={registrarPresentes}
+              />
             </div>
           ) : (
             <div className="space-y-3">
@@ -369,6 +381,7 @@ const EquipeManager = () => {
         empresaId={empresaAtiva}
         data={hoje}
         aberturaAtrasada={aberturaAtrasada}
+        presentes={presentes}
         colaboradorInicial={colaboradorInicial}
         pedirPrevia={pedirPrevia}
         onLancar={lancarAtraso}

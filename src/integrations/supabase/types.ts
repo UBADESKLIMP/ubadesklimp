@@ -65,6 +65,69 @@ export type Database = {
         }
         Relationships: []
       }
+      equipe_abertura_presentes: {
+        Row: {
+          colaborador_id: string
+          created_at: string
+          data: string
+          empresa_id: string
+          hora_chegada_porta: string | null
+          registrado_por: string
+        }
+        Insert: {
+          colaborador_id: string
+          created_at?: string
+          data: string
+          empresa_id: string
+          hora_chegada_porta?: string | null
+          registrado_por: string
+        }
+        Update: {
+          colaborador_id?: string
+          created_at?: string
+          data?: string
+          empresa_id?: string
+          hora_chegada_porta?: string | null
+          registrado_por?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_abertura_presentes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_abertura_presentes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_abertura_presentes_empresa_id_data_fkey"
+            columns: ["empresa_id", "data"]
+            isOneToOne: false
+            referencedRelation: "equipe_aberturas"
+            referencedColumns: ["empresa_id", "data"]
+          },
+          {
+            foreignKeyName: "equipe_abertura_presentes_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_abertura_presentes_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       equipe_aberturas: {
         Row: {
           created_at: string
@@ -2063,6 +2126,10 @@ export type Database = {
           p_testemunha_2?: string
         }
         Returns: string
+      }
+      equipe_registrar_presentes_porta: {
+        Args: { p_data: string; p_empresa_id: string; p_presentes: Json }
+        Returns: number
       }
       equipe_registrar_tentativa_login: {
         Args: { p_sucesso: boolean; p_user_id: string }

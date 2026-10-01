@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database, Json } from '@/integrations/supabase/types';
 
 type Marcacao = Database['public']['Enums']['equipe_marcacao'];
 type AtrasoStatus = Database['public']['Enums']['equipe_atraso_status'];
@@ -104,26 +104,41 @@ export const useEquipeEmpresas = (empresaIds: string[]) => {
 };
 
 /** Abertura do dia de uma empresa (regra da porta). */
+export interface PresenteNaPorta {
+  colaborador_id: string;
+  hora_chegada_porta: string | null;
+}
+
 export const useAberturaDoDia = (empresaId: string | null, data = hoje()) => {
   const { toast } = useToast();
   const [horaAbertura, setHoraAbertura] = useState<string | null>(null);
+  const [presentes, setPresentes] = useState<PresenteNaPorta[]>([]);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   const load = useCallback(async () => {
     if (!empresaId) {
       setHoraAbertura(null);
+      setPresentes([]);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const { data: row } = await supabase
-      .from('equipe_aberturas')
-      .select('hora_abertura')
-      .eq('empresa_id', empresaId)
-      .eq('data', data)
-      .maybeSingle();
+    const [{ data: row }, { data: presentesRows }] = await Promise.all([
+      supabase
+        .from('equipe_aberturas')
+        .select('hora_abertura')
+        .eq('empresa_id', empresaId)
+        .eq('data', data)
+        .maybeSingle(),
+      supabase
+        .from('equipe_abertura_presentes')
+        .select('colaborador_id, hora_chegada_porta')
+        .eq('empresa_id', empresaId)
+        .eq('data', data),
+    ]);
     setHoraAbertura(row?.hora_abertura ?? null);
+    setPresentes(presentesRows ?? []);
     setLoading(false);
   }, [empresaId, data]);
 
@@ -155,7 +170,37 @@ export const useAberturaDoDia = (empresaId: string | null, data = hoje()) => {
     return true;
   };
 
-  return { horaAbertura, loading, salvando, registrarAbertura, reload: load };
+  /** Substitui a lista inteira de quem estava na porta nesse dia. */
+  const registrarPresentes = async (lista: PresenteNaPorta[]) => {
+    if (!empresaId) return false;
+    setSalvando(true);
+    const { error } = await supabase.rpc('equipe_registrar_presentes_porta', {
+      p_empresa_id: empresaId,
+      p_data: data,
+      p_presentes: lista as unknown as Json,
+    });
+    setSalvando(false);
+    if (error) {
+      toast({ title: 'Não foi possível salvar', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    toast({
+      title: lista.length === 0 ? 'Lista limpa' : `${lista.length} na porta`,
+      description: 'Vai vir marcado quando você lançar o atraso dessas pessoas.',
+    });
+    await load();
+    return true;
+  };
+
+  return {
+    horaAbertura,
+    presentes,
+    loading,
+    salvando,
+    registrarAbertura,
+    registrarPresentes,
+    reload: load,
+  };
 };
 
 export const useEquipeAtrasos = (empresaIds: string[]) => {

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
-import type { EquipeColaborador, PreviaAtraso } from '@/hooks/useEquipe';
+import type { EquipeColaborador, PresenteNaPorta, PreviaAtraso } from '@/hooks/useEquipe';
 
 type Marcacao = Database['public']['Enums']['equipe_marcacao'];
 
@@ -19,6 +19,8 @@ interface Props {
   empresaId: string | null;
   data: string;
   aberturaAtrasada: boolean;
+  /** Quem foi marcado na porta ao registrar a abertura — pré-preenche o campo. */
+  presentes: PresenteNaPorta[];
   colaboradorInicial?: string | null;
   pedirPrevia: (params: {
     colaboradorId: string;
@@ -51,6 +53,7 @@ const LancarAtrasoDialog = ({
   empresaId,
   data,
   aberturaAtrasada,
+  presentes,
   colaboradorInicial,
   pedirPrevia,
   onLancar,
@@ -76,6 +79,15 @@ const LancarAtrasoDialog = ({
       setPrevia(null);
     }
   }, [open, colaboradorInicial]);
+
+  // Se a pessoa foi marcada como presente na porta quando a abertura foi
+  // registrada, já vem preenchido — o gestor só confirma, em vez de lembrar.
+  useEffect(() => {
+    if (!colaboradorId) return;
+    const presente = presentes.find((p) => p.colaborador_id === colaboradorId);
+    setEstavaNaPorta(Boolean(presente));
+    setHoraChegadaPorta(presente?.hora_chegada_porta?.slice(0, 5) ?? '');
+  }, [colaboradorId, presentes]);
 
   const camposCompletos =
     Boolean(colaboradorId) &&
