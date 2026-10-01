@@ -10,10 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
-import { useAberturaDoDia, useEquipeAtrasos, useEquipeColaboradores } from '@/hooks/useEquipe';
+import {
+  useAberturaDoDia,
+  useEquipeAtrasos,
+  useEquipeColaboradores,
+  useEquipeEmpresas,
+} from '@/hooks/useEquipe';
 import { EquipeStatusBadge, MinutosAtraso } from './EquipeStatusBadge';
 import LancarAtrasoDialog from './LancarAtrasoDialog';
 import FichaColaboradorDialog from './FichaColaboradorDialog';
+import EquipeRelatorio from './EquipeRelatorio';
+import EquipeConfig from './EquipeConfig';
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
@@ -34,6 +41,7 @@ const EquipeManager = () => {
     [empresaAtiva]
   );
 
+  const empresas = useEquipeEmpresas(equipeAccess.empresaIds);
   const { colaboradores, loading: loadingColaboradores } = useEquipeColaboradores(empresaIds);
   const { atrasos, loading: loadingAtrasos, pedirPrevia, lancarAtraso } = useEquipeAtrasos(empresaIds);
   const { horaAbertura, registrarAbertura, salvando } = useAberturaDoDia(empresaAtiva);
@@ -72,19 +80,25 @@ const EquipeManager = () => {
     );
   }
 
+  // Sem empresa não há o que mostrar nas outras abas — mas o admin precisa
+  // conseguir chegar nas configurações justamente pra cadastrar a primeira.
   if (equipeAccess.empresaIds.length === 0) {
     return (
       <div>
         <AdminPageHeader
           icon={Users}
           title="Equipe"
-          description="Atrasos, ciências e medidas disciplinares."
+          description="Comece cadastrando a empresa e a escala."
         />
-        <AdminEmptyState
-          icon={Users}
-          title="Nenhuma empresa cadastrada"
-          description="Cadastre as empresas (razão social e CNPJ) e as escalas antes de começar a lançar atrasos. Sem empresa, não há a quem vincular colaborador nem de onde tirar o horário previsto."
-        />
+        {equipeAccess.isEquipeAdmin ? (
+          <EquipeConfig />
+        ) : (
+          <AdminEmptyState
+            icon={Users}
+            title="Nenhuma empresa vinculada a você"
+            description="Peça pro admin cadastrar a empresa e vincular seu acesso de gestor a ela."
+          />
+        )}
       </div>
     );
   }
@@ -143,7 +157,7 @@ const EquipeManager = () => {
             <SelectContent className="bg-[#12121a] border-blue-500/20 text-white">
               {equipeAccess.empresaIds.map((id) => (
                 <SelectItem key={id} value={id}>
-                  {id === equipeAccess.minhaEmpresaId ? 'Minha empresa' : `Empresa ${id.slice(0, 8)}`}
+                  {empresas.find((e) => e.id === id)?.razao_social ?? 'Carregando...'}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -225,6 +239,8 @@ const EquipeManager = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="equipe">Colaboradores</TabsTrigger>
+          <TabsTrigger value="relatorio">Relatório</TabsTrigger>
+          {equipeAccess.isEquipeAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="hoje">
@@ -312,6 +328,15 @@ const EquipeManager = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="relatorio">
+          <EquipeRelatorio empresaId={empresaAtiva} />
+        </TabsContent>
+
+        {equipeAccess.isEquipeAdmin && (
+          <TabsContent value="config">
+            <EquipeConfig />
+          </TabsContent>
+        )}
       </Tabs>
 
       <LancarAtrasoDialog

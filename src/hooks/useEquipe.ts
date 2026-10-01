@@ -77,6 +77,32 @@ export const useEquipeColaboradores = (empresaIds: string[]) => {
   return { colaboradores, loading, reload: load };
 };
 
+/** Nome das empresas visíveis, pro seletor mostrar razão social em vez de id. */
+export const useEquipeEmpresas = (empresaIds: string[]) => {
+  const [empresas, setEmpresas] = useState<{ id: string; razao_social: string }[]>([]);
+
+  useEffect(() => {
+    if (empresaIds.length === 0) {
+      setEmpresas([]);
+      return;
+    }
+    let cancelado = false;
+    supabase
+      .from('empresas')
+      .select('id, razao_social')
+      .in('id', empresaIds)
+      .order('razao_social')
+      .then(({ data }) => {
+        if (!cancelado) setEmpresas(data ?? []);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [empresaIds.join(',')]);
+
+  return empresas;
+};
+
 /** Abertura do dia de uma empresa (regra da porta). */
 export const useAberturaDoDia = (empresaId: string | null, data = hoje()) => {
   const { toast } = useToast();

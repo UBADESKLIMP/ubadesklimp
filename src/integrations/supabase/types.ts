@@ -1695,6 +1695,10 @@ export type Database = {
         }[]
       }
       equipe_checar_login: { Args: { p_user_id: string }; Returns: boolean }
+      equipe_contagem_funcionarios: {
+        Args: { p_empresa_id: string }
+        Returns: number
+      }
       equipe_contar_atrasos_mes: {
         Args: { p_colaborador_id: string; p_referencia: string }
         Returns: number
@@ -1731,6 +1735,20 @@ export type Database = {
       equipe_registrar_tentativa_login: {
         Args: { p_sucesso: boolean; p_user_id: string }
         Returns: undefined
+      }
+      equipe_relatorio_mensal: {
+        Args: { p_competencia: string; p_empresa_id: string }
+        Returns: {
+          colaborador: string
+          colaborador_id: string
+          medidas_no_mes: number
+          minutos_compensados: number
+          minutos_desconto: number
+          ocorrencias: number
+          ocorrencias_abonadas: number
+          ocorrencias_compensadas: number
+          ocorrencias_na_tolerancia: number
+        }[]
       }
       equipe_sugerir_medida: {
         Args: { p_colaborador_id: string; p_referencia: string }
