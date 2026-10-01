@@ -12,7 +12,8 @@ export interface ComparisonItem {
   fragrance_id: string | null;
   variation_id: string | null;
   quantity: number | null;
-  unidade_compra: UnidadeCompra;
+  /** Null = ninguém decidiu ainda; a tela sugere a partir da observação. */
+  unidade_compra: UnidadeCompra | null;
 }
 
 export type UnidadeCompra = 'unidade' | 'caixa';
@@ -84,7 +85,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
         id: string;
         missing_product_id: string;
         quantity: number | null;
-        unidade_compra: UnidadeCompra;
+        unidade_compra: UnidadeCompra | null;
         missing_products: { product_id: string; fragrance_id: string | null; variation_id: string | null } | null;
       }>;
       const nextItems: ComparisonItem[] = typedItemRows.map((row) => ({
@@ -94,7 +95,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
         fragrance_id: row.missing_products?.fragrance_id ?? null,
         variation_id: row.missing_products?.variation_id ?? null,
         quantity: row.quantity,
-        unidade_compra: row.unidade_compra ?? 'unidade',
+        unidade_compra: row.unidade_compra,
       }));
       setItems(nextItems);
 

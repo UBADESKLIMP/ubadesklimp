@@ -22,6 +22,7 @@ import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { buildPurchaseOrderMessage, downloadPurchaseOrderPdf, PurchaseOrderItem } from '@/lib/purchaseOrder';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
+import { unidadeSugerida } from '@/lib/unidadeCompra';
 import ConfirmarQuantidadesDialog, {
   type ItemDoPedido,
   type LinhaConfirmada,
@@ -123,6 +124,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
       unitPrice: price,
       quantity: item.quantity,
       unidadeCompra: item.unidade_compra,
+      observacao: getNote(item.id, winnerId),
     });
     orderDetailsBySupplier.set(winnerId, list);
   }
@@ -134,7 +136,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
       name: d.name,
       quantity: d.quantity ?? 1,
       unitPrice: d.unitPrice,
-      unidadeCompra: d.unidadeCompra,
+      unidadeCompra: unidadeSugerida(d.unidadeCompra, d.observacao),
     }));
 
   const handleArchive = async () => {

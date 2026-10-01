@@ -10,15 +10,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
+import { observacaoIndicaCaixa, unidadeSugerida, type UnidadeCompra } from '@/lib/unidadeCompra';
 
-export type UnidadeCompra = 'unidade' | 'caixa';
+export type { UnidadeCompra } from '@/lib/unidadeCompra';
 
 export interface ItemDoPedido {
   itemId: string;
   name: string;
   unitPrice: number;
   quantity: number | null;
-  unidadeCompra: UnidadeCompra;
+  unidadeCompra: UnidadeCompra | null;
+  /** Observação que o fornecedor mandou junto do preço, ex: "CXA 1X6". */
+  observacao?: string | null;
 }
 
 export interface LinhaConfirmada {
@@ -65,7 +68,11 @@ const ConfirmarQuantidadesDialog = ({
     setQuantidades(
       Object.fromEntries(itens.map((i) => [i.itemId, i.quantity ? String(i.quantity) : '']))
     );
-    setUnidades(Object.fromEntries(itens.map((i) => [i.itemId, i.unidadeCompra])));
+    setUnidades(
+      Object.fromEntries(
+        itens.map((i) => [i.itemId, unidadeSugerida(i.unidadeCompra, i.observacao)])
+      )
+    );
   }, [open, itens]);
 
   const parsed = useMemo(() => {
@@ -116,10 +123,18 @@ const ConfirmarQuantidadesDialog = ({
             return (
               <div
                 key={item.itemId}
-                className="flex items-center gap-3 border rounded-lg px-3 py-2"
+                className="flex flex-wrap items-center gap-2 border rounded-lg px-3 py-2"
               >
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 basis-48">
                   <p className="text-sm truncate">{item.name}</p>
+                  {item.observacao && (
+                    <p className="text-xs text-muted-foreground">
+                      Fornecedor anotou: {item.observacao}
+                      {!item.unidadeCompra && observacaoIndicaCaixa(item.observacao) && (
+                        <span className="text-primary"> · marcamos cx por isso</span>
+                      )}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {formatPrice(item.unitPrice)} cada
                     {qtd
