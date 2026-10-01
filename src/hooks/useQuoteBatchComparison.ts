@@ -114,13 +114,31 @@ export const useQuoteBatchComparison = (batchId: string) => {
         }[];
       }>;
 
-      const nextSuppliers: ComparisonSupplier[] = typedSupplierRows.map((row) => ({
-        id: row.id,
-        company_name: row.suppliers?.company_name ?? 'Fornecedor removido',
-        contact_name: row.suppliers?.contact_name ?? '',
-        phone: row.suppliers?.phone ?? '',
-        order_generated_at: row.order_generated_at,
-      }));
+      // Quem já respondeu vai pra esquerda. A tabela de comparação rola na
+      // horizontal, e com muitos fornecedores convidados os poucos que
+      // responderam ficavam lá no fim, fora da tela — justo quem precisa ser
+      // olhado. Dentro de cada grupo, ordem alfabética pra posição não ficar
+      // dançando a cada recarga.
+      const respondeu = new Set(
+        typedSupplierRows
+          .filter((row) => row.quote_line_items.some((item) => item.price !== null))
+          .map((row) => row.id)
+      );
+
+      const nextSuppliers: ComparisonSupplier[] = typedSupplierRows
+        .map((row) => ({
+          id: row.id,
+          company_name: row.suppliers?.company_name ?? 'Fornecedor removido',
+          contact_name: row.suppliers?.contact_name ?? '',
+          phone: row.suppliers?.phone ?? '',
+          order_generated_at: row.order_generated_at,
+        }))
+        .sort((a, b) => {
+          const aRespondeu = respondeu.has(a.id);
+          const bRespondeu = respondeu.has(b.id);
+          if (aRespondeu !== bRespondeu) return aRespondeu ? -1 : 1;
+          return a.company_name.localeCompare(b.company_name, 'pt-BR');
+        });
       setSuppliers(nextSuppliers);
 
       const nextPriceByKey: Record<string, number | null> = {};
