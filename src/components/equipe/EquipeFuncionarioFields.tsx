@@ -41,6 +41,9 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const [almocoPrevisto, setAlmocoPrevisto] = useState('');
   const [duracaoAlmoco, setDuracaoAlmoco] = useState('120');
   const [termoAssinadoEm, setTermoAssinadoEm] = useState('');
+  const [modelo, setModelo] = useState<string>('almoco_2h');
+  const [modeloOriginal, setModeloOriginal] = useState<string>('almoco_2h');
+  const [cafeAtivo, setCafeAtivo] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
@@ -55,7 +58,9 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           supabase.from('equipe_escalas').select('id, nome, empresa_id, entrada').eq('ativo', true),
           supabase
             .from('staff_members')
-            .select('empresa_id, escala_id, almoco_previsto, duracao_almoco_min, termo_assinado_em')
+            .select(
+              'empresa_id, escala_id, almoco_previsto, duracao_almoco_min, termo_assinado_em, modelo_intervalo'
+            )
             .eq('user_id', userId)
             .maybeSingle(),
           supabase.from('equipe_papeis').select('papel').eq('user_id', userId).maybeSingle(),
@@ -71,6 +76,17 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setDuracaoAlmoco(String(member?.duracao_almoco_min ?? 120));
       setTermoAssinadoEm(member?.termo_assinado_em ?? '');
       setPapel(papelRow?.papel ?? SEM_VALOR);
+      setModelo(member?.modelo_intervalo ?? 'almoco_2h');
+      setModeloOriginal(member?.modelo_intervalo ?? 'almoco_2h');
+
+      // O café é por empresa: sem ele ligado, os modelos nem podem ser escolhidos.
+      if (member?.empresa_id) {
+        const { data: ativo } = await supabase.rpc('ponto_cafe_ativo', {
+          p_empresa_id: member.empresa_id,
+        });
+        if (!cancelado) setCafeAtivo(Boolean(ativo));
+      }
+
       setCarregando(false);
     };
 
@@ -119,6 +135,26 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         });
         return;
       }
+    }
+
+    // O modelo de intervalo vai pela função, não pelo update direto: é ela que
+    // registra a data da troca e barra modelo com café quando ele está
+    // desligado na empresa.
+    if (modelo !== modeloOriginal) {
+      const { error: modeloError } = await supabase.rpc('ponto_definir_modelo_intervalo', {
+        p_funcionario_id: userId,
+        p_modelo: modelo as 'almoco_2h' | 'almoco_1h30_cafe_2x15' | 'almoco_1h30_cafe_1x30',
+      });
+      if (modeloError) {
+        setSalvando(false);
+        toast({
+          title: 'Dados salvos, mas o modelo de intervalo não',
+          description: modeloError.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setModeloOriginal(modelo);
     }
 
     setSalvando(false);
@@ -220,6 +256,33 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           />
           <p className="text-xs text-muted-foreground">
             Retorno esperado = saída real + esta duração.
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <Label>Modelo de intervalo</Label>
+          <Select
+            value={modelo}
+            onValueChange={setModelo}
+            disabled={!cafeAtivo}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="almoco_2h">Almoço de 2h (padrão)</SelectItem>
+              <SelectItem value="almoco_1h30_cafe_2x15">
+                Almoço 1h30 + café 15 min de manhã e 15 à tarde
+              </SelectItem>
+              <SelectItem value="almoco_1h30_cafe_1x30">
+                Almoço 1h30 + café de 30 min (manhã ou tarde)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {cafeAtivo
+              ? 'A troca vale a partir do dia seguinte. O intervalo total continua sendo 2h.'
+              : 'As pausas de café estão desligadas nesta empresa. Ligue em Ponto > Configurações antes de usar os modelos com café.'}
           </p>
         </div>
 

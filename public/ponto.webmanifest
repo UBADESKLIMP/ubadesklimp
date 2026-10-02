@@ -1,0 +1,19 @@
+{
+  "name": "Ponto Ubadesklimp",
+  "short_name": "Ponto",
+  "description": "Bater ponto na loja",
+  "start_url": "/ponto",
+  "scope": "/ponto",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0F6B5C",
+  "icons": [
+    {
+      "src": "/ponto-icone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

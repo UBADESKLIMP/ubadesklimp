@@ -14,7 +14,8 @@ const GuardaQuiosque = ({ children }: { children: React.ReactNode }) => {
   const { pathname } = useLocation();
 
   const eQuiosque = Boolean(lerTokenEstacao()) && quiosqueTravado() && !quiosqueLiberado();
-  if (eQuiosque && pathname !== '/ponto') {
+  // /ponto/q/<token> é a tela do QR: também é ponto, não é "o resto do admin".
+  if (eQuiosque && !pathname.startsWith('/ponto')) {
     return <Navigate to="/ponto" replace />;
   }
 

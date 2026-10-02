@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import TecladoPin from '@/components/ponto/TecladoPin';
 import EscolherPessoa from '@/components/ponto/EscolherPessoa';
 import Aviso from '@/components/ponto/Aviso';
+import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import {
@@ -53,6 +54,7 @@ interface AvisoAtual {
 type Tela = 'inicio' | 'bater-quem' | 'bater-pin' | 'abrir-loja' | 'faltante' | 'manutencao';
 
 const Ponto = () => {
+  usePontoInstalavel();
   const {
     token,
     contexto,

@@ -242,6 +242,181 @@ export const usePontoInfra = (empresaId: string | null) => {
   return { estacoes, redes, tentativas, loading, recarregar: carregar, revogarEstacao, alternarRede, liberarIpAtual };
 };
 
+export interface LocalQr {
+  id: string;
+  nome: string;
+  ativo: boolean;
+  marcacoes: MarcacaoTipo[];
+  /** Se nunca geraram token, o cartaz ainda não existe. */
+  tem_token: boolean;
+}
+
+export interface DispositivoPendente {
+  id: string;
+  funcionario_id: string;
+  nome: string;
+  apelido: string | null;
+  status: Database['public']['Enums']['ponto_dispositivo_status'];
+  created_at: string;
+  aprovado_em: string | null;
+}
+
+/** Pontos de QR (cozinha, etc.) e celulares esperando liberação. */
+export const usePontoQrEDispositivos = (empresaId: string | null) => {
+  const [locais, setLocais] = useState<LocalQr[]>([]);
+  const [dispositivos, setDispositivos] = useState<DispositivoPendente[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const carregar = useCallback(async () => {
+    if (!empresaId) {
+      setLocais([]);
+      setDispositivos([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+
+    const [locaisRes, devsRes] = await Promise.all([
+      supabase
+        .from('ponto_locais')
+        .select('id, nome, ativo, marcacoes_permitidas, qr_token_hash')
+        .eq('empresa_id', empresaId)
+        .eq('tipo', 'qr')
+        .order('created_at'),
+      supabase
+        .from('ponto_dispositivos')
+        // ponto_dispositivos tem duas FKs pra staff_members (dono e quem
+        // aprovou): sem dizer qual, o PostgREST não sabe escolher.
+        .select(
+          'id, funcionario_id, apelido, status, created_at, aprovado_em, staff_members!ponto_dispositivos_funcionario_id_fkey(display_name)'
+        )
+        .order('created_at', { ascending: false }),
+    ]);
+
+    type LinhaLocal = {
+      id: string;
+      nome: string;
+      ativo: boolean;
+      marcacoes_permitidas: MarcacaoTipo[];
+      qr_token_hash: string | null;
+    };
+
+    setLocais(
+      ((locaisRes.data ?? []) as LinhaLocal[]).map((l) => ({
+        id: l.id,
+        nome: l.nome,
+        ativo: l.ativo,
+        marcacoes: l.marcacoes_permitidas ?? [],
+        tem_token: Boolean(l.qr_token_hash),
+      }))
+    );
+
+    type LinhaDev = {
+      id: string;
+      funcionario_id: string;
+      apelido: string | null;
+      status: Database['public']['Enums']['ponto_dispositivo_status'];
+      created_at: string;
+      aprovado_em: string | null;
+      staff_members: { display_name: string } | null;
+    };
+
+    setDispositivos(
+      ((devsRes.data ?? []) as LinhaDev[]).map((d) => ({
+        id: d.id,
+        funcionario_id: d.funcionario_id,
+        nome: d.staff_members?.display_name ?? 'Colaborador',
+        apelido: d.apelido,
+        status: d.status,
+        created_at: d.created_at,
+        aprovado_em: d.aprovado_em,
+      }))
+    );
+
+    setLoading(false);
+  }, [empresaId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const criarLocalQr = async (nome: string) => {
+    if (!empresaId) return { ok: false, mensagem: 'Sem empresa.' };
+    const { data, error } = await supabase.rpc('ponto_criar_local_qr', {
+      p_empresa_id: empresaId,
+      p_nome: nome,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    await carregar();
+    return data as unknown as { ok: boolean; local_id: string; token: string };
+  };
+
+  const rotacionarQr = async (localId: string) => {
+    const { data, error } = await supabase.rpc('ponto_rotacionar_qr', { p_local_id: localId });
+    if (error) return { ok: false, mensagem: error.message };
+    await carregar();
+    return data as unknown as { ok: boolean; token: string };
+  };
+
+  const decidirDispositivo = async (id: string, aprovar: boolean) => {
+    const { error } = await supabase.rpc('ponto_decidir_dispositivo', {
+      p_dispositivo_id: id,
+      p_aprovar: aprovar,
+    });
+    if (!error) await carregar();
+    return !error;
+  };
+
+  return {
+    locais,
+    dispositivos,
+    pendentes: dispositivos.filter((d) => d.status === 'pendente'),
+    loading,
+    recarregar: carregar,
+    criarLocalQr,
+    rotacionarQr,
+    decidirDispositivo,
+  };
+};
+
+/**
+ * Pausas de café por empresa (PRD R4). Nasce desligada: dividir o intervalo em
+ * almoço + café é zona cinzenta e precisa de aditivo ou acordo antes.
+ */
+export const usePausasCafe = (empresaId: string | null) => {
+  const [ativo, setAtivo] = useState<boolean | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const carregar = useCallback(async () => {
+    if (!empresaId) {
+      setAtivo(null);
+      return;
+    }
+    const { data } = await supabase.rpc('ponto_cafe_ativo', { p_empresa_id: empresaId });
+    setAtivo(Boolean(data));
+  }, [empresaId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const definir = async (novo: boolean) => {
+    if (!empresaId) return false;
+    setSalvando(true);
+    const { error } = await supabase
+      .from('ponto_config')
+      .upsert(
+        { empresa_id: empresaId, chave: 'pausas_cafe_ativas', valor: novo, updated_at: new Date().toISOString() },
+        { onConflict: 'empresa_id,chave' }
+      );
+    setSalvando(false);
+    if (!error) await carregar();
+    return !error;
+  };
+
+  return { ativo, salvando, definir };
+};
+
 /** PIN de manutenção do quiosque: é ele que libera o resto do admin no PC. */
 export const usePinManutencao = (empresaId: string | null) => {
   const [definido, setDefinido] = useState<boolean | null>(null);

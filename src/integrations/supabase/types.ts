@@ -2276,6 +2276,8 @@ export type Database = {
           empresa_id: string | null
           escala_id: string | null
           is_admin: boolean
+          modelo_intervalo: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+          modelo_intervalo_desde: string | null
           salario_hora: number | null
           tentativas_login: number
           termo_adesao_path: string | null
@@ -2292,6 +2294,8 @@ export type Database = {
           empresa_id?: string | null
           escala_id?: string | null
           is_admin?: boolean
+          modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+          modelo_intervalo_desde?: string | null
           salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
@@ -2308,6 +2312,8 @@ export type Database = {
           empresa_id?: string | null
           escala_id?: string | null
           is_admin?: boolean
+          modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+          modelo_intervalo_desde?: string | null
           salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
@@ -2678,6 +2684,14 @@ export type Database = {
         Args: { p_estacao_token: string; p_termo: string }
         Returns: Json
       }
+      ponto_cafe_ativo: { Args: { p_empresa_id: string }; Returns: boolean }
+      ponto_cafe_por_dia: {
+        Args: { p_data?: string; p_funcionario_id: string }
+        Returns: {
+          minutos: number
+          quantidade: number
+        }[]
+      }
       ponto_calcular_hash: {
         Args: {
           p_empresa_id: string
@@ -2697,9 +2711,32 @@ export type Database = {
         Returns: Json
       }
       ponto_confirmar_por_prazo: { Args: never; Returns: number }
+      ponto_criar_local_qr: {
+        Args: {
+          p_empresa_id: string
+          p_marcacoes?: Database["public"]["Enums"]["ponto_marcacao_tipo"][]
+          p_nome: string
+        }
+        Returns: Json
+      }
+      ponto_decidir_dispositivo: {
+        Args: { p_aprovar: boolean; p_dispositivo_id: string }
+        Returns: Json
+      }
+      ponto_definir_modelo_intervalo: {
+        Args: {
+          p_funcionario_id: string
+          p_modelo: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+        }
+        Returns: Json
+      }
       ponto_definir_pin_manutencao: {
         Args: { p_empresa_id: string; p_pin: string }
         Returns: Json
+      }
+      ponto_duracao_almoco: {
+        Args: { p_data?: string; p_funcionario_id: string }
+        Returns: number
       }
       ponto_estacao_contexto: {
         Args: { p_estacao_token: string }
@@ -2719,6 +2756,10 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_modelo_vigente: {
+        Args: { p_data?: string; p_funcionario_id: string }
+        Returns: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+      }
       ponto_pin_confere: {
         Args: { p_funcionario_id: string; p_pin: string }
         Returns: boolean
@@ -2727,6 +2768,7 @@ export type Database = {
         Args: { p_funcionario_id: string }
         Returns: Database["public"]["Enums"]["ponto_marcacao_tipo"]
       }
+      ponto_qr_contexto: { Args: { p_qr_token: string }; Returns: Json }
       ponto_registrar: {
         Args: {
           p_device_id?: string
@@ -2735,6 +2777,15 @@ export type Database = {
           p_pin: string
           p_qr_token?: string
           p_tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: Json
+      }
+      ponto_registrar_dispositivo: {
+        Args: {
+          p_apelido?: string
+          p_device_id: string
+          p_funcionario_id: string
+          p_pin: string
         }
         Returns: Json
       }
@@ -2763,6 +2814,7 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_rotacionar_qr: { Args: { p_local_id: string }; Returns: Json }
       ponto_sair_do_quiosque: {
         Args: { p_estacao_token: string; p_pin: string }
         Returns: Json
@@ -2773,6 +2825,10 @@ export type Database = {
           p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
         }
         Returns: boolean
+      }
+      ponto_status_dispositivo: {
+        Args: { p_device_id: string; p_funcionario_id: string }
+        Returns: Json
       }
       ponto_tem_permissao: {
         Args: { p_permissao: string; p_user_id: string }
@@ -2824,7 +2880,7 @@ export type Database = {
         | "intervalo_reduzido_empresa"
         | "atraso"
         | "marcacao_duplicada"
-      equipe_marcacao: "entrada" | "retorno_almoco"
+      equipe_marcacao: "entrada" | "retorno_almoco" | "retorno_pausa"
       equipe_marcacao_ponto:
         | "entrada"
         | "saida_almoco"
@@ -2862,6 +2918,10 @@ export type Database = {
         | "hora_extra_saida"
         | "saida_pausa"
         | "retorno_pausa"
+      ponto_modelo_intervalo:
+        | "almoco_2h"
+        | "almoco_1h30_cafe_2x15"
+        | "almoco_1h30_cafe_1x30"
       ponto_motivo_recusa:
         | "fora_da_rede"
         | "dispositivo_nao_aprovado"
@@ -3039,7 +3099,7 @@ export const Constants = {
         "atraso",
         "marcacao_duplicada",
       ],
-      equipe_marcacao: ["entrada", "retorno_almoco"],
+      equipe_marcacao: ["entrada", "retorno_almoco", "retorno_pausa"],
       equipe_marcacao_ponto: [
         "entrada",
         "saida_almoco",
@@ -3081,6 +3141,11 @@ export const Constants = {
         "hora_extra_saida",
         "saida_pausa",
         "retorno_pausa",
+      ],
+      ponto_modelo_intervalo: [
+        "almoco_2h",
+        "almoco_1h30_cafe_2x15",
+        "almoco_1h30_cafe_1x30",
       ],
       ponto_motivo_recusa: [
         "fora_da_rede",

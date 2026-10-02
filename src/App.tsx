@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Ponto from "./pages/Ponto";
+import PontoQr from "./pages/PontoQr";
 import GuardaQuiosque from "./components/ponto/GuardaQuiosque";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/automotivo" element={<Automotivo />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/ponto" element={<Ponto />} />
+              <Route path="/ponto/q/:token" element={<PontoQr />} />
               <Route 
                 path="/profile" 
                 element={

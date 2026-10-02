@@ -21,10 +21,13 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import PontoQrLocais from './PontoQrLocais';
 import {
   usePontoAgora,
   usePontoDoDia,
   usePontoInfra,
+  usePontoQrEDispositivos,
+  usePausasCafe,
   usePinManutencao,
   hojeISO,
   MOTIVO_LABEL,
@@ -79,6 +82,8 @@ const PontoManager = () => {
   const { marcacoes, loading: loadingDia } = usePontoDoDia(empresaAtiva, dia);
   const { estacoes, redes, tentativas, loading: loadingInfra, revogarEstacao, alternarRede } =
     usePontoInfra(empresaAtiva);
+  const qrEDispositivos = usePontoQrEDispositivos(empresaAtiva);
+  const pausasCafe = usePausasCafe(empresaAtiva);
   const pinManutencao = usePinManutencao(empresaAtiva);
   const [novoPin, setNovoPin] = useState('');
   const [salvandoPin, setSalvandoPin] = useState(false);
@@ -151,6 +156,14 @@ const PontoManager = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="estacoes">Estações e rede</TabsTrigger>
+          <TabsTrigger value="qr">
+            QR e celulares
+            {qrEDispositivos.pendentes.length > 0 && (
+              <span className="ml-2 font-mono text-[10px] text-[#f0b429]">
+                {qrEDispositivos.pendentes.length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {/* ----------------------------------------------------- agora na loja */}
@@ -428,6 +441,56 @@ const PontoManager = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="qr" className="space-y-4">
+          {equipeAccess.isEquipeAdmin && (
+            <Card className={CARD}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <Coffee className="h-4 w-4 text-blue-400" />
+                  <p className="text-sm text-white">Pausas de café</p>
+                </div>
+                <p className="text-xs text-blue-300/50 mb-4">
+                  Divide o intervalo de 2h em almoço de 1h30 mais café. Antes de ligar, formalize
+                  por escrito: pausa de café não prevista em lei pode ser cobrada como hora extra
+                  (Súmula 118 do TST). Com isso desligado, ninguém bate pausa e os modelos com café
+                  não podem ser escolhidos.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    className={
+                      pausasCafe.ativo
+                        ? 'h-11 bg-[#C0392B] hover:bg-[#a63224]'
+                        : 'h-11 bg-blue-600 hover:bg-blue-500'
+                    }
+                    disabled={pausasCafe.ativo === null || pausasCafe.salvando}
+                    onClick={() => pausasCafe.definir(!pausasCafe.ativo)}
+                  >
+                    {pausasCafe.salvando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {pausasCafe.ativo ? 'Desligar pausas de café' : 'Ligar pausas de café'}
+                  </Button>
+                  <span className="text-xs text-blue-300/50">
+                    {pausasCafe.ativo === null
+                      ? ''
+                      : pausasCafe.ativo
+                        ? 'Ligadas nesta empresa.'
+                        : 'Desligadas — todo mundo no almoço de 2h.'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <PontoQrLocais
+            locais={qrEDispositivos.locais}
+            dispositivos={qrEDispositivos.dispositivos}
+            loading={qrEDispositivos.loading}
+            podeGerenciar={equipeAccess.isEquipeAdmin}
+            criarLocalQr={qrEDispositivos.criarLocalQr}
+            rotacionarQr={qrEDispositivos.rotacionarQr}
+            decidirDispositivo={qrEDispositivos.decidirDispositivo}
+          />
         </TabsContent>
       </Tabs>
     </div>
