@@ -14,6 +14,8 @@ import { useMeusRegistros } from '@/hooks/useEquipe';
 import { EquipeStatusBadge, EquipeMedidaBadge, MinutosAtraso } from './EquipeStatusBadge';
 import { downloadAdvertenciaPdf, type DadosAdvertencia } from '@/lib/equipeAdvertencia';
 import JustificarPontoDialog from './JustificarPontoDialog';
+import MeuPonto from './MeuPonto';
+import { useMeuPonto } from '@/hooks/usePonto';
 import { STATUS_LABEL, TIPO_LABEL, useJustificativasPonto } from '@/hooks/useJustificativaPonto';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +44,8 @@ const MeusRegistros = () => {
     criar: criarJustificativaPonto,
     darCiencia: darCienciaJustificativa,
   } = useJustificativasPonto([], true);
+  const meuPonto = useMeuPonto(14);
+  const pontoPendentes = meuPonto.pendentes.length;
   const [medidas, setMedidas] = useState<
     { id: string; tipo: MedidaTipo; data_aplicacao: string; fundamento: string; status: string }[]
   >([]);
@@ -120,6 +124,12 @@ const MeusRegistros = () => {
               <span className="ml-2 font-mono text-[10px] text-[#f0b429]">{pendentes.length}</span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="meu-ponto">
+            Meu ponto
+            {pontoPendentes > 0 && (
+              <span className="ml-2 font-mono text-[10px] text-[#f0b429]">{pontoPendentes}</span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="ponto">Ajustes de ponto</TabsTrigger>
           <TabsTrigger value="medidas">Minhas medidas</TabsTrigger>
@@ -188,6 +198,15 @@ const MeusRegistros = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="meu-ponto">
+          <MeuPonto
+            marcacoes={meuPonto.marcacoes}
+            pendentes={meuPonto.pendentes}
+            loading={meuPonto.loading}
+            responder={meuPonto.responder}
+          />
         </TabsContent>
 
         <TabsContent value="historico">

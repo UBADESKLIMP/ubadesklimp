@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Ponto from "./pages/Ponto";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/automotivo" element={<Automotivo />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/ponto" element={<Ponto />} />
               <Route 
                 path="/profile" 
                 element={

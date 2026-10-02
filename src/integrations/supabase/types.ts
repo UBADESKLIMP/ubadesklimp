@@ -1173,6 +1173,472 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_config: {
+        Row: {
+          chave: string
+          empresa_id: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          empresa_id: string
+          updated_at?: string
+          valor: Json
+        }
+        Update: {
+          chave?: string
+          empresa_id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_dispositivos: {
+        Row: {
+          apelido: string | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          created_at: string
+          device_id_hash: string
+          funcionario_id: string
+          id: string
+          status: Database["public"]["Enums"]["ponto_dispositivo_status"]
+        }
+        Insert: {
+          apelido?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          device_id_hash: string
+          funcionario_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["ponto_dispositivo_status"]
+        }
+        Update: {
+          apelido?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          device_id_hash?: string
+          funcionario_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["ponto_dispositivo_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_dispositivos_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_dispositivos_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_dispositivos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_dispositivos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ponto_estacoes: {
+        Row: {
+          created_at: string
+          device_token_hash: string
+          id: string
+          local_id: string
+          nome: string
+          registrado_por: string | null
+          revogada_em: string | null
+          ultimo_heartbeat: string | null
+          ultimo_ip: unknown
+        }
+        Insert: {
+          created_at?: string
+          device_token_hash: string
+          id?: string
+          local_id: string
+          nome: string
+          registrado_por?: string | null
+          revogada_em?: string | null
+          ultimo_heartbeat?: string | null
+          ultimo_ip?: unknown
+        }
+        Update: {
+          created_at?: string
+          device_token_hash?: string
+          id?: string
+          local_id?: string
+          nome?: string
+          registrado_por?: string | null
+          revogada_em?: string | null
+          ultimo_heartbeat?: string | null
+          ultimo_ip?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_estacoes_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_estacoes_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_estacoes_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ponto_locais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          id: string
+          marcacoes_permitidas: Database["public"]["Enums"]["ponto_marcacao_tipo"][]
+          nome: string
+          qr_dinamico: boolean
+          qr_token_hash: string | null
+          tipo: Database["public"]["Enums"]["ponto_local_tipo"]
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          id?: string
+          marcacoes_permitidas?: Database["public"]["Enums"]["ponto_marcacao_tipo"][]
+          nome: string
+          qr_dinamico?: boolean
+          qr_token_hash?: string | null
+          tipo: Database["public"]["Enums"]["ponto_local_tipo"]
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          marcacoes_permitidas?: Database["public"]["Enums"]["ponto_marcacao_tipo"][]
+          nome?: string
+          qr_dinamico?: boolean
+          qr_token_hash?: string | null
+          tipo?: Database["public"]["Enums"]["ponto_local_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_locais_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_marcacoes: {
+        Row: {
+          confirmacao: Database["public"]["Enums"]["ponto_confirmacao"]
+          created_at: string
+          dispositivo_id: string | null
+          empresa_id: string
+          estacao_id: string | null
+          estava_na_porta: boolean
+          foto_path: string | null
+          funcionario_id: string
+          hash: string
+          hash_anterior: string | null
+          id: string
+          ip: unknown
+          local_id: string | null
+          marcado_por: string | null
+          origem: Database["public"]["Enums"]["ponto_origem"]
+          registrado_em: string
+          tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+          user_agent: string | null
+        }
+        Insert: {
+          confirmacao?: Database["public"]["Enums"]["ponto_confirmacao"]
+          created_at?: string
+          dispositivo_id?: string | null
+          empresa_id: string
+          estacao_id?: string | null
+          estava_na_porta?: boolean
+          foto_path?: string | null
+          funcionario_id: string
+          hash: string
+          hash_anterior?: string | null
+          id?: string
+          ip?: unknown
+          local_id?: string | null
+          marcado_por?: string | null
+          origem?: Database["public"]["Enums"]["ponto_origem"]
+          registrado_em?: string
+          tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+          user_agent?: string | null
+        }
+        Update: {
+          confirmacao?: Database["public"]["Enums"]["ponto_confirmacao"]
+          created_at?: string
+          dispositivo_id?: string | null
+          empresa_id?: string
+          estacao_id?: string | null
+          estava_na_porta?: boolean
+          foto_path?: string | null
+          funcionario_id?: string
+          hash?: string
+          hash_anterior?: string | null
+          id?: string
+          ip?: unknown
+          local_id?: string | null
+          marcado_por?: string | null
+          origem?: Database["public"]["Enums"]["ponto_origem"]
+          registrado_em?: string
+          tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_marcacoes_dispositivo_id_fkey"
+            columns: ["dispositivo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dispositivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_estacao_id_fkey"
+            columns: ["estacao_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_estacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_marcado_por_fkey"
+            columns: ["marcado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_marcado_por_fkey"
+            columns: ["marcado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ponto_permissoes: {
+        Row: {
+          concedida_por: string | null
+          created_at: string
+          permissao: string
+          user_id: string
+        }
+        Insert: {
+          concedida_por?: string | null
+          created_at?: string
+          permissao: string
+          user_id: string
+        }
+        Update: {
+          concedida_por?: string | null
+          created_at?: string
+          permissao?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_permissoes_concedida_por_fkey"
+            columns: ["concedida_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_permissoes_concedida_por_fkey"
+            columns: ["concedida_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_permissoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_permissoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ponto_redes: {
+        Row: {
+          ativo: boolean
+          empresa_id: string
+          id: string
+          ip: unknown
+          origem: Database["public"]["Enums"]["ponto_rede_origem"]
+          visto_em: string
+        }
+        Insert: {
+          ativo?: boolean
+          empresa_id: string
+          id?: string
+          ip: unknown
+          origem: Database["public"]["Enums"]["ponto_rede_origem"]
+          visto_em?: string
+        }
+        Update: {
+          ativo?: boolean
+          empresa_id?: string
+          id?: string
+          ip?: unknown
+          origem?: Database["public"]["Enums"]["ponto_rede_origem"]
+          visto_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_redes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_tentativas: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          empresa_id: string | null
+          funcionario_id: string | null
+          id: string
+          ip: unknown
+          local_id: string | null
+          motivo: Database["public"]["Enums"]["ponto_motivo_recusa"]
+          tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"] | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          empresa_id?: string | null
+          funcionario_id?: string | null
+          id?: string
+          ip?: unknown
+          local_id?: string | null
+          motivo: Database["public"]["Enums"]["ponto_motivo_recusa"]
+          tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"] | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          empresa_id?: string | null
+          funcionario_id?: string | null
+          id?: string
+          ip?: unknown
+          local_id?: string | null
+          motivo?: Database["public"]["Enums"]["ponto_motivo_recusa"]
+          tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"] | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_tentativas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_tentativas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_tentativas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_tentativas_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_locais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_fragrances: {
         Row: {
           available_literages: string[] | null
@@ -1422,7 +1888,7 @@ export type Database = {
           missing_product_id: string
           quantity: number | null
           quote_batch_id: string
-          unidade_compra: string
+          unidade_compra: string | null
         }
         Insert: {
           created_at?: string
@@ -1430,7 +1896,7 @@ export type Database = {
           missing_product_id: string
           quantity?: number | null
           quote_batch_id: string
-          unidade_compra?: string
+          unidade_compra?: string | null
         }
         Update: {
           created_at?: string
@@ -1438,7 +1904,7 @@ export type Database = {
           missing_product_id?: string
           quantity?: number | null
           quote_batch_id?: string
-          unidade_compra?: string
+          unidade_compra?: string | null
         }
         Relationships: [
           {
@@ -2176,6 +2642,104 @@ export type Database = {
       is_equipe_admin: { Args: never; Returns: boolean }
       is_equipe_gestor_ou_admin: { Args: never; Returns: boolean }
       is_staff_admin: { Args: never; Returns: boolean }
+      ponto_abrir_loja: {
+        Args: {
+          p_device_id?: string
+          p_estacao_token?: string
+          p_motivo?: string
+          p_pin: string
+          p_responsavel_id: string
+        }
+        Returns: Json
+      }
+      ponto_agora_na_loja: { Args: { p_empresa_id: string }; Returns: Json }
+      ponto_calcular_hash: {
+        Args: {
+          p_empresa_id: string
+          p_funcionario_id: string
+          p_hash_anterior: string
+          p_registrado_em: string
+          p_tipo: string
+        }
+        Returns: string
+      }
+      ponto_config_int: {
+        Args: { p_chave: string; p_empresa_id: string; p_padrao: number }
+        Returns: number
+      }
+      ponto_confirmar_marcacao: {
+        Args: { p_confirma: boolean; p_marcacao_id: string }
+        Returns: Json
+      }
+      ponto_confirmar_por_prazo: { Args: never; Returns: number }
+      ponto_estacao_contexto: {
+        Args: { p_estacao_token: string }
+        Returns: Json
+      }
+      ponto_heartbeat: { Args: { p_estacao_token: string }; Returns: Json }
+      ponto_ip_origem: { Args: never; Returns: unknown }
+      ponto_marcacoes_do_dia: {
+        Args: { p_data?: string; p_empresa_id: string }
+        Returns: Json
+      }
+      ponto_marcar_presentes: {
+        Args: {
+          p_funcionarios: string[]
+          p_pin: string
+          p_responsavel_id: string
+        }
+        Returns: Json
+      }
+      ponto_pin_confere: {
+        Args: { p_funcionario_id: string; p_pin: string }
+        Returns: boolean
+      }
+      ponto_proxima_marcacao: {
+        Args: { p_funcionario_id: string }
+        Returns: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+      }
+      ponto_registrar: {
+        Args: {
+          p_device_id?: string
+          p_estacao_token?: string
+          p_funcionario_id: string
+          p_pin: string
+          p_qr_token?: string
+          p_tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: Json
+      }
+      ponto_registrar_estacao: {
+        Args: { p_local_id?: string; p_nome: string }
+        Returns: Json
+      }
+      ponto_registrar_tentativa: {
+        Args: {
+          p_detalhe?: string
+          p_empresa_id: string
+          p_funcionario_id: string
+          p_local_id: string
+          p_motivo: Database["public"]["Enums"]["ponto_motivo_recusa"]
+          p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: undefined
+      }
+      ponto_sequencia_valida: {
+        Args: {
+          p_funcionario_id: string
+          p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: boolean
+      }
+      ponto_tem_permissao: {
+        Args: { p_permissao: string; p_user_id: string }
+        Returns: boolean
+      }
+      ponto_user_agent: { Args: never; Returns: string }
+      ponto_verificar_integridade: {
+        Args: { p_empresa_id: string }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
@@ -2230,6 +2794,39 @@ export type Database = {
         | "advertencia_escrita"
         | "suspensao"
       equipe_papel: "admin" | "gestor" | "colaborador"
+      ponto_confirmacao:
+        | "na"
+        | "pendente"
+        | "confirmada"
+        | "contestada"
+        | "confirmada_por_prazo"
+      ponto_dispositivo_status: "pendente" | "aprovado" | "revogado"
+      ponto_local_tipo: "estacao" | "qr"
+      ponto_marcacao_tipo:
+        | "entrada"
+        | "saida_almoco"
+        | "retorno_almoco"
+        | "saida"
+        | "hora_extra_inicio"
+        | "hora_extra_saida"
+        | "saida_pausa"
+        | "retorno_pausa"
+      ponto_motivo_recusa:
+        | "fora_da_rede"
+        | "dispositivo_nao_aprovado"
+        | "pin_invalido"
+        | "conta_bloqueada"
+        | "sequencia_invalida"
+        | "local_nao_permite"
+        | "token_qr_invalido"
+        | "estacao_invalida"
+        | "duplicada"
+        | "rate_limit"
+        | "sem_ip"
+        | "fora_da_janela"
+        | "sem_permissao"
+      ponto_origem: "individual" | "abertura_coletiva"
+      ponto_rede_origem: "heartbeat" | "manual"
       staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
     }
     CompositeTypes: {
@@ -2415,6 +3012,42 @@ export const Constants = {
         "suspensao",
       ],
       equipe_papel: ["admin", "gestor", "colaborador"],
+      ponto_confirmacao: [
+        "na",
+        "pendente",
+        "confirmada",
+        "contestada",
+        "confirmada_por_prazo",
+      ],
+      ponto_dispositivo_status: ["pendente", "aprovado", "revogado"],
+      ponto_local_tipo: ["estacao", "qr"],
+      ponto_marcacao_tipo: [
+        "entrada",
+        "saida_almoco",
+        "retorno_almoco",
+        "saida",
+        "hora_extra_inicio",
+        "hora_extra_saida",
+        "saida_pausa",
+        "retorno_pausa",
+      ],
+      ponto_motivo_recusa: [
+        "fora_da_rede",
+        "dispositivo_nao_aprovado",
+        "pin_invalido",
+        "conta_bloqueada",
+        "sequencia_invalida",
+        "local_nao_permite",
+        "token_qr_invalido",
+        "estacao_invalida",
+        "duplicada",
+        "rate_limit",
+        "sem_ip",
+        "fora_da_janela",
+        "sem_permissao",
+      ],
+      ponto_origem: ["individual", "abertura_coletiva"],
+      ponto_rede_origem: ["heartbeat", "manual"],
       staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
     },
   },

@@ -21,6 +21,7 @@ import CotacoesManager from '@/components/quotes/CotacoesManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import EquipeManager from '@/components/equipe/EquipeManager';
+import PontoManager from '@/components/equipe/PontoManager';
 import MeusRegistros from '@/components/equipe/MeusRegistros';
 import DraggableAdminGrid from '@/components/DraggableAdminGrid';
 import NonPublicProductsSection from '@/components/NonPublicProductsSection';
@@ -367,6 +368,9 @@ const Admin = () => {
 
       case 'equipe':
         return <EquipeManager />;
+
+      case 'ponto':
+        return <PontoManager />;
 
       case 'meus-registros':
         return <MeusRegistros />;

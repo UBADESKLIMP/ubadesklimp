@@ -11,6 +11,7 @@ import {
   Shield,
   Receipt,
   Users,
+  Clock,
   ClipboardCheck as ClipboardCheckIcon,
   type LucideIcon,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ export type AdminSection =
   | 'quotes'
   | 'staff'
   | 'equipe'
+  | 'ponto'
   | 'meus-registros';
 
 export type AdminNavGroup = 'catalogo' | 'operacao' | 'equipe';
@@ -71,6 +73,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
   { key: 'equipe', label: 'Atrasos', icon: Users, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
+  { key: 'ponto', label: 'Ponto', icon: Clock, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
   {
     key: 'meus-registros',
     label: 'Meus registros',
