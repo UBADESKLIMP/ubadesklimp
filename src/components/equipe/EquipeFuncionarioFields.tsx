@@ -44,6 +44,8 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const [modelo, setModelo] = useState<string>('almoco_2h');
   const [modeloOriginal, setModeloOriginal] = useState<string>('almoco_2h');
   const [cafeAtivo, setCafeAtivo] = useState(false);
+  const [podeAbrirLoja, setPodeAbrirLoja] = useState(false);
+  const [podeAbrirLojaOriginal, setPodeAbrirLojaOriginal] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
@@ -52,8 +54,13 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
 
     const load = async () => {
       setCarregando(true);
-      const [{ data: empresasData }, { data: escalasData }, { data: member }, { data: papelRow }] =
-        await Promise.all([
+      const [
+        { data: empresasData },
+        { data: escalasData },
+        { data: member },
+        { data: papelRow },
+        { data: aberturaRow },
+      ] = await Promise.all([
           supabase.from('empresas').select('id, razao_social').eq('ativo', true).order('razao_social'),
           supabase.from('equipe_escalas').select('id, nome, empresa_id, entrada').eq('ativo', true),
           supabase
@@ -64,6 +71,12 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
             .eq('user_id', userId)
             .maybeSingle(),
           supabase.from('equipe_papeis').select('papel').eq('user_id', userId).maybeSingle(),
+          supabase
+            .from('ponto_permissoes')
+            .select('permissao')
+            .eq('user_id', userId)
+            .eq('permissao', 'abertura_coletiva')
+            .maybeSingle(),
         ]);
 
       if (cancelado) return;
@@ -78,6 +91,8 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setPapel(papelRow?.papel ?? SEM_VALOR);
       setModelo(member?.modelo_intervalo ?? 'almoco_2h');
       setModeloOriginal(member?.modelo_intervalo ?? 'almoco_2h');
+      setPodeAbrirLoja(Boolean(aberturaRow));
+      setPodeAbrirLojaOriginal(Boolean(aberturaRow));
 
       // O café é por empresa: sem ele ligado, os modelos nem podem ser escolhidos.
       if (member?.empresa_id) {
@@ -155,6 +170,34 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         return;
       }
       setModeloOriginal(modelo);
+    }
+
+    // Permissão de abrir a loja: é nominal, dada a pessoas específicas. Sem
+    // ela o botão "Abrir loja" nem aparece no quiosque.
+    if (podeAbrirLoja !== podeAbrirLojaOriginal) {
+      const { error: permError } = podeAbrirLoja
+        ? await supabase
+            .from('ponto_permissoes')
+            .upsert(
+              { user_id: userId, permissao: 'abertura_coletiva' },
+              { onConflict: 'user_id,permissao' }
+            )
+        : await supabase
+            .from('ponto_permissoes')
+            .delete()
+            .eq('user_id', userId)
+            .eq('permissao', 'abertura_coletiva');
+
+      if (permError) {
+        setSalvando(false);
+        toast({
+          title: 'Dados salvos, mas a permissão de abrir a loja não',
+          description: permError.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setPodeAbrirLojaOriginal(podeAbrirLoja);
     }
 
     setSalvando(false);
@@ -257,6 +300,31 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           <p className="text-xs text-muted-foreground">
             Retorno esperado = saída real + esta duração.
           </p>
+        </div>
+
+        <div className="space-y-1 sm:col-span-2">
+          <Label>Abrir a loja pelo ponto</Label>
+          <button
+            type="button"
+            onClick={() => setPodeAbrirLoja((v) => !v)}
+            className="flex items-start gap-3 text-left w-full rounded-lg border px-3 py-2.5 hover:bg-accent transition-colors"
+          >
+            <span
+              className={`h-5 w-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center text-[11px] font-bold ${
+                podeAbrirLoja
+                  ? 'border-[#0F6B5C] bg-[#0F6B5C] text-white'
+                  : 'border-muted-foreground/40'
+              }`}
+            >
+              {podeAbrirLoja ? '✓' : ''}
+            </span>
+            <span className="text-sm">
+              Pode registrar a abertura e bater a entrada de quem estava na porta
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                Sem isso, o botão "Abrir loja" nem aparece no computador da loja para esta pessoa.
+              </span>
+            </span>
+          </button>
         </div>
 
         <div className="space-y-1">
