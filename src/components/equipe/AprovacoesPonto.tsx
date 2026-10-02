@@ -72,6 +72,13 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
                     {formatarData(j.data)}
                   </span>
                   <span className="text-xs text-blue-300/70">{TIPO_LABEL[j.tipo]}</span>
+                  {/* Veio de uma batida real: o gestor decide olhando o fato,
+                      não só o texto de quem pediu. */}
+                  {j.marcacao_id && (
+                    <span className="text-[10px] uppercase tracking-wider text-blue-300 border border-blue-500/40 bg-blue-500/10 rounded px-1.5 py-0.5">
+                      batida do ponto
+                    </span>
+                  )}
                   {j.intervalo_calculado_min != null && (
                     <span className="font-mono text-xs text-blue-300/50">
                       intervalo {j.intervalo_calculado_min} min

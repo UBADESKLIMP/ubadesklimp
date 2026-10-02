@@ -242,6 +242,37 @@ export const usePontoInfra = (empresaId: string | null) => {
   return { estacoes, redes, tentativas, loading, recarregar: carregar, revogarEstacao, alternarRede, liberarIpAtual };
 };
 
+/** PIN de manutenção do quiosque: é ele que libera o resto do admin no PC. */
+export const usePinManutencao = (empresaId: string | null) => {
+  const [definido, setDefinido] = useState<boolean | null>(null);
+
+  const carregar = useCallback(async () => {
+    if (!empresaId) {
+      setDefinido(null);
+      return;
+    }
+    const { data } = await supabase.rpc('ponto_tem_pin_manutencao', { p_empresa_id: empresaId });
+    setDefinido(Boolean(data));
+  }, [empresaId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const definir = async (pin: string) => {
+    if (!empresaId) return { ok: false, mensagem: 'Sem empresa.' };
+    const { error } = await supabase.rpc('ponto_definir_pin_manutencao', {
+      p_empresa_id: empresaId,
+      p_pin: pin,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    await carregar();
+    return { ok: true };
+  };
+
+  return { definido, definir };
+};
+
 export interface MinhaMarcacao {
   id: string;
   tipo: MarcacaoTipo;

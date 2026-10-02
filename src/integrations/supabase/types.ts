@@ -709,6 +709,7 @@ export type Database = {
           evento_falha_id: string | null
           id: string
           intervalo_calculado_min: number | null
+          marcacao_id: string | null
           minutos_compensados: number | null
           minutos_suprimidos: number | null
           motivo: string
@@ -731,6 +732,7 @@ export type Database = {
           evento_falha_id?: string | null
           id?: string
           intervalo_calculado_min?: number | null
+          marcacao_id?: string | null
           minutos_compensados?: number | null
           minutos_suprimidos?: number | null
           motivo: string
@@ -753,6 +755,7 @@ export type Database = {
           evento_falha_id?: string | null
           id?: string
           intervalo_calculado_min?: number | null
+          marcacao_id?: string | null
           minutos_compensados?: number | null
           minutos_suprimidos?: number | null
           motivo?: string
@@ -824,6 +827,13 @@ export type Database = {
             columns: ["evento_falha_id"]
             isOneToOne: false
             referencedRelation: "equipe_eventos_falha"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_justificativas_ponto_marcacao_id_fkey"
+            columns: ["marcacao_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_marcacoes"
             referencedColumns: ["id"]
           },
           {
@@ -995,6 +1005,7 @@ export type Database = {
           order_sent_at: string | null
           order_sent_by: string | null
           order_supplier_name: string | null
+          ponto_estacao_id: string | null
           product_id: string
           report_count: number
           reported_by: string | null
@@ -1016,6 +1027,7 @@ export type Database = {
           order_sent_at?: string | null
           order_sent_by?: string | null
           order_supplier_name?: string | null
+          ponto_estacao_id?: string | null
           product_id: string
           report_count?: number
           reported_by?: string | null
@@ -1037,6 +1049,7 @@ export type Database = {
           order_sent_at?: string | null
           order_sent_by?: string | null
           order_supplier_name?: string | null
+          ponto_estacao_id?: string | null
           product_id?: string
           report_count?: number
           reported_by?: string | null
@@ -1083,6 +1096,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "missing_products_ponto_estacao_id_fkey"
+            columns: ["ponto_estacao_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_estacoes"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "missing_products_product_id_fkey"
@@ -2544,6 +2564,7 @@ export type Database = {
           p_atraso_id?: string
           p_colaborador_id: string
           p_data: string
+          p_marcacao_id?: string
           p_marcacoes: Json
           p_motivo: string
           p_tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
@@ -2653,6 +2674,10 @@ export type Database = {
         Returns: Json
       }
       ponto_agora_na_loja: { Args: { p_empresa_id: string }; Returns: Json }
+      ponto_buscar_produto: {
+        Args: { p_estacao_token: string; p_termo: string }
+        Returns: Json
+      }
       ponto_calcular_hash: {
         Args: {
           p_empresa_id: string
@@ -2672,6 +2697,10 @@ export type Database = {
         Returns: Json
       }
       ponto_confirmar_por_prazo: { Args: never; Returns: number }
+      ponto_definir_pin_manutencao: {
+        Args: { p_empresa_id: string; p_pin: string }
+        Returns: Json
+      }
       ponto_estacao_contexto: {
         Args: { p_estacao_token: string }
         Returns: Json
@@ -2724,6 +2753,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      ponto_reportar_faltante: {
+        Args: {
+          p_estacao_token: string
+          p_funcionario_id: string
+          p_pin: string
+          p_product_id: string
+          p_stock_remaining?: number
+        }
+        Returns: Json
+      }
+      ponto_sair_do_quiosque: {
+        Args: { p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
       ponto_sequencia_valida: {
         Args: {
           p_funcionario_id: string
@@ -2734,6 +2777,14 @@ export type Database = {
       ponto_tem_permissao: {
         Args: { p_permissao: string; p_user_id: string }
         Returns: boolean
+      }
+      ponto_tem_pin_manutencao: {
+        Args: { p_empresa_id: string }
+        Returns: boolean
+      }
+      ponto_tipo_para_justificativa: {
+        Args: { p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"] }
+        Returns: Database["public"]["Enums"]["equipe_marcacao_ponto"]
       }
       ponto_user_agent: { Args: never; Returns: string }
       ponto_verificar_integridade: {

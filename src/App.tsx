@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Ponto from "./pages/Ponto";
+import GuardaQuiosque from "./components/ponto/GuardaQuiosque";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
@@ -45,6 +46,7 @@ const App = () => (
         <AuthProvider>
           <CartProvider>
             <ScrollToTop />
+            <GuardaQuiosque>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/automotivo" element={<Automotivo />} />
@@ -78,6 +80,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </GuardaQuiosque>
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

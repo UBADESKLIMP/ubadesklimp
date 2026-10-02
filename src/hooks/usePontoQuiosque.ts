@@ -31,6 +31,54 @@ export const limparTokenEstacao = () => {
   }
 };
 
+/**
+ * Liberação do modo quiosque pelo PIN de manutenção (PRD 4.6).
+ * Fica em sessionStorage de propósito: fechou o navegador ou reiniciou o PC,
+ * volta a ser quiosque sozinho (P31) — ninguém precisa lembrar de retrancar.
+ */
+const CHAVE_LIBERADO = 'ubadesklimp.ponto.liberado';
+
+/**
+ * Só tranca o navegador depois que a empresa tem PIN de manutenção — senão
+ * registrar o próprio PC deixaria a pessoa sem painel e sem saída. O banco diz
+ * se já existe PIN; aqui só se guarda a resposta pro guarda de rota ler sem
+ * precisar de sessão.
+ */
+const CHAVE_TRAVADO = 'ubadesklimp.ponto.travado';
+
+export const quiosqueTravado = () => {
+  try {
+    return localStorage.getItem(CHAVE_TRAVADO) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const definirTrava = (travado: boolean) => {
+  try {
+    if (travado) localStorage.setItem(CHAVE_TRAVADO, '1');
+    else localStorage.removeItem(CHAVE_TRAVADO);
+  } catch {
+    /* sem storage: não tranca */
+  }
+};
+
+export const quiosqueLiberado = () => {
+  try {
+    return sessionStorage.getItem(CHAVE_LIBERADO) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const liberarQuiosque = () => {
+  try {
+    sessionStorage.setItem(CHAVE_LIBERADO, '1');
+  } catch {
+    /* sem storage: segue trancado, que é o lado seguro */
+  }
+};
+
 export interface FuncionarioDoQuiosque {
   id: string;
   nome: string;
@@ -44,7 +92,45 @@ export interface ContextoEstacao {
   local?: string;
   empresa_id?: string;
   rede_ok?: boolean;
+  modo_quiosque?: boolean;
   funcionarios?: FuncionarioDoQuiosque[];
+}
+
+export interface PendenteDaAbertura {
+  funcionario_id: string;
+  nome: string;
+}
+
+export interface ResultadoAbertura {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  origem?: 'estacao' | 'celular';
+  hora_abertura?: string;
+  pendentes?: PendenteDaAbertura[];
+}
+
+export interface ResultadoPresentes {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  entradas_registradas?: number;
+  hora?: string;
+}
+
+export interface ProdutoDoQuiosque {
+  id: string;
+  nome: string;
+  marca: string | null;
+}
+
+export interface ResultadoFaltante {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  ja_existia?: boolean;
+  produto?: string;
+  reportes?: number;
 }
 
 export interface ResultadoBatida {
@@ -90,7 +176,9 @@ export const usePontoQuiosque = () => {
       setContexto({ ok: false, motivo: 'erro' });
       return;
     }
-    setContexto(data as unknown as ContextoEstacao);
+    const ctx = data as unknown as ContextoEstacao;
+    setContexto(ctx);
+    definirTrava(Boolean(ctx?.ok && ctx.modo_quiosque));
   }, [token]);
 
   useEffect(() => {
@@ -124,6 +212,72 @@ export const usePontoQuiosque = () => {
     return { ok: false, mensagem: 'Não foi possível registrar este computador.' };
   };
 
+  /** Passo 1 da abertura coletiva: grava a hora e devolve quem falta bater. */
+  const abrirLoja = async (responsavelId: string, pin: string, motivo?: string) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_abrir_loja', {
+      p_responsavel_id: responsavelId,
+      p_pin: pin,
+      p_estacao_token: token,
+      p_motivo: motivo ?? undefined,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos abrir a loja agora. Tente de novo.' };
+    return data as unknown as ResultadoAbertura;
+  };
+
+  /** Passo 2: gera as entradas de quem estava na porta. */
+  const marcarPresentes = async (responsavelId: string, pin: string, funcionarios: string[]) => {
+    const { data, error } = await supabase.rpc('ponto_marcar_presentes', {
+      p_responsavel_id: responsavelId,
+      p_pin: pin,
+      p_funcionarios: funcionarios,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos marcar agora. Tente de novo.' };
+    return data as unknown as ResultadoPresentes;
+  };
+
+  const buscarProduto = async (termo: string): Promise<ProdutoDoQuiosque[]> => {
+    if (!token) return [];
+    const { data, error } = await supabase.rpc('ponto_buscar_produto', {
+      p_estacao_token: token,
+      p_termo: termo,
+    });
+    if (error) return [];
+    const r = data as unknown as { ok: boolean; produtos?: ProdutoDoQuiosque[] };
+    return r?.produtos ?? [];
+  };
+
+  const reportarFaltante = async (
+    funcionarioId: string,
+    pin: string,
+    produtoId: string,
+    sobrando?: number | null
+  ) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_reportar_faltante', {
+      p_funcionario_id: funcionarioId,
+      p_pin: pin,
+      p_estacao_token: token,
+      p_product_id: produtoId,
+      p_stock_remaining: sobrando ?? undefined,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
+    return data as unknown as ResultadoFaltante;
+  };
+
+  /** PIN de manutenção: libera o resto do admin neste navegador até fechar. */
+  const sairDoQuiosque = async (pin: string) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_sair_do_quiosque', {
+      p_estacao_token: token,
+      p_pin: pin,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos verificar agora.' };
+    const r = data as unknown as { ok: boolean; mensagem?: string };
+    if (r?.ok) liberarQuiosque();
+    return r;
+  };
+
   const baterPonto = async (
     funcionarioId: string,
     pin: string,
@@ -149,6 +303,11 @@ export const usePontoQuiosque = () => {
     recarregar: carregarContexto,
     registrarEstacao,
     baterPonto,
+    abrirLoja,
+    marcarPresentes,
+    buscarProduto,
+    reportarFaltante,
+    sairDoQuiosque,
     desregistrar: () => {
       limparTokenEstacao();
       setToken(null);

@@ -4,6 +4,7 @@ import {
   Loader2,
   Monitor,
   Wifi,
+  KeyRound,
   ShieldAlert,
   Users,
   Coffee,
@@ -24,6 +25,7 @@ import {
   usePontoAgora,
   usePontoDoDia,
   usePontoInfra,
+  usePinManutencao,
   hojeISO,
   MOTIVO_LABEL,
   TIPO_LABEL,
@@ -77,6 +79,10 @@ const PontoManager = () => {
   const { marcacoes, loading: loadingDia } = usePontoDoDia(empresaAtiva, dia);
   const { estacoes, redes, tentativas, loading: loadingInfra, revogarEstacao, alternarRede } =
     usePontoInfra(empresaAtiva);
+  const pinManutencao = usePinManutencao(empresaAtiva);
+  const [novoPin, setNovoPin] = useState('');
+  const [salvandoPin, setSalvandoPin] = useState(false);
+  const [erroPin, setErroPin] = useState<string | null>(null);
 
   const contagem = useMemo(() => {
     const por = (s: SituacaoAgora['situacao']) => pessoas.filter((p) => p.situacao === s).length;
@@ -324,6 +330,55 @@ const PontoManager = () => {
               )}
             </CardContent>
           </Card>
+
+          {equipeAccess.isEquipeAdmin && (
+            <Card className={CARD}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <KeyRound className="h-4 w-4 text-blue-400" />
+                  <p className="text-sm text-white">PIN de manutenção do quiosque</p>
+                </div>
+                <p className="text-xs text-blue-300/50 mb-4">
+                  É ele que sai do modo quiosque no PC da loja e devolve o painel naquele
+                  computador. Enquanto não houver PIN, o PC registrado continua abrindo o admin
+                  normalmente — ninguém fica trancado sem ter como voltar.
+                </p>
+
+                <div className="flex flex-wrap items-end gap-3">
+                  <Input
+                    value={novoPin}
+                    onChange={(e) => setNovoPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    inputMode="numeric"
+                    placeholder="4 a 8 dígitos"
+                    className="bg-[#0c0c14] border-blue-500/20 h-11 font-mono w-40 text-white placeholder:text-blue-300/40"
+                  />
+                  <Button
+                    className="h-11 bg-blue-600 hover:bg-blue-500"
+                    disabled={novoPin.length < 4 || salvandoPin}
+                    onClick={async () => {
+                      setErroPin(null);
+                      setSalvandoPin(true);
+                      const r = await pinManutencao.definir(novoPin);
+                      setSalvandoPin(false);
+                      if (r.ok) setNovoPin('');
+                      else setErroPin(r.mensagem ?? 'Não foi possível salvar.');
+                    }}
+                  >
+                    {salvandoPin && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {pinManutencao.definido ? 'Trocar PIN' : 'Definir PIN'}
+                  </Button>
+                  <span className="text-xs text-blue-300/50">
+                    {pinManutencao.definido === null
+                      ? ''
+                      : pinManutencao.definido
+                        ? 'PIN definido — o quiosque tranca o resto do admin.'
+                        : 'Nenhum PIN ainda.'}
+                  </span>
+                </div>
+                {erroPin && <p className="text-sm text-[#ff8a7a] mt-2">{erroPin}</p>}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className={CARD}>
             <CardContent className="pt-6">

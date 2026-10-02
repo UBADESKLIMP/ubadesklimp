@@ -26,6 +26,8 @@ export interface JustificativaPonto {
   valor_pago: number | null;
   motivo_rejeicao: string | null;
   atraso_id: string | null;
+  /** Batida de ponto que está sendo contestada ou corrigida (Etapa 3). */
+  marcacao_id: string | null;
   created_at: string;
 }
 
