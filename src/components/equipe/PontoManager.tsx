@@ -238,6 +238,12 @@ const PontoManager = () => {
         icon={Clock}
         title="Ponto"
         description="Quem está na loja agora, as batidas do dia e as estações que registram o ponto."
+        action={
+          <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => setLancando(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Lançar batida
+          </Button>
+        }
       />
 
       {/* Quem saiu do quiosque pelo PIN de manutenção precisa de um caminho de
@@ -410,13 +416,6 @@ const PontoManager = () => {
                     Voltar pra hoje
                   </Button>
                 )}
-                <Button
-                  className="h-11 bg-blue-600 hover:bg-blue-500 ml-auto"
-                  onClick={() => setLancando(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Lançar batida
-                </Button>
               </div>
 
               {loadingDia ? (
