@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,12 @@ const Ponto = () => {
     voltarAoModoFacil,
   } = usePontoQuiosque();
 
+  // Modo demonstração: serve pra mostrar o quiosque a alguém, de qualquer
+  // aparelho, sem precisar que ele seja uma estação. Não escreve nada — toda
+  // ação devolve um aviso dizendo que foi demonstração.
+  const [params] = useSearchParams();
+  const demo = params.get('demo') === '1';
+
   const [tela, setTela] = useState<Tela>('ponto');
   const [pin, setPin] = useState('');
   const [aviso, setAviso] = useState<AvisoAtual | null>(null);
@@ -113,6 +120,11 @@ const Ponto = () => {
 
   const baterPonto = async () => {
     if (pin.length !== 4) return;
+    if (demo) {
+      setPin('');
+      avisoDeDemo();
+      return;
+    }
     setEnviando(true);
     const r = await baterPontoPorPin(pin);
     setEnviando(false);
@@ -138,6 +150,11 @@ const Ponto = () => {
   };
 
   const confirmarManutencao = async () => {
+    if (demo) {
+      setPin('');
+      avisoDeDemo();
+      return;
+    }
     setEnviando(true);
     const r = await abrirBastidor(pin);
     setEnviando(false);
@@ -152,7 +169,14 @@ const Ponto = () => {
     mostrarAviso({ ok: false, mensagem: r.mensagem });
   };
 
-  if (carregando) {
+  const avisoDeDemo = () =>
+    mostrarAviso({
+      ok: true,
+      destaque: 'Demonstração',
+      mensagem: 'Nada foi registrado. No computador da loja isto grava a batida de verdade.',
+    });
+
+  if (carregando && !demo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F6F3]">
         <Clock className="h-8 w-8 animate-pulse text-[#55605F]" />
@@ -162,7 +186,7 @@ const Ponto = () => {
 
   // PC ainda não registrado. O caminho principal é o código gerado no painel:
   // assim ninguém precisa logar a conta de admin neste computador.
-  if (!token || contexto?.ok === false) {
+  if (!demo && (!token || contexto?.ok === false)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F3] text-[#141B1E] p-6 gap-5 text-center">
         <Clock className="h-12 w-12 text-[#55605F]" />
@@ -231,9 +255,11 @@ const Ponto = () => {
   }
 
   const atalhos = (contexto?.atalhos ?? ['bater_ponto', 'abrir_loja', 'reportar_faltante']) as Atalho[];
-  const temQuemAbra = (contexto?.funcionarios ?? []).some((f) => f.pode_abrir_loja);
-  const mostraAbrirLoja = atalhos.includes('abrir_loja') && temQuemAbra;
-  const mostraFaltante = atalhos.includes('reportar_faltante');
+  const temQuemAbra = demo || (contexto?.funcionarios ?? []).some((f) => f.pode_abrir_loja);
+  // Abrir loja e reportar faltante escrevem de verdade e precisam da estação.
+  // Mostrar meio funcionando numa demonstração é pior que não mostrar.
+  const mostraAbrirLoja = !demo && atalhos.includes('abrir_loja') && temQuemAbra;
+  const mostraFaltante = !demo && atalhos.includes('reportar_faltante');
   const secundaria = tela !== 'ponto';
 
   return (
@@ -242,29 +268,37 @@ const Ponto = () => {
 
       <header className="flex items-center justify-between px-5 py-3.5">
         <span className="text-xs text-[#8A9290] tracking-wide">
-          {contexto?.local} · {contexto?.estacao}
+          {demo ? 'Demonstração · como a equipe vê' : `${contexto?.local} · ${contexto?.estacao}`}
         </span>
         <div className="flex items-center gap-4">
-          <span
-            className={cn(
-              'flex items-center gap-1.5 text-xs',
-              contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#C0392B]'
-            )}
-          >
-            {contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            {contexto?.rede_ok ? 'rede da loja' : 'fora da rede'}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setPin('');
-              setTela('manutencao');
-            }}
-            className="text-[#8A9290]/50 hover:text-[#55605F] p-1"
-            aria-label="Sair do modo quiosque"
-          >
-            <Unlock className="h-3.5 w-3.5" />
-          </button>
+          {demo ? (
+            <span className="text-[10px] uppercase tracking-wider font-semibold bg-[#B8860B] text-white rounded px-2 py-0.5 -rotate-1">
+              demonstração
+            </span>
+          ) : (
+            <span
+              className={cn(
+                'flex items-center gap-1.5 text-xs',
+                contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#C0392B]'
+              )}
+            >
+              {contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+              {contexto?.rede_ok ? 'rede da loja' : 'fora da rede'}
+            </span>
+          )}
+          {!demo && (
+            <button
+              type="button"
+              onClick={() => {
+                setPin('');
+                setTela('manutencao');
+              }}
+              className="text-[#8A9290]/50 hover:text-[#55605F] p-1"
+              aria-label="Sair do modo quiosque"
+            >
+              <Unlock className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </header>
 
@@ -361,6 +395,12 @@ const Ponto = () => {
           </button>
         ) : (
           <div className="flex items-center justify-center gap-2 border-t border-[#DCDFD8] pt-4">
+            {demo && (
+              <p className="text-xs text-[#8A9290] text-center max-w-md">
+                Demonstração: digite quatro números para ver a tela de confirmação. No computador
+                da loja ainda aparecem aqui os botões de abrir a loja e reportar faltante.
+              </p>
+            )}
             {mostraAbrirLoja && (
               <button
                 type="button"

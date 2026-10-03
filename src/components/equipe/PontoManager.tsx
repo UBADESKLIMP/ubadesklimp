@@ -239,10 +239,22 @@ const PontoManager = () => {
         title="Ponto"
         description="Quem está na loja agora, as batidas do dia e as estações que registram o ponto."
         action={
-          <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => setLancando(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Lançar batida
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Abre a tela do balcão numa aba nova: serve pra mostrar a alguém
+                sem sair do painel, e sem precisar ir até o PC da loja. */}
+            <Button
+              variant="outline"
+              className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
+              onClick={() => window.open('/ponto?demo=1', '_blank', 'noopener')}
+            >
+              <Monitor className="h-4 w-4 mr-2" />
+              Ver ponto
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => setLancando(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Lançar batida
+            </Button>
+          </div>
         }
       />
 
