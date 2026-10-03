@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Clock,
+  Plus,
   Loader2,
   Monitor,
   Wifi,
@@ -23,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import PontoQrLocais from './PontoQrLocais';
+import LancarMarcacaoDialog from './LancarMarcacaoDialog';
 import { lerTokenEstacao, retrancarQuiosque } from '@/hooks/usePontoQuiosque';
 import {
   usePontoAgora,
@@ -81,7 +83,8 @@ const PontoManager = () => {
   const empresaAtiva = equipeAccess.empresaIds[0] ?? null;
 
   const { pessoas, loading: loadingAgora } = usePontoAgora(empresaAtiva);
-  const { marcacoes, loading: loadingDia } = usePontoDoDia(empresaAtiva, dia);
+  const { marcacoes, pessoas: pessoasDaEmpresa, loading: loadingDia, lancarMarcacao } =
+    usePontoDoDia(empresaAtiva, dia);
   const {
     estacoes,
     redes,
@@ -114,6 +117,7 @@ const PontoManager = () => {
   const esteEhUmQuiosque = Boolean(lerTokenEstacao());
   const [liberandoRede, setLiberandoRede] = useState(false);
   const [avisoRede, setAvisoRede] = useState<string | null>(null);
+  const [lancando, setLancando] = useState(false);
   const [nomeNovaEstacao, setNomeNovaEstacao] = useState('PC da frente');
   const [preparando, setPreparando] = useState(false);
   const [codigo, setCodigo] = useState<string | null>(null);
@@ -406,6 +410,13 @@ const PontoManager = () => {
                     Voltar pra hoje
                   </Button>
                 )}
+                <Button
+                  className="h-11 bg-blue-600 hover:bg-blue-500 ml-auto"
+                  onClick={() => setLancando(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Lançar batida
+                </Button>
               </div>
 
               {loadingDia ? (
@@ -419,6 +430,14 @@ const PontoManager = () => {
                       <span className="font-mono text-base text-white tabular-nums w-14">{m.hora}</span>
                       <span className="text-sm text-white min-w-0 flex-1 truncate">{m.nome}</span>
                       <span className="text-xs text-blue-300/70">{TIPO_LABEL[m.tipo]}</span>
+                      {m.origem === 'lancamento_gestor' && (
+                        <span
+                          className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase bg-[#f0b429]/20 text-[#f0b429]"
+                          title={m.motivo_lancamento ?? undefined}
+                        >
+                          lançada por {m.marcado_por ?? 'gestor'}
+                        </span>
+                      )}
                       {m.origem === 'abertura_coletiva' && (
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase bg-[#f0b429]/20 text-[#f0b429]">
                           abertura · {m.marcado_por ?? 'responsável'}
@@ -730,6 +749,13 @@ const PontoManager = () => {
           />
         </TabsContent>
       </Tabs>
+
+      <LancarMarcacaoDialog
+        aberto={lancando}
+        pessoas={pessoasDaEmpresa}
+        onFechar={() => setLancando(false)}
+        onLancar={lancarMarcacao}
+      />
     </div>
   );
 };

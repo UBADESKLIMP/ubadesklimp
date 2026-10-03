@@ -18,6 +18,11 @@ export interface SituacaoAgora {
   desde: string | null;
 }
 
+export interface PessoaDaEmpresa {
+  id: string;
+  nome: string;
+}
+
 export interface MarcacaoDoDia {
   id: string;
   nome: string;
@@ -27,6 +32,8 @@ export interface MarcacaoDoDia {
   origem: Database['public']['Enums']['ponto_origem'];
   confirmacao: Confirmacao;
   marcado_por: string | null;
+  /** Por que o gestor lançou esta batida no lugar da pessoa. */
+  motivo_lancamento: string | null;
   ip: string | null;
   codigo: string;
 }
@@ -96,11 +103,43 @@ export const usePontoDoDia = (empresaId: string | null, data: string) => {
     setLoading(false);
   }, [empresaId, data]);
 
+  const [pessoas, setPessoas] = useState<PessoaDaEmpresa[]>([]);
+
   useEffect(() => {
     carregar();
   }, [carregar]);
 
-  return { marcacoes, loading, recarregar: carregar };
+  // A lista de nomes só existe aqui, no painel: o gestor lança por alguém e
+  // não sabe — nem deve saber — o PIN de ninguém.
+  useEffect(() => {
+    if (!empresaId) {
+      setPessoas([]);
+      return;
+    }
+    supabase
+      .rpc('ponto_pessoas_da_empresa', { p_empresa_id: empresaId })
+      .then(({ data }) => setPessoas((data as unknown as PessoaDaEmpresa[]) ?? []));
+  }, [empresaId]);
+
+  const lancarMarcacao = async (
+    funcionarioId: string,
+    tipo: MarcacaoTipo,
+    quando: string,
+    motivo: string
+  ) => {
+    const { data, error } = await supabase.rpc('ponto_lancar_marcacao', {
+      p_funcionario_id: funcionarioId,
+      p_tipo: tipo,
+      p_quando: quando,
+      p_motivo: motivo,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    const r = data as unknown as { ok: boolean; mensagem?: string };
+    if (r?.ok) await carregar();
+    return r;
+  };
+
+  return { marcacoes, pessoas, loading, recarregar: carregar, lancarMarcacao };
 };
 
 export interface Estacao {

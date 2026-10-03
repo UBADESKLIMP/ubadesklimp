@@ -1470,6 +1470,7 @@ export type Database = {
           ip: unknown
           local_id: string | null
           marcado_por: string | null
+          motivo_lancamento: string | null
           origem: Database["public"]["Enums"]["ponto_origem"]
           registrado_em: string
           tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
@@ -1490,6 +1491,7 @@ export type Database = {
           ip?: unknown
           local_id?: string | null
           marcado_por?: string | null
+          motivo_lancamento?: string | null
           origem?: Database["public"]["Enums"]["ponto_origem"]
           registrado_em?: string
           tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
@@ -1510,6 +1512,7 @@ export type Database = {
           ip?: unknown
           local_id?: string | null
           marcado_por?: string | null
+          motivo_lancamento?: string | null
           origem?: Database["public"]["Enums"]["ponto_origem"]
           registrado_em?: string
           tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
@@ -2836,6 +2839,15 @@ export type Database = {
       }
       ponto_heartbeat: { Args: { p_estacao_token: string }; Returns: Json }
       ponto_ip_origem: { Args: never; Returns: unknown }
+      ponto_lancar_marcacao: {
+        Args: {
+          p_funcionario_id: string
+          p_motivo: string
+          p_quando: string
+          p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: Json
+      }
       ponto_liberar_rede_atual: {
         Args: { p_empresa_id: string }
         Returns: Json
@@ -2863,6 +2875,10 @@ export type Database = {
       ponto_modelo_vigente: {
         Args: { p_data?: string; p_funcionario_id: string }
         Returns: Database["public"]["Enums"]["ponto_modelo_intervalo"]
+      }
+      ponto_pessoas_da_empresa: {
+        Args: { p_empresa_id: string }
+        Returns: Json
       }
       ponto_pin_confere: {
         Args: { p_funcionario_id: string; p_pin: string }
@@ -3078,7 +3094,7 @@ export type Database = {
         | "sem_ip"
         | "fora_da_janela"
         | "sem_permissao"
-      ponto_origem: "individual" | "abertura_coletiva"
+      ponto_origem: "individual" | "abertura_coletiva" | "lancamento_gestor"
       ponto_rede_origem: "heartbeat" | "manual"
       staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
     }
@@ -3304,7 +3320,7 @@ export const Constants = {
         "fora_da_janela",
         "sem_permissao",
       ],
-      ponto_origem: ["individual", "abertura_coletiva"],
+      ponto_origem: ["individual", "abertura_coletiva", "lancamento_gestor"],
       ponto_rede_origem: ["heartbeat", "manual"],
       staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
     },
