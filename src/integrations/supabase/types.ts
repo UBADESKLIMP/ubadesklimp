@@ -1351,6 +1351,7 @@ export type Database = {
       }
       ponto_estacoes: {
         Row: {
+          atalhos: string[]
           created_at: string
           device_token_hash: string
           id: string
@@ -1362,6 +1363,7 @@ export type Database = {
           ultimo_ip: unknown
         }
         Insert: {
+          atalhos?: string[]
           created_at?: string
           device_token_hash: string
           id?: string
@@ -1373,6 +1375,7 @@ export type Database = {
           ultimo_ip?: unknown
         }
         Update: {
+          atalhos?: string[]
           created_at?: string
           device_token_hash?: string
           id?: string
@@ -2794,6 +2797,10 @@ export type Database = {
         Args: { p_aprovar: boolean; p_dispositivo_id: string }
         Returns: Json
       }
+      ponto_definir_atalhos: {
+        Args: { p_atalhos: string[]; p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
       ponto_definir_modelo_intervalo: {
         Args: {
           p_funcionario_id: string
@@ -2821,6 +2828,10 @@ export type Database = {
       }
       ponto_estacao_contexto: {
         Args: { p_estacao_token: string }
+        Returns: Json
+      }
+      ponto_estacao_ficha: {
+        Args: { p_estacao_token: string; p_pin: string }
         Returns: Json
       }
       ponto_heartbeat: { Args: { p_estacao_token: string }; Returns: Json }

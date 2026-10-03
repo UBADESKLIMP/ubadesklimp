@@ -75,8 +75,8 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltante, onFim, onVoltar }: 
     return (
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
         <div className="text-center">
-          <div className="h-12 w-12 rounded-full bg-[#0F6B5C]/10 flex items-center justify-center mx-auto mb-4">
-            <PackagePlus className="h-6 w-6 text-[#0F6B5C]" />
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <PackagePlus className="h-6 w-6 text-primary" />
           </div>
           <p className="text-xl font-heading max-w-xs">{produto.nome}</p>
           <p className="text-sm text-[#55605F] mt-1.5">Digite seu PIN para confirmar que está acabando</p>
@@ -134,7 +134,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltante, onFim, onVoltar }: 
               setProduto(p);
               setPin('');
             }}
-            className="min-h-[4.25rem] rounded-2xl border border-[#DCDFD8] bg-white px-5 py-3.5 text-left hover:border-[#0F6B5C]/40 active:scale-[0.99] transition"
+            className="min-h-[4.25rem] rounded-2xl border border-[#DCDFD8] bg-white px-5 py-3.5 text-left hover:border-primary/40 active:scale-[0.99] transition"
           >
             <span className="block text-base leading-tight text-[#141B1E]">{p.nome}</span>
             {p.marca && <span className="block text-sm text-[#8A9290] mt-0.5">{p.marca}</span>}

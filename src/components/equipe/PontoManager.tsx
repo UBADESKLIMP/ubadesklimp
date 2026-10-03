@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import PontoQrLocais from './PontoQrLocais';
+import { lerTokenEstacao, retrancarQuiosque } from '@/hooks/usePontoQuiosque';
 import {
   usePontoAgora,
   usePontoDoDia,
@@ -108,6 +109,8 @@ const PontoManager = () => {
     };
   }, [pessoas]);
 
+  // Só mostra o caminho de volta no navegador que realmente é a estação.
+  const esteEhUmQuiosque = Boolean(lerTokenEstacao());
   const [liberandoRede, setLiberandoRede] = useState(false);
   const [avisoRede, setAvisoRede] = useState<string | null>(null);
   const [nomeNovaEstacao, setNomeNovaEstacao] = useState('PC da frente');
@@ -218,6 +221,33 @@ const PontoManager = () => {
         title="Ponto"
         description="Quem está na loja agora, as batidas do dia e as estações que registram o ponto."
       />
+
+      {/* Quem saiu do quiosque pelo PIN de manutenção precisa de um caminho de
+          volta visível. Sem isso o computador da loja fica preso no painel até
+          alguém fechar o navegador. */}
+      {esteEhUmQuiosque && (
+        <Card className="bg-[#12121a] border-blue-500/30 text-white mb-6">
+          <CardContent className="pt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <Monitor className="h-4 w-4 text-blue-400 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-white">Este computador é uma estação de ponto</p>
+              <p className="text-xs text-blue-300/60 mt-0.5">
+                Você saiu do modo fácil com o PIN de manutenção. Voltar deixa a tela pronta pra
+                equipe de novo.
+              </p>
+            </div>
+            <Button
+              className="h-10 bg-blue-600 hover:bg-blue-500"
+              onClick={() => {
+                retrancarQuiosque();
+                window.location.href = '/ponto';
+              }}
+            >
+              Voltar ao modo quiosque
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Enquanto faltar o básico, o ponto simplesmente não funciona pra
           ninguém — e isso precisa estar na cara de quem abre a tela, não

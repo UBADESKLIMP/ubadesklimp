@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import Teclado from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
+import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
-import { usePontoQuiosque, TIPO_LABEL } from '@/hooks/usePontoQuiosque';
+import { usePontoQuiosque, TIPO_LABEL, type Atalho, type FichaDaEstacao } from '@/hooks/usePontoQuiosque';
 
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
 const SEGUNDOS_ATE_LIMPAR = 30;
@@ -47,7 +48,7 @@ interface AvisoAtual {
   codigo?: string;
 }
 
-type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'manutencao';
+type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'manutencao' | 'bastidor';
 
 const Ponto = () => {
   usePontoInstalavel();
@@ -62,7 +63,9 @@ const Ponto = () => {
     marcarPresentesPorPin,
     buscarProduto,
     reportarFaltantePorPin,
-    sairDoQuiosque,
+    abrirBastidor,
+    salvarAtalhos,
+    voltarAoModoFacil,
   } = usePontoQuiosque();
 
   const [tela, setTela] = useState<Tela>('ponto');
@@ -73,6 +76,8 @@ const Ponto = () => {
   const [codigoEstacao, setCodigoEstacao] = useState('');
   const [ativando, setAtivando] = useState(false);
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
+  const [ficha, setFicha] = useState<FichaDaEstacao | null>(null);
+  const [pinBastidor, setPinBastidor] = useState('');
 
   const voltarAoInicio = useCallback(() => {
     setTela('ponto');
@@ -122,13 +127,16 @@ const Ponto = () => {
 
   const confirmarManutencao = async () => {
     setEnviando(true);
-    const r = await sairDoQuiosque(pin);
+    const r = await abrirBastidor(pin);
     setEnviando(false);
-    setPin('');
     if (r.ok) {
-      window.location.href = '/admin';
+      setFicha(r);
+      setPinBastidor(pin);
+      setPin('');
+      setTela('bastidor');
       return;
     }
+    setPin('');
     mostrarAviso({ ok: false, mensagem: r.mensagem });
   };
 
@@ -164,7 +172,7 @@ const Ponto = () => {
             className="h-16 text-center font-mono text-3xl tracking-[0.3em] bg-white border-[#DCDFD8]"
           />
           <Button
-            className="h-14 text-lg w-full mt-3 bg-[#0F6B5C] hover:bg-[#0F6B5C]/90"
+            className="h-14 text-lg w-full mt-3 bg-primary hover:bg-primary/90"
             disabled={codigoEstacao.length !== 6 || ativando}
             onClick={async () => {
               setErroRegistro(null);
@@ -210,7 +218,10 @@ const Ponto = () => {
     );
   }
 
+  const atalhos = (contexto?.atalhos ?? ['bater_ponto', 'abrir_loja', 'reportar_faltante']) as Atalho[];
   const temQuemAbra = (contexto?.funcionarios ?? []).some((f) => f.pode_abrir_loja);
+  const mostraAbrirLoja = atalhos.includes('abrir_loja') && temQuemAbra;
+  const mostraFaltante = atalhos.includes('reportar_faltante');
   const secundaria = tela !== 'ponto';
 
   return (
@@ -282,6 +293,22 @@ const Ponto = () => {
         />
       )}
 
+      {tela === 'bastidor' && ficha && (
+        <Bastidor
+          ficha={ficha}
+          salvarAtalhos={(a) => salvarAtalhos(pinBastidor, a)}
+          onModoFacil={() => {
+            setPinBastidor('');
+            setFicha(null);
+            voltarAoModoFacil();
+            voltarAoInicio();
+          }}
+          onAbrirPainel={() => {
+            window.location.href = '/admin';
+          }}
+        />
+      )}
+
       {tela === 'manutencao' && (
         <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
           <div className="text-center">
@@ -310,7 +337,7 @@ const Ponto = () => {
       )}
 
       {/* ------------------------------------- resto: rodapé, fora do caminho */}
-      <footer className="px-5 pb-5 pt-2">
+      <footer className={cn('px-5 pb-5 pt-2', tela === 'bastidor' && 'hidden')}>
         {secundaria ? (
           <button
             type="button"
@@ -322,7 +349,7 @@ const Ponto = () => {
           </button>
         ) : (
           <div className="flex items-center justify-center gap-2 border-t border-[#DCDFD8] pt-4">
-            {temQuemAbra && (
+            {mostraAbrirLoja && (
               <button
                 type="button"
                 onClick={() => {
@@ -335,17 +362,19 @@ const Ponto = () => {
                 Abrir loja
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                setPin('');
-                setTela('faltante');
-              }}
-              className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
-            >
-              <PackagePlus className="h-4 w-4" />
-              Reportar faltante
-            </button>
+            {mostraFaltante && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPin('');
+                  setTela('faltante');
+                }}
+                className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
+              >
+                <PackagePlus className="h-4 w-4" />
+                Reportar faltante
+              </button>
+            )}
           </div>
         )}
       </footer>

@@ -140,14 +140,14 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
               className={cn(
                 'h-[4.25rem] rounded-2xl border px-5 flex items-center gap-4 text-left text-lg transition active:scale-[0.99]',
                 marcado
-                  ? 'border-[#0F6B5C] bg-[#0F6B5C]/8 text-[#141B1E]'
-                  : 'border-[#DCDFD8] bg-white text-[#55605F] hover:border-[#0F6B5C]/40'
+                  ? 'border-primary bg-primary/5 text-[#141B1E]'
+                  : 'border-[#DCDFD8] bg-white text-[#55605F] hover:border-primary/40'
               )}
             >
               <span
                 className={cn(
                   'h-7 w-7 rounded-lg border-2 shrink-0 flex items-center justify-center text-sm font-bold',
-                  marcado ? 'border-[#0F6B5C] bg-[#0F6B5C] text-white' : 'border-[#DCDFD8]'
+                  marcado ? 'border-primary bg-primary text-white' : 'border-[#DCDFD8]'
                 )}
               >
                 {marcado ? '✓' : ''}
@@ -162,7 +162,7 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
         type="button"
         disabled={marcados.size === 0 || enviando}
         onClick={confirmarPresentes}
-        className="h-16 rounded-2xl bg-[#0F6B5C] text-white text-lg font-medium flex items-center justify-center gap-3 disabled:bg-[#141B1E]/10 disabled:text-[#141B1E]/30 active:scale-[0.99] transition"
+        className="h-16 rounded-2xl bg-primary text-primary-foreground text-lg font-medium flex items-center justify-center gap-3 disabled:bg-[#141B1E]/10 disabled:text-[#141B1E]/30 active:scale-[0.99] transition"
       >
         {enviando && <Loader2 className="h-5 w-5 animate-spin" />}
         Registrar entrada de {marcados.size}

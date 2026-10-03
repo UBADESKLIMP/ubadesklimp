@@ -71,6 +71,14 @@ export const quiosqueLiberado = () => {
   }
 };
 
+export const retrancarQuiosque = () => {
+  try {
+    sessionStorage.removeItem(CHAVE_LIBERADO);
+  } catch {
+    /* idem */
+  }
+};
+
 export const liberarQuiosque = () => {
   try {
     sessionStorage.setItem(CHAVE_LIBERADO, '1');
@@ -85,6 +93,21 @@ export interface FuncionarioDoQuiosque {
   pode_abrir_loja: boolean;
 }
 
+export type Atalho = 'bater_ponto' | 'abrir_loja' | 'reportar_faltante';
+
+export interface FichaDaEstacao {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  nome?: string;
+  local?: string;
+  atalhos?: Atalho[];
+  ultimo_ip?: string | null;
+  ultimo_heartbeat?: string | null;
+  registrado_em?: string;
+  batidas_hoje?: number;
+}
+
 export interface ContextoEstacao {
   ok: boolean;
   motivo?: string;
@@ -93,6 +116,8 @@ export interface ContextoEstacao {
   empresa_id?: string;
   rede_ok?: boolean;
   modo_quiosque?: boolean;
+  estacao_id?: string;
+  atalhos?: Atalho[];
   funcionarios?: FuncionarioDoQuiosque[];
 }
 
@@ -279,6 +304,40 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoFaltante;
   };
 
+  /** Ficha do aparelho pro bastidor. O PIN é conferido no banco de novo. */
+  const abrirBastidor = async (pin: string): Promise<FichaDaEstacao> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_estacao_ficha', {
+      p_estacao_token: token,
+      p_pin: pin,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos abrir agora.' };
+    const r = data as unknown as FichaDaEstacao;
+    // Entrar no bastidor já destrava o navegador: quem tem o PIN de
+    // manutenção pode sair pro painel sem digitar duas vezes.
+    if (r?.ok) liberarQuiosque();
+    return r;
+  };
+
+  const salvarAtalhos = async (pin: string, atalhos: Atalho[]) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_definir_atalhos', {
+      p_estacao_token: token,
+      p_pin: pin,
+      p_atalhos: atalhos,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos salvar agora.' };
+    const r = data as unknown as { ok: boolean; mensagem?: string };
+    if (r?.ok) await carregarContexto();
+    return r;
+  };
+
+  /** Volta a trancar este navegador no quiosque. */
+  const voltarAoModoFacil = () => {
+    retrancarQuiosque();
+    carregarContexto();
+  };
+
   /** PIN de manutenção: libera o resto do admin neste navegador até fechar. */
   const sairDoQuiosque = async (pin: string) => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -316,6 +375,9 @@ export const usePontoQuiosque = () => {
     recarregar: carregarContexto,
     registrarEstacao,
     ativarComCodigo,
+    abrirBastidor,
+    salvarAtalhos,
+    voltarAoModoFacil,
     baterPontoPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
