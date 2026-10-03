@@ -150,6 +150,16 @@ export interface ProdutoDoQuiosque {
   marca: string | null;
 }
 
+export interface ResultadoFaltantes {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  novos?: number;
+  somados?: number;
+  falhou?: number;
+  total?: number;
+}
+
 export interface ResultadoFaltante {
   ok: boolean;
   motivo?: string;
@@ -292,16 +302,16 @@ export const usePontoQuiosque = () => {
     return r?.produtos ?? [];
   };
 
-  const reportarFaltantePorPin = async (pin: string, produtoId: string, sobrando?: number | null) => {
+  /** Vários de uma vez: o PIN vem uma só vez, a lista vai junto. */
+  const reportarFaltantesPorPin = async (pin: string, produtoIds: string[]) => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
-    const { data, error } = await supabase.rpc('ponto_reportar_faltante_por_pin', {
+    const { data, error } = await supabase.rpc('ponto_reportar_faltantes_por_pin', {
       p_pin: pin,
       p_estacao_token: token,
-      p_product_id: produtoId,
-      p_stock_remaining: sobrando ?? undefined,
+      p_produtos: produtoIds,
     });
     if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
-    return data as unknown as ResultadoFaltante;
+    return data as unknown as ResultadoFaltantes;
   };
 
   /** Ficha do aparelho pro bastidor. O PIN é conferido no banco de novo. */
@@ -382,7 +392,7 @@ export const usePontoQuiosque = () => {
     abrirLojaPorPin,
     marcarPresentesPorPin,
     buscarProduto,
-    reportarFaltantePorPin,
+    reportarFaltantesPorPin,
     sairDoQuiosque,
     desregistrar: () => {
       limparTokenEstacao();

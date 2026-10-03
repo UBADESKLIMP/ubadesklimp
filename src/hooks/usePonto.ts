@@ -133,6 +133,8 @@ export const usePontoInfra = (empresaId: string | null) => {
   const [estacoes, setEstacoes] = useState<Estacao[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
   const [tentativas, setTentativas] = useState<TentativaRecusada[]>([]);
+  /** Quem o quiosque não reconhece, porque o PIN é procurado por empresa. */
+  const [semEmpresa, setSemEmpresa] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const carregar = useCallback(async () => {
@@ -145,7 +147,7 @@ export const usePontoInfra = (empresaId: string | null) => {
     }
     setLoading(true);
 
-    const [est, red, tent] = await Promise.all([
+    const [est, red, tent, soltos] = await Promise.all([
       supabase
         .from('ponto_estacoes')
         .select('id, nome, ultimo_heartbeat, ultimo_ip, revogada_em, ponto_locais(nome, empresa_id)')
@@ -161,7 +163,12 @@ export const usePontoInfra = (empresaId: string | null) => {
         .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false })
         .limit(50),
+      supabase.from('staff_members').select('display_name').is('empresa_id', null),
     ]);
+
+    setSemEmpresa(
+      ((soltos.data ?? []) as { display_name: string }[]).map((s) => s.display_name)
+    );
 
     type LinhaEstacao = {
       id: string;
@@ -264,6 +271,7 @@ export const usePontoInfra = (empresaId: string | null) => {
     estacoes,
     redes,
     tentativas,
+    semEmpresa,
     loading,
     recarregar: carregar,
     revogarEstacao,

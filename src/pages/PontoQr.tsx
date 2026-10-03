@@ -46,6 +46,18 @@ const PontoQr = () => {
     document.title = 'Bater ponto · Ubadesklimp';
   }, []);
 
+  // Mesma regra do balcão: Esc desiste e volta pro começo.
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        voltar();
+      }
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  });
+
   const confirmar = async () => {
     if (pin.length !== 4) return;
     setEnviando(true);

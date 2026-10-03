@@ -62,7 +62,7 @@ const Ponto = () => {
     abrirLojaPorPin,
     marcarPresentesPorPin,
     buscarProduto,
-    reportarFaltantePorPin,
+    reportarFaltantesPorPin,
     abrirBastidor,
     salvarAtalhos,
     voltarAoModoFacil,
@@ -86,6 +86,18 @@ const Ponto = () => {
   }, []);
 
   const mostrarAviso = useCallback((a: AvisoAtual) => setAviso(a), []);
+
+  // Esc volta pro ponto de qualquer canto do quiosque. Quem está no balcão
+  // desiste no teclado, não procurando o botão de voltar.
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      voltarAoInicio();
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [voltarAoInicio]);
 
   // Ninguém pode deixar meio PIN digitado na tela: sem toque, limpa.
   useEffect(() => {
@@ -287,7 +299,7 @@ const Ponto = () => {
       {tela === 'faltante' && (
         <ReportarFaltante
           buscarProduto={buscarProduto}
-          reportarFaltante={reportarFaltantePorPin}
+          reportarFaltantes={reportarFaltantesPorPin}
           onFim={mostrarAviso}
           onVoltar={voltarAoInicio}
         />

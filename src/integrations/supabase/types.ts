@@ -2952,6 +2952,10 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_reportar_faltantes_por_pin: {
+        Args: { p_estacao_token: string; p_pin: string; p_produtos: string[] }
+        Returns: Json
+      }
       ponto_rotacionar_qr: { Args: { p_local_id: string }; Returns: Json }
       ponto_sair_do_quiosque: {
         Args: { p_estacao_token: string; p_pin: string }

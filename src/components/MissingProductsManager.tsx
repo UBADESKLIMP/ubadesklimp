@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink, PackageCheck, Pencil, Truck } from 'lucide-react';
+import { Plus, X, Check, ChevronsUpDown, ClipboardCheck, Trash2, ExternalLink, PackageCheck, Pencil, Truck, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -222,6 +222,7 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
   const { openItemIds } = useQuoteBatches();
   const { exclusiveBrands } = useExclusiveBrands();
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [buscaFaltante, setBuscaFaltante] = useState('');
   const [rows, setRows] = useState<ReportRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
@@ -252,8 +253,22 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
     const brand = productById.get(item.product_id)?.brand;
     return !!(brand && exclusiveBrandByNormalized.has(normalizeText(brand)));
   };
-  const pendingNormalItems = sortedMissingProducts.filter((item) => !isExclusiveBrandItem(item));
-  const pendingExclusiveItems = sortedMissingProducts.filter((item) => isExclusiveBrandItem(item));
+  // Busca na lista: com 240 itens pendentes, achar um produto rolando a
+  // página é pior do que não ter a lista. Procura por nome e por marca.
+  const buscaNormalizada = normalizeText(buscaFaltante.trim());
+  const casaComBusca = (item: (typeof sortedMissingProducts)[number]) => {
+    if (buscaNormalizada.length === 0) return true;
+    const produto = productById.get(item.product_id);
+    const alvo = normalizeText(`${produto?.name ?? ''} ${produto?.brand ?? ''}`);
+    return alvo.includes(buscaNormalizada);
+  };
+
+  const pendingNormalItems = sortedMissingProducts
+    .filter((item) => !isExclusiveBrandItem(item))
+    .filter(casaComBusca);
+  const pendingExclusiveItems = sortedMissingProducts
+    .filter((item) => isExclusiveBrandItem(item))
+    .filter(casaComBusca);
 
   const exclusiveGroupsBySupplier = new Map<
     string,
@@ -619,11 +634,40 @@ const MissingProductsManager = ({ products, staffAccess, onGoToProduct }: Missin
               )}
             </TabsTrigger>
           </TabsList>
+
+          <div className="relative mb-4 mt-4">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={buscaFaltante}
+              onChange={(e) => setBuscaFaltante(e.target.value)}
+              placeholder="Buscar na lista por nome ou marca"
+              className="h-11 pl-9 pr-9"
+            />
+            {buscaFaltante && (
+              <button
+                type="button"
+                onClick={() => setBuscaFaltante('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center"
+                aria-label="Limpar busca"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           <TabsContent value="pendente">
             {loading ? (
               <AdminLoadingState rows={3} tone="light" />
             ) : pendingNormalItems.length === 0 ? (
-              <AdminEmptyState icon={ClipboardCheck} title="Nenhum produto faltando no momento." tone="light" />
+              <AdminEmptyState
+                icon={ClipboardCheck}
+                title={
+                  buscaFaltante
+                    ? `Nada com "${buscaFaltante}" na lista de pendentes.`
+                    : 'Nenhum produto faltando no momento.'
+                }
+                tone="light"
+              />
             ) : (
               <div className="space-y-3">
                 {pendingNormalItems.map((item) => {

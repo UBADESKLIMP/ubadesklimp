@@ -53,10 +53,8 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
         if (completo && !confirmando) onConfirmar();
         return;
       }
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onChange('');
-      }
+      // Esc não limpa aqui: quem cuida dele é a tela, que usa Esc pra
+      // voltar ao ponto de qualquer lugar do quiosque.
     };
 
     window.addEventListener('keydown', aoTeclar);

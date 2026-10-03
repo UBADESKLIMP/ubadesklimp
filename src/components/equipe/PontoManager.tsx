@@ -86,6 +86,7 @@ const PontoManager = () => {
     estacoes,
     redes,
     tentativas,
+    semEmpresa,
     loading: loadingInfra,
     revogarEstacao,
     alternarRede,
@@ -160,6 +161,19 @@ const PontoManager = () => {
           Liberar a rede onde estou
         </Button>
       ) : undefined,
+    });
+  }
+
+  // Quem está sem empresa não entra na busca do PIN: o quiosque devolve
+  // "PIN não encontrado" e parece defeito, quando é cadastro faltando.
+  if (semEmpresa.length > 0) {
+    pendencias.push({
+      chave: 'sem-empresa',
+      titulo:
+        semEmpresa.length === 1
+          ? `${semEmpresa[0]} não consegue bater ponto`
+          : `${semEmpresa.length} pessoas não conseguem bater ponto`,
+      como: `Sem empresa vinculada o PIN não é reconhecido no quiosque — a tela diz "PIN não encontrado". Falta preencher para: ${semEmpresa.join(', ')}.`,
     });
   }
 
