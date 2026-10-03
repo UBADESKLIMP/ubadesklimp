@@ -81,7 +81,16 @@ const PontoManager = () => {
 
   const { pessoas, loading: loadingAgora } = usePontoAgora(empresaAtiva);
   const { marcacoes, loading: loadingDia } = usePontoDoDia(empresaAtiva, dia);
-  const { estacoes, redes, tentativas, loading: loadingInfra, revogarEstacao, alternarRede, liberarRedeAtual } =
+  const {
+    estacoes,
+    redes,
+    tentativas,
+    loading: loadingInfra,
+    revogarEstacao,
+    alternarRede,
+    liberarRedeAtual,
+    prepararEstacao,
+  } =
     usePontoInfra(empresaAtiva);
   const qrEDispositivos = usePontoQrEDispositivos(empresaAtiva);
   const pausasCafe = usePausasCafe(empresaAtiva);
@@ -101,6 +110,19 @@ const PontoManager = () => {
 
   const [liberandoRede, setLiberandoRede] = useState(false);
   const [avisoRede, setAvisoRede] = useState<string | null>(null);
+  const [nomeNovaEstacao, setNomeNovaEstacao] = useState('PC da frente');
+  const [preparando, setPreparando] = useState(false);
+  const [codigo, setCodigo] = useState<string | null>(null);
+  const [erroCodigo, setErroCodigo] = useState<string | null>(null);
+
+  const gerarCodigo = async () => {
+    setErroCodigo(null);
+    setPreparando(true);
+    const r = await prepararEstacao(nomeNovaEstacao.trim() || 'PC da frente');
+    setPreparando(false);
+    if (r.ok && r.codigo) setCodigo(r.codigo);
+    else setErroCodigo(r.mensagem ?? 'Não foi possível gerar o código.');
+  };
 
   const estacoesAtivas = estacoes.filter((e) => !e.revogada_em);
   const redesAtivas = redes.filter((r) => r.ativo);
@@ -142,7 +164,18 @@ const PontoManager = () => {
     pendencias.push({
       chave: 'estacao',
       titulo: 'Nenhum computador registrado como estação',
-      como: 'Este é o único passo que não dá pra fazer daqui: vá até o PC da loja, entre como admin e abra /ponto nele.',
+      como: 'Gere um código aqui e digite ele no PC da loja, em /ponto. Não precisa fazer login lá.',
+      acao: equipeAccess.isEquipeAdmin ? (
+        <Button
+          size="sm"
+          className="h-10 bg-blue-600 hover:bg-blue-500"
+          disabled={preparando}
+          onClick={gerarCodigo}
+        >
+          {preparando && <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />}
+          Preparar um computador
+        </Button>
+      ) : undefined,
     });
   }
 
@@ -215,6 +248,38 @@ const PontoManager = () => {
             </ul>
 
             {avisoRede && <p className="text-sm text-blue-300 mt-3">{avisoRede}</p>}
+            {erroCodigo && <p className="text-sm text-[#ff8a7a] mt-3">{erroCodigo}</p>}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* O código precisa ficar grande: alguém vai lê-lo daqui e digitar num
+          teclado do outro lado da loja. */}
+      {codigo && (
+        <Card className="bg-[#12121a] border-[#2F9E44]/50 text-white mb-6">
+          <CardContent className="pt-6">
+            <p className="text-sm text-white">Agora, no computador da loja</p>
+            <ol className="text-xs text-blue-300/70 mt-2 space-y-1 list-decimal list-inside">
+              <li>Abra <span className="font-mono text-blue-300">ubadesklimp.com/ponto</span> nele</li>
+              <li>Toque em "Tenho um código" e digite os seis números abaixo</li>
+            </ol>
+
+            <p className="font-mono text-5xl sm:text-6xl font-bold tabular-nums tracking-[0.15em] text-[#2F9E44] my-5">
+              {codigo}
+            </p>
+
+            <p className="text-xs text-blue-300/50">
+              Vale por 30 minutos, uma vez só, e só funciona de dentro da rede da loja. Depois disso
+              esta tela mostra o computador na lista.
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 mt-3 text-blue-300/70 hover:text-white hover:bg-blue-500/10"
+              onClick={() => setCodigo(null)}
+            >
+              Fechar
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -381,9 +446,29 @@ const PontoManager = () => {
                 <p className="text-sm text-white">Computadores que batem ponto</p>
               </div>
               <p className="text-xs text-blue-300/50 mb-4">
-                Registre o PC abrindo <span className="font-mono">/ponto</span> nele, logado como
-                admin. Revogar derruba aquele computador na hora.
+                Gere um código aqui e digite ele em <span className="font-mono">/ponto</span> no
+                computador da loja — não precisa fazer login lá. Revogar derruba aquele computador
+                na hora.
               </p>
+
+              {equipeAccess.isEquipeAdmin && (
+                <div className="flex flex-wrap items-end gap-3 mb-4">
+                  <Input
+                    value={nomeNovaEstacao}
+                    onChange={(e) => setNomeNovaEstacao(e.target.value)}
+                    placeholder="Nome do computador"
+                    className="bg-[#0c0c14] border-blue-500/20 h-11 w-48 text-white placeholder:text-blue-300/40"
+                  />
+                  <Button
+                    className="h-11 bg-blue-600 hover:bg-blue-500"
+                    disabled={preparando}
+                    onClick={gerarCodigo}
+                  >
+                    {preparando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Preparar um computador
+                  </Button>
+                </div>
+              )}
 
               {loadingInfra ? (
                 <Loader2 className="h-5 w-5 animate-spin text-blue-400" />

@@ -1284,6 +1284,71 @@ export type Database = {
           },
         ]
       }
+      ponto_estacao_convites: {
+        Row: {
+          codigo_hash: string
+          created_at: string
+          criado_por: string | null
+          empresa_id: string
+          expira_em: string
+          id: string
+          local_id: string | null
+          nome: string
+          usado_em: string | null
+        }
+        Insert: {
+          codigo_hash: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id: string
+          expira_em: string
+          id?: string
+          local_id?: string | null
+          nome: string
+          usado_em?: string | null
+        }
+        Update: {
+          codigo_hash?: string
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string
+          expira_em?: string
+          id?: string
+          local_id?: string | null
+          nome?: string
+          usado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_estacao_convites_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_estacao_convites_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_estacao_convites_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_estacao_convites_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_locais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_estacoes: {
         Row: {
           created_at: string
@@ -2680,6 +2745,7 @@ export type Database = {
         Returns: Json
       }
       ponto_agora_na_loja: { Args: { p_empresa_id: string }; Returns: Json }
+      ponto_ativar_estacao: { Args: { p_codigo: string }; Returns: Json }
       ponto_buscar_produto: {
         Args: { p_estacao_token: string; p_termo: string }
         Returns: Json
@@ -2711,6 +2777,7 @@ export type Database = {
         Returns: Json
       }
       ponto_confirmar_por_prazo: { Args: never; Returns: number }
+      ponto_convite_aberto: { Args: { p_empresa_id: string }; Returns: Json }
       ponto_criar_local_qr: {
         Args: {
           p_empresa_id: string
@@ -2767,6 +2834,10 @@ export type Database = {
       ponto_pin_confere: {
         Args: { p_funcionario_id: string; p_pin: string }
         Returns: boolean
+      }
+      ponto_preparar_estacao: {
+        Args: { p_empresa_id: string; p_local_id?: string; p_nome: string }
+        Returns: Json
       }
       ponto_proxima_marcacao: {
         Args: { p_funcionario_id: string }

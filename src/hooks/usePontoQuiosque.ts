@@ -200,6 +200,23 @@ export const usePontoQuiosque = () => {
     return () => clearInterval(intervalo);
   }, [token]);
 
+  /**
+   * Caminho normal: o admin gera o código no painel e alguém digita aqui. Não
+   * exige login nenhum neste computador — o que evita a senha de admin morar
+   * num micro que fica ligado o dia inteiro na frente da loja.
+   */
+  const ativarComCodigo = async (codigo: string) => {
+    const { data, error } = await supabase.rpc('ponto_ativar_estacao', { p_codigo: codigo });
+    if (error) return { ok: false, mensagem: 'Não conseguimos verificar agora. Tente de novo.' };
+    const r = data as unknown as { ok: boolean; token?: string; mensagem?: string };
+    if (r?.ok && r.token) {
+      gravarTokenEstacao(r.token);
+      setToken(r.token);
+      return { ok: true };
+    }
+    return { ok: false, mensagem: r?.mensagem ?? 'Código inválido.' };
+  };
+
   const registrarEstacao = async (nome: string) => {
     const { data, error } = await supabase.rpc('ponto_registrar_estacao', { p_nome: nome });
     if (error) return { ok: false, mensagem: error.message };
@@ -302,6 +319,7 @@ export const usePontoQuiosque = () => {
     carregando,
     recarregar: carregarContexto,
     registrarEstacao,
+    ativarComCodigo,
     baterPonto,
     abrirLoja,
     marcarPresentes,

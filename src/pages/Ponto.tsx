@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock } from 'lucide-react';
+import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,7 @@ const Ponto = () => {
     contexto,
     carregando,
     registrarEstacao,
+    ativarComCodigo,
     baterPonto,
     abrirLoja,
     marcarPresentes,
@@ -76,6 +77,8 @@ const Ponto = () => {
   const [enviando, setEnviando] = useState(false);
   const [nomeEstacao, setNomeEstacao] = useState('PC da frente');
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
+  const [codigoEstacao, setCodigoEstacao] = useState('');
+  const [ativando, setAtivando] = useState(false);
 
   const voltarAoInicio = useCallback(() => {
     setTela('inicio');
@@ -149,35 +152,73 @@ const Ponto = () => {
     );
   }
 
-  // PC ainda não registrado: só o admin consegue registrar (a função exige).
+  // PC ainda não registrado. O caminho principal é o código gerado no painel:
+  // assim ninguém precisa logar a conta de admin neste computador.
   if (!token || contexto?.ok === false) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 gap-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 gap-5 text-center">
         <Clock className="h-12 w-12 text-muted-foreground" />
-        <h1 className="text-2xl font-heading">Este computador ainda não é uma estação</h1>
-        <p className="text-muted-foreground max-w-md">
-          Entre como administrador e registre este PC uma vez. Depois disso ele abre direto no
-          ponto, inclusive se reiniciar.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
+        <div>
+          <h1 className="text-2xl font-heading">Este computador ainda não bate ponto</h1>
+          <p className="text-muted-foreground max-w-md mt-2">
+            No painel, em <span className="text-foreground">Ponto → Preparar um computador</span>,
+            saem seis números. Digite eles aqui.
+          </p>
+        </div>
+
+        <div className="w-full max-w-xs">
           <Input
-            value={nomeEstacao}
-            onChange={(e) => setNomeEstacao(e.target.value)}
-            placeholder="Nome deste computador"
-            className="h-12"
+            value={codigoEstacao}
+            onChange={(e) => setCodigoEstacao(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            inputMode="numeric"
+            autoFocus
+            placeholder="000000"
+            className="h-16 text-center font-mono text-3xl tracking-[0.3em]"
           />
           <Button
-            className="h-12"
+            className="h-14 text-lg w-full mt-3"
+            disabled={codigoEstacao.length !== 6 || ativando}
             onClick={async () => {
               setErroRegistro(null);
-              const r = await registrarEstacao(nomeEstacao.trim() || 'Estação');
-              if (!r.ok) setErroRegistro(r.mensagem ?? 'Não foi possível registrar.');
+              setAtivando(true);
+              const r = await ativarComCodigo(codigoEstacao);
+              setAtivando(false);
+              if (r.ok) setCodigoEstacao('');
+              else setErroRegistro(r.mensagem ?? 'Não foi possível ativar.');
             }}
           >
-            Registrar este PC
+            {ativando && <Loader2 className="h-5 w-5 animate-spin mr-2" />}
+            Ativar este computador
           </Button>
         </div>
+
         {erroRegistro && <p className="text-sm text-[#C0392B] max-w-sm">{erroRegistro}</p>}
+
+        {/* Caminho antigo, pra quem já está logado como admin aqui mesmo. */}
+        <details className="max-w-sm w-full text-left">
+          <summary className="text-sm text-muted-foreground cursor-pointer text-center">
+            Estou logado como administrador neste PC
+          </summary>
+          <div className="flex flex-col sm:flex-row gap-2 mt-3">
+            <Input
+              value={nomeEstacao}
+              onChange={(e) => setNomeEstacao(e.target.value)}
+              placeholder="Nome deste computador"
+              className="h-12"
+            />
+            <Button
+              variant="outline"
+              className="h-12"
+              onClick={async () => {
+                setErroRegistro(null);
+                const r = await registrarEstacao(nomeEstacao.trim() || 'Estação');
+                if (!r.ok) setErroRegistro(r.mensagem ?? 'Não foi possível registrar.');
+              }}
+            >
+              Registrar
+            </Button>
+          </div>
+        </details>
       </div>
     );
   }

@@ -246,7 +246,31 @@ export const usePontoInfra = (empresaId: string | null) => {
     return r;
   };
 
-  return { estacoes, redes, tentativas, loading, recarregar: carregar, revogarEstacao, alternarRede, liberarRedeAtual };
+  /**
+   * Prepara um computador e devolve o código que alguém digita lá no balcão.
+   * O código em claro só volta nesta chamada — o banco guarda só o hash.
+   */
+  const prepararEstacao = async (nome: string) => {
+    if (!empresaId) return { ok: false, mensagem: 'Sem empresa.' };
+    const { data, error } = await supabase.rpc('ponto_preparar_estacao', {
+      p_empresa_id: empresaId,
+      p_nome: nome,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    return data as unknown as { ok: boolean; codigo?: string; expira_em?: string; mensagem?: string };
+  };
+
+  return {
+    estacoes,
+    redes,
+    tentativas,
+    loading,
+    recarregar: carregar,
+    revogarEstacao,
+    alternarRede,
+    liberarRedeAtual,
+    prepararEstacao,
+  };
 };
 
 export interface LocalQr {
