@@ -2744,6 +2744,10 @@ export type Database = {
       }
       ponto_heartbeat: { Args: { p_estacao_token: string }; Returns: Json }
       ponto_ip_origem: { Args: never; Returns: unknown }
+      ponto_liberar_rede_atual: {
+        Args: { p_empresa_id: string }
+        Returns: Json
+      }
       ponto_marcacoes_do_dia: {
         Args: { p_data?: string; p_empresa_id: string }
         Returns: Json

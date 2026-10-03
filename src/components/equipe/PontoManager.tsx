@@ -4,6 +4,7 @@ import {
   Loader2,
   Monitor,
   Wifi,
+  AlertTriangle,
   KeyRound,
   ShieldAlert,
   Users,
@@ -80,7 +81,7 @@ const PontoManager = () => {
 
   const { pessoas, loading: loadingAgora } = usePontoAgora(empresaAtiva);
   const { marcacoes, loading: loadingDia } = usePontoDoDia(empresaAtiva, dia);
-  const { estacoes, redes, tentativas, loading: loadingInfra, revogarEstacao, alternarRede } =
+  const { estacoes, redes, tentativas, loading: loadingInfra, revogarEstacao, alternarRede, liberarRedeAtual } =
     usePontoInfra(empresaAtiva);
   const qrEDispositivos = usePontoQrEDispositivos(empresaAtiva);
   const pausasCafe = usePausasCafe(empresaAtiva);
@@ -97,6 +98,53 @@ const PontoManager = () => {
       naoChegou: por('não chegou'),
     };
   }, [pessoas]);
+
+  const [liberandoRede, setLiberandoRede] = useState(false);
+  const [avisoRede, setAvisoRede] = useState<string | null>(null);
+
+  const estacoesAtivas = estacoes.filter((e) => !e.revogada_em);
+  const redesAtivas = redes.filter((r) => r.ativo);
+
+  // Duas travas de verdade, nessa ordem: sem rede liberada toda batida é
+  // recusada (inclusive pelo QR), e sem estação não existe onde bater no balcão.
+  const pendencias: { chave: string; titulo: string; como: string; acao?: React.ReactNode }[] = [];
+
+  if (redesAtivas.length === 0) {
+    pendencias.push({
+      chave: 'rede',
+      titulo: 'A rede da loja não está liberada',
+      como: 'Toda batida é recusada com "Conecte no Wi-Fi da loja" — inclusive pelo QR. Estando na loja agora, libere daqui.',
+      acao: equipeAccess.isEquipeAdmin ? (
+        <Button
+          size="sm"
+          className="h-10 bg-blue-600 hover:bg-blue-500"
+          disabled={liberandoRede}
+          onClick={async () => {
+            setAvisoRede(null);
+            setLiberandoRede(true);
+            const r = await liberarRedeAtual();
+            setLiberandoRede(false);
+            setAvisoRede(
+              r.ok
+                ? `Rede ${r.ip} liberada.`
+                : (r.mensagem ?? 'Não foi possível liberar esta rede.')
+            );
+          }}
+        >
+          {liberandoRede && <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />}
+          Liberar a rede onde estou
+        </Button>
+      ) : undefined,
+    });
+  }
+
+  if (estacoesAtivas.length === 0) {
+    pendencias.push({
+      chave: 'estacao',
+      titulo: 'Nenhum computador registrado como estação',
+      como: 'Este é o único passo que não dá pra fazer daqui: vá até o PC da loja, entre como admin e abra /ponto nele.',
+    });
+  }
 
   const recusasHoje = tentativas.filter(
     (t) => t.created_at.slice(0, 10) === hojeISO() && t.motivo !== 'sem_ip'
@@ -137,6 +185,39 @@ const PontoManager = () => {
         title="Ponto"
         description="Quem está na loja agora, as batidas do dia e as estações que registram o ponto."
       />
+
+      {/* Enquanto faltar o básico, o ponto simplesmente não funciona pra
+          ninguém — e isso precisa estar na cara de quem abre a tela, não
+          escondido numa aba lá embaixo. */}
+      {!loadingInfra && pendencias.length > 0 && (
+        <Card className="bg-[#f0b429]/10 border-[#f0b429]/40 text-white mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2 mb-3">
+              <AlertTriangle className="h-4 w-4 text-[#f0b429] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-white">Ninguém consegue bater ponto ainda</p>
+                <p className="text-xs text-[#f0b429]/80 mt-0.5">
+                  Falta {pendencias.length === 1 ? 'isto' : 'isto'} para o ponto entrar no ar:
+                </p>
+              </div>
+            </div>
+
+            <ul className="space-y-3">
+              {pendencias.map((p) => (
+                <li key={p.chave} className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="text-sm text-white min-w-0 flex-1">
+                    {p.titulo}
+                    <span className="block text-xs text-blue-300/60 mt-0.5">{p.como}</span>
+                  </span>
+                  {p.acao}
+                </li>
+              ))}
+            </ul>
+
+            {avisoRede && <p className="text-sm text-blue-300 mt-3">{avisoRede}</p>}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
         <AdminStatCard icon={Users} label="Na loja" value={contagem.naLoja} hint="agora" />
@@ -401,8 +482,35 @@ const PontoManager = () => {
               </div>
               <p className="text-xs text-blue-300/50 mb-4">
                 A estação atualiza sozinha o IP a cada 5 minutos. Se o provedor trocar o IP e
-                ninguém conseguir bater, desative o antigo aqui.
+                ninguém conseguir bater, libere a rede daqui — estando na loja — e desative a
+                antiga.
               </p>
+
+              {equipeAccess.isEquipeAdmin && (
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-10 border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
+                    disabled={liberandoRede}
+                    onClick={async () => {
+                      setAvisoRede(null);
+                      setLiberandoRede(true);
+                      const r = await liberarRedeAtual();
+                      setLiberandoRede(false);
+                      setAvisoRede(
+                        r.ok
+                          ? `Rede ${r.ip} liberada.`
+                          : (r.mensagem ?? 'Não foi possível liberar esta rede.')
+                      );
+                    }}
+                  >
+                    {liberandoRede && <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />}
+                    Liberar a rede onde estou
+                  </Button>
+                  {avisoRede && <span className="text-xs text-blue-300/70">{avisoRede}</span>}
+                </div>
+              )}
 
               {loadingInfra ? (
                 <Loader2 className="h-5 w-5 animate-spin text-blue-400" />

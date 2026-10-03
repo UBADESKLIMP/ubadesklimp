@@ -230,16 +230,23 @@ export const usePontoInfra = (empresaId: string | null) => {
     return !error;
   };
 
-  const liberarIpAtual = async (ip: string) => {
-    if (!empresaId) return false;
-    const { error } = await supabase
-      .from('ponto_redes')
-      .upsert({ empresa_id: empresaId, ip, origem: 'manual', ativo: true }, { onConflict: 'empresa_id,ip' });
-    if (!error) await carregar();
-    return !error;
+  /**
+   * Cadastra a rede de onde o admin está chamando. Quem lê o IP é o servidor:
+   * o navegador não conhece o próprio IP público, e aceitar um IP vindo do
+   * cliente seria justamente a fraude que o módulo existe pra impedir.
+   */
+  const liberarRedeAtual = async () => {
+    if (!empresaId) return { ok: false, mensagem: 'Sem empresa.' };
+    const { data, error } = await supabase.rpc('ponto_liberar_rede_atual', {
+      p_empresa_id: empresaId,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    const r = data as unknown as { ok: boolean; ip?: string; mensagem?: string };
+    if (r?.ok) await carregar();
+    return r;
   };
 
-  return { estacoes, redes, tentativas, loading, recarregar: carregar, revogarEstacao, alternarRede, liberarIpAtual };
+  return { estacoes, redes, tentativas, loading, recarregar: carregar, revogarEstacao, alternarRede, liberarRedeAtual };
 };
 
 export interface LocalQr {
