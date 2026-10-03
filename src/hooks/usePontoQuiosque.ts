@@ -102,6 +102,7 @@ export interface PendenteDaAbertura {
 }
 
 export interface ResultadoAbertura {
+  nome?: string;
   ok: boolean;
   motivo?: string;
   mensagem?: string;
@@ -134,6 +135,8 @@ export interface ResultadoFaltante {
 }
 
 export interface ResultadoBatida {
+  /** Quem bateu. Só volta depois do PIN conferir. */
+  nome?: string;
   ok: boolean;
   motivo?: string;
   mensagem?: string;
@@ -229,11 +232,10 @@ export const usePontoQuiosque = () => {
     return { ok: false, mensagem: 'Não foi possível registrar este computador.' };
   };
 
-  /** Passo 1 da abertura coletiva: grava a hora e devolve quem falta bater. */
-  const abrirLoja = async (responsavelId: string, pin: string, motivo?: string) => {
+  /** Passo 1 da abertura coletiva: o PIN diz quem está abrindo. */
+  const abrirLojaPorPin = async (pin: string, motivo?: string) => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
-    const { data, error } = await supabase.rpc('ponto_abrir_loja', {
-      p_responsavel_id: responsavelId,
+    const { data, error } = await supabase.rpc('ponto_abrir_loja_por_pin', {
       p_pin: pin,
       p_estacao_token: token,
       p_motivo: motivo ?? undefined,
@@ -243,10 +245,11 @@ export const usePontoQuiosque = () => {
   };
 
   /** Passo 2: gera as entradas de quem estava na porta. */
-  const marcarPresentes = async (responsavelId: string, pin: string, funcionarios: string[]) => {
-    const { data, error } = await supabase.rpc('ponto_marcar_presentes', {
-      p_responsavel_id: responsavelId,
+  const marcarPresentesPorPin = async (pin: string, funcionarios: string[]) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_marcar_presentes_por_pin', {
       p_pin: pin,
+      p_estacao_token: token,
       p_funcionarios: funcionarios,
     });
     if (error) return { ok: false, mensagem: 'Não conseguimos marcar agora. Tente de novo.' };
@@ -264,15 +267,9 @@ export const usePontoQuiosque = () => {
     return r?.produtos ?? [];
   };
 
-  const reportarFaltante = async (
-    funcionarioId: string,
-    pin: string,
-    produtoId: string,
-    sobrando?: number | null
-  ) => {
+  const reportarFaltantePorPin = async (pin: string, produtoId: string, sobrando?: number | null) => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
-    const { data, error } = await supabase.rpc('ponto_reportar_faltante', {
-      p_funcionario_id: funcionarioId,
+    const { data, error } = await supabase.rpc('ponto_reportar_faltante_por_pin', {
       p_pin: pin,
       p_estacao_token: token,
       p_product_id: produtoId,
@@ -295,17 +292,16 @@ export const usePontoQuiosque = () => {
     return r;
   };
 
-  const baterPonto = async (
-    funcionarioId: string,
-    pin: string,
-    tipo?: MarcacaoTipo
-  ): Promise<ResultadoBatida> => {
+  /**
+   * O PIN diz quem é a pessoa: não há lista de nomes na tela. O nome só volta
+   * no comprovante, depois do PIN conferir.
+   */
+  const baterPontoPorPin = async (pin: string, tipo?: MarcacaoTipo): Promise<ResultadoBatida> => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
-    const { data, error } = await supabase.rpc('ponto_registrar', {
-      p_funcionario_id: funcionarioId,
+    const { data, error } = await supabase.rpc('ponto_registrar_por_pin', {
       p_pin: pin,
-      p_tipo: tipo ?? undefined,
       p_estacao_token: token,
+      p_tipo: tipo ?? undefined,
     });
     if (error) {
       return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
@@ -320,11 +316,11 @@ export const usePontoQuiosque = () => {
     recarregar: carregarContexto,
     registrarEstacao,
     ativarComCodigo,
-    baterPonto,
-    abrirLoja,
-    marcarPresentes,
+    baterPontoPorPin,
+    abrirLojaPorPin,
+    marcarPresentesPorPin,
     buscarProduto,
-    reportarFaltante,
+    reportarFaltantePorPin,
     sairDoQuiosque,
     desregistrar: () => {
       limparTokenEstacao();

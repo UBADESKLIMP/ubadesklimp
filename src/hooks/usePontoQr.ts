@@ -24,11 +24,6 @@ export const idDoDispositivo = (): string => {
   }
 };
 
-export interface PessoaDoQr {
-  id: string;
-  nome: string;
-}
-
 export interface ContextoQr {
   ok: boolean;
   motivo?: string;
@@ -38,10 +33,17 @@ export interface ContextoQr {
   empresa_id?: string;
   rede_ok?: boolean;
   marcacoes?: MarcacaoTipo[];
-  funcionarios?: PessoaDoQr[];
 }
 
 export type StatusDispositivo = 'novo' | 'pendente' | 'aprovado' | 'revogado';
+
+interface RespostaDispositivo {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  nome?: string;
+  status?: StatusDispositivo;
+}
 
 export const usePontoQr = (token: string | undefined) => {
   const [contexto, setContexto] = useState<ContextoQr | null>(null);
@@ -66,38 +68,38 @@ export const usePontoQr = (token: string | undefined) => {
     carregar();
   }, [carregar]);
 
-  const statusDoDispositivo = async (funcionarioId: string): Promise<StatusDispositivo> => {
-    const { data, error } = await supabase.rpc('ponto_status_dispositivo', {
-      p_funcionario_id: funcionarioId,
-      p_device_id: idDoDispositivo(),
-    });
-    if (error) return 'novo';
-    return ((data as unknown as { status?: string })?.status ?? 'novo') as StatusDispositivo;
-  };
-
-  const registrarDispositivo = async (funcionarioId: string, pin: string, apelido?: string) => {
-    const { data, error } = await supabase.rpc('ponto_registrar_dispositivo', {
-      p_funcionario_id: funcionarioId,
-      p_pin: pin,
-      p_device_id: idDoDispositivo(),
-      p_apelido: apelido ?? undefined,
-    });
-    if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
-    return data as unknown as { ok: boolean; status?: StatusDispositivo; mensagem?: string };
-  };
-
-  const bater = async (
-    funcionarioId: string,
-    pin: string,
-    tipo?: MarcacaoTipo
-  ): Promise<ResultadoBatida> => {
+  /** Quem é a pessoa do PIN e em que pé está o aparelho dela. */
+  const verificarDispositivo = async (pin: string): Promise<RespostaDispositivo> => {
     if (!token) return { ok: false, mensagem: 'Este QR não é válido.' };
-    const { data, error } = await supabase.rpc('ponto_registrar', {
-      p_funcionario_id: funcionarioId,
+    const { data, error } = await supabase.rpc('ponto_dispositivo_por_pin', {
       p_pin: pin,
-      p_tipo: tipo ?? undefined,
       p_qr_token: token,
       p_device_id: idDoDispositivo(),
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos verificar agora.' };
+    return data as unknown as RespostaDispositivo;
+  };
+
+  const liberarDispositivo = async (pin: string, apelido?: string): Promise<RespostaDispositivo> => {
+    if (!token) return { ok: false, mensagem: 'Este QR não é válido.' };
+    const { data, error } = await supabase.rpc('ponto_dispositivo_por_pin', {
+      p_pin: pin,
+      p_qr_token: token,
+      p_device_id: idDoDispositivo(),
+      p_apelido: apelido ?? undefined,
+      p_registrar: true,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora.' };
+    return data as unknown as RespostaDispositivo;
+  };
+
+  const baterPorPin = async (pin: string, tipo?: MarcacaoTipo): Promise<ResultadoBatida> => {
+    if (!token) return { ok: false, mensagem: 'Este QR não é válido.' };
+    const { data, error } = await supabase.rpc('ponto_registrar_por_pin', {
+      p_pin: pin,
+      p_qr_token: token,
+      p_device_id: idDoDispositivo(),
+      p_tipo: tipo ?? undefined,
     });
     if (error) {
       return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
@@ -105,5 +107,5 @@ export const usePontoQr = (token: string | undefined) => {
     return data as unknown as ResultadoBatida;
   };
 
-  return { contexto, carregando, recarregar: carregar, statusDoDispositivo, registrarDispositivo, bater };
+  return { contexto, carregando, recarregar: carregar, verificarDispositivo, liberarDispositivo, baterPorPin };
 };

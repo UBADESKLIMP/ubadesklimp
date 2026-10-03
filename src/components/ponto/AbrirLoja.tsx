@@ -1,60 +1,60 @@
 import { useState } from 'react';
-import { ArrowLeft, Loader2, DoorOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2, DoorOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import TecladoPin from './TecladoPin';
-import EscolherPessoa from './EscolherPessoa';
+import Teclado from './Teclado';
 import type {
-  FuncionarioDoQuiosque,
   PendenteDaAbertura,
   ResultadoAbertura,
   ResultadoPresentes,
 } from '@/hooks/usePontoQuiosque';
 
+interface AvisoAtual {
+  ok: boolean;
+  nome?: string;
+  destaque?: string;
+  detalhe?: string;
+  mensagem?: string;
+}
+
 interface Props {
-  /** Só quem tem a permissão aparece na lista (PRD 4.5, P20). */
-  autorizados: FuncionarioDoQuiosque[];
-  abrirLoja: (responsavelId: string, pin: string) => Promise<ResultadoAbertura>;
-  marcarPresentes: (
-    responsavelId: string,
-    pin: string,
-    funcionarios: string[]
-  ) => Promise<ResultadoPresentes>;
-  onFim: (ok: boolean, destaque?: string, detalhe?: string, mensagem?: string) => void;
+  abrirLoja: (pin: string) => Promise<ResultadoAbertura>;
+  marcarPresentes: (pin: string, funcionarios: string[]) => Promise<ResultadoPresentes>;
+  onFim: (a: AvisoAtual) => void;
   onVoltar: () => void;
 }
 
-type Passo = 'quem' | 'pin' | 'presentes';
-
-const AbrirLoja = ({ autorizados, abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
-  const [passo, setPasso] = useState<Passo>('quem');
-  const [responsavel, setResponsavel] = useState<FuncionarioDoQuiosque | null>(null);
+/**
+ * Abertura coletiva. Não existe lista de quem pode abrir: o PIN é que diz. Um
+ * PIN que não tem a permissão é recusado no banco, então a tela não precisa
+ * expor quem são as pessoas autorizadas.
+ */
+const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
   const [pin, setPin] = useState('');
-  const [busca, setBusca] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [responsavel, setResponsavel] = useState<string | null>(null);
   const [hora, setHora] = useState('');
   const [pendentes, setPendentes] = useState<PendenteDaAbertura[]>([]);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
 
-  // O PIN fica guardado só durante o fluxo: a segunda chamada (marcar os
-  // presentes) exige ele de novo e pedir duas vezes na porta da loja, com fila
-  // esperando, é o tipo de atrito que faz a equipe abandonar o sistema.
+  // O PIN fica guardado só durante o fluxo: marcar os presentes exige ele de
+  // novo, e pedir duas vezes com a equipe esperando na porta é o tipo de
+  // atrito que faz todo mundo voltar pro caderno.
   const confirmarPin = async () => {
-    if (!responsavel || pin.length !== 4) return;
+    if (pin.length !== 4) return;
     setEnviando(true);
-    const r = await abrirLoja(responsavel.id, pin);
+    const r = await abrirLoja(pin);
     setEnviando(false);
 
     if (!r.ok) {
       setPin('');
-      onFim(false, undefined, undefined, r.mensagem ?? 'Não foi possível abrir a loja.');
+      onFim({ ok: false, mensagem: r.mensagem ?? 'Não foi possível abrir a loja.' });
       return;
     }
 
+    setResponsavel(r.nome ?? 'Responsável');
     setHora((r.hora_abertura ?? '').slice(0, 5));
     setPendentes(r.pendentes ?? []);
     setMarcados(new Set());
-    setPasso('presentes');
   };
 
   const alternar = (id: string) =>
@@ -66,82 +66,67 @@ const AbrirLoja = ({ autorizados, abrirLoja, marcarPresentes, onFim, onVoltar }:
     });
 
   const confirmarPresentes = async () => {
-    if (!responsavel) return;
     setEnviando(true);
-    const r = await marcarPresentes(responsavel.id, pin, [...marcados]);
+    const r = await marcarPresentes(pin, [...marcados]);
     setEnviando(false);
     setPin('');
 
     if (!r.ok) {
-      onFim(false, undefined, undefined, r.mensagem ?? 'Não foi possível marcar.');
+      onFim({ ok: false, mensagem: r.mensagem ?? 'Não foi possível marcar.' });
       return;
     }
 
     const qtd = r.entradas_registradas ?? 0;
-    onFim(
-      true,
-      String(qtd),
-      qtd === 1 ? 'entrada registrada' : 'entradas registradas',
-      qtd === 0
-        ? 'Ninguém novo foi marcado. Quem já tinha batido continua como estava.'
-        : `Às ${(r.hora ?? hora).slice(0, 5)}. Cada um confirma depois, em Meu ponto.`
-    );
+    onFim({
+      ok: true,
+      destaque: String(qtd),
+      detalhe: qtd === 1 ? 'entrada registrada' : 'entradas registradas',
+      mensagem:
+        qtd === 0
+          ? 'Ninguém novo foi marcado. Quem já tinha batido continua como estava.'
+          : `Às ${(r.hora ?? hora).slice(0, 5)}. Cada um confirma depois, em Meu ponto.`,
+    });
   };
 
-  if (passo === 'quem') {
+  if (!responsavel) {
     return (
-      <EscolherPessoa
-        funcionarios={autorizados}
-        busca={busca}
-        onBusca={setBusca}
-        onEscolher={(f) => {
-          setResponsavel(f);
-          setPin('');
-          setPasso('pin');
-        }}
-        onVoltar={onVoltar}
-        vazio="Ninguém com permissão para abrir a loja."
-      />
-    );
-  }
-
-  if (passo === 'pin' && responsavel) {
-    return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
         <div className="text-center">
-          <p className="text-2xl font-heading">{responsavel.nome}</p>
-          <p className="text-muted-foreground mt-1">Digite seu PIN para abrir a loja</p>
+          <div className="h-12 w-12 rounded-full bg-[#B8860B]/10 flex items-center justify-center mx-auto mb-4">
+            <DoorOpen className="h-6 w-6 text-[#B8860B]" />
+          </div>
+          <p className="text-xl font-heading">Abrir a loja</p>
+          <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
+            Digite o PIN de quem está abrindo. A entrada de quem estava na porta sai no nome dessa
+            pessoa.
+          </p>
         </div>
 
-        <TecladoPin valor={pin} onChange={setPin} onConfirmar={confirmarPin} confirmando={enviando} />
-
-        <Button variant="ghost" className="h-12" onClick={onVoltar}>
-          Cancelar
-        </Button>
+        <Teclado
+          valor={pin}
+          onChange={setPin}
+          onConfirmar={confirmarPin}
+          confirmando={enviando}
+          tom="loja"
+        />
       </main>
     );
   }
 
   return (
-    <main className="flex-1 flex flex-col p-4 gap-3">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-12 w-12" onClick={onVoltar}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="min-w-0">
-          <p className="text-base font-medium flex items-center gap-2">
-            <DoorOpen className="h-4 w-4 shrink-0" />
-            Loja aberta às {hora}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Quem já estava na porta? A lista fecha em 10 minutos.
-          </p>
-        </div>
+    <main className="flex-1 flex flex-col px-5 pb-4 gap-4 min-h-0">
+      <div className="text-center">
+        <p className="text-sm text-[#55605F]">
+          Loja aberta às <span className="font-mono text-[#141B1E] font-semibold">{hora}</span> por{' '}
+          {responsavel}
+        </p>
+        <p className="text-base text-[#141B1E] mt-1">Quem já estava na porta?</p>
+        <p className="text-xs text-[#8A9290] mt-0.5">A lista fecha em 10 minutos.</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto grid gap-2 sm:grid-cols-2 content-start">
+      <div className="flex-1 overflow-y-auto grid gap-2.5 sm:grid-cols-2 content-start">
         {pendentes.length === 0 && (
-          <p className="text-muted-foreground p-4">
+          <p className="text-[#55605F] p-4 text-center sm:col-span-2">
             Todo mundo já bateu entrada hoje. Nada a marcar.
           </p>
         )}
@@ -153,14 +138,16 @@ const AbrirLoja = ({ autorizados, abrirLoja, marcarPresentes, onFim, onVoltar }:
               type="button"
               onClick={() => alternar(p.funcionario_id)}
               className={cn(
-                'h-16 rounded-xl border px-4 flex items-center gap-3 text-left text-lg transition active:scale-[0.99]',
-                marcado ? 'border-[#2F9E44] bg-[#2F9E44]/10' : 'bg-card hover:bg-accent'
+                'h-[4.25rem] rounded-2xl border px-5 flex items-center gap-4 text-left text-lg transition active:scale-[0.99]',
+                marcado
+                  ? 'border-[#0F6B5C] bg-[#0F6B5C]/8 text-[#141B1E]'
+                  : 'border-[#DCDFD8] bg-white text-[#55605F] hover:border-[#0F6B5C]/40'
               )}
             >
               <span
                 className={cn(
-                  'h-6 w-6 rounded border-2 shrink-0 flex items-center justify-center text-sm font-bold',
-                  marcado ? 'border-[#2F9E44] bg-[#2F9E44] text-white' : 'border-muted-foreground/40'
+                  'h-7 w-7 rounded-lg border-2 shrink-0 flex items-center justify-center text-sm font-bold',
+                  marcado ? 'border-[#0F6B5C] bg-[#0F6B5C] text-white' : 'border-[#DCDFD8]'
                 )}
               >
                 {marcado ? '✓' : ''}
@@ -171,14 +158,15 @@ const AbrirLoja = ({ autorizados, abrirLoja, marcarPresentes, onFim, onVoltar }:
         })}
       </div>
 
-      <Button
-        className="h-16 text-xl"
+      <button
+        type="button"
         disabled={marcados.size === 0 || enviando}
         onClick={confirmarPresentes}
+        className="h-16 rounded-2xl bg-[#0F6B5C] text-white text-lg font-medium flex items-center justify-center gap-3 disabled:bg-[#141B1E]/10 disabled:text-[#141B1E]/30 active:scale-[0.99] transition"
       >
-        {enviando && <Loader2 className="h-5 w-5 animate-spin mr-3" />}
+        {enviando && <Loader2 className="h-5 w-5 animate-spin" />}
         Registrar entrada de {marcados.size}
-      </Button>
+      </button>
     </main>
   );
 };

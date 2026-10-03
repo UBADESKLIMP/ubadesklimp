@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import TecladoPin from '@/components/ponto/TecladoPin';
-import EscolherPessoa from '@/components/ponto/EscolherPessoa';
+import Teclado from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
-import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
-import {
-  usePontoQuiosque,
-  TIPO_LABEL,
-  type FuncionarioDoQuiosque,
-} from '@/hooks/usePontoQuiosque';
+import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
+import { usePontoQuiosque, TIPO_LABEL } from '@/hooks/usePontoQuiosque';
 
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
 const SEGUNDOS_ATE_LIMPAR = 30;
@@ -27,11 +22,11 @@ const Relogio = () => {
 
   return (
     <div className="text-center">
-      <p className="font-mono text-6xl sm:text-8xl font-bold tabular-nums tracking-tight text-foreground">
+      <p className="font-mono text-[4.5rem] sm:text-[6rem] leading-none font-bold tabular-nums tracking-tight text-[#141B1E]">
         {agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
       </p>
-      {/* first-letter e não capitalize: capitalize vira "02 De Outubro De 2026" */}
-      <p className="text-base sm:text-lg text-muted-foreground mt-2 first-letter:uppercase">
+      {/* first-letter e não capitalize: capitalize vira "03 De Outubro De 2026" */}
+      <p className="text-sm sm:text-base text-[#55605F] mt-3 first-letter:uppercase">
         {agora.toLocaleDateString('pt-BR', {
           weekday: 'long',
           day: '2-digit',
@@ -45,13 +40,14 @@ const Relogio = () => {
 
 interface AvisoAtual {
   ok: boolean;
+  nome?: string;
   destaque?: string;
   detalhe?: string;
   mensagem?: string;
   codigo?: string;
 }
 
-type Tela = 'inicio' | 'bater-quem' | 'bater-pin' | 'abrir-loja' | 'faltante' | 'manutencao';
+type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'manutencao';
 
 const Ponto = () => {
   usePontoInstalavel();
@@ -61,43 +57,34 @@ const Ponto = () => {
     carregando,
     registrarEstacao,
     ativarComCodigo,
-    baterPonto,
-    abrirLoja,
-    marcarPresentes,
+    baterPontoPorPin,
+    abrirLojaPorPin,
+    marcarPresentesPorPin,
     buscarProduto,
-    reportarFaltante,
+    reportarFaltantePorPin,
     sairDoQuiosque,
   } = usePontoQuiosque();
 
-  const [tela, setTela] = useState<Tela>('inicio');
-  const [pessoa, setPessoa] = useState<FuncionarioDoQuiosque | null>(null);
+  const [tela, setTela] = useState<Tela>('ponto');
   const [pin, setPin] = useState('');
-  const [busca, setBusca] = useState('');
   const [aviso, setAviso] = useState<AvisoAtual | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [nomeEstacao, setNomeEstacao] = useState('PC da frente');
-  const [erroRegistro, setErroRegistro] = useState<string | null>(null);
   const [codigoEstacao, setCodigoEstacao] = useState('');
   const [ativando, setAtivando] = useState(false);
+  const [erroRegistro, setErroRegistro] = useState<string | null>(null);
 
   const voltarAoInicio = useCallback(() => {
-    setTela('inicio');
-    setPessoa(null);
+    setTela('ponto');
     setPin('');
-    setBusca('');
     setAviso(null);
   }, []);
 
-  const mostrarAviso = useCallback(
-    (ok: boolean, destaque?: string, detalhe?: string, mensagem?: string, codigo?: string) => {
-      setAviso({ ok, destaque, detalhe, mensagem, codigo });
-    },
-    []
-  );
+  const mostrarAviso = useCallback((a: AvisoAtual) => setAviso(a), []);
 
-  // Ninguém pode deixar a tela aberta com o nome de outro: sem toque, limpa.
+  // Ninguém pode deixar meio PIN digitado na tela: sem toque, limpa.
   useEffect(() => {
-    if (tela === 'inicio' && !aviso) return;
+    if (tela === 'ponto' && !pin && !aviso) return;
     const t = setTimeout(voltarAoInicio, SEGUNDOS_ATE_LIMPAR * 1000);
     const resetar = () => clearTimeout(t);
     window.addEventListener('pointerdown', resetar, { once: true });
@@ -107,15 +94,15 @@ const Ponto = () => {
     };
   }, [tela, pin, aviso, voltarAoInicio]);
 
-  const confirmarBatida = async () => {
-    if (!pessoa || pin.length !== 4) return;
+  const baterPonto = async () => {
+    if (pin.length !== 4) return;
     setEnviando(true);
-    const r = await baterPonto(pessoa.id, pin);
+    const r = await baterPontoPorPin(pin);
     setEnviando(false);
     setPin('');
 
     if (!r.ok) {
-      mostrarAviso(false, undefined, undefined, r.mensagem);
+      mostrarAviso({ ok: false, mensagem: r.mensagem });
       return;
     }
 
@@ -123,13 +110,14 @@ const Ponto = () => {
       ? new Date(r.registrado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       : '';
 
-    mostrarAviso(
-      true,
-      hora,
-      r.tipo ? TIPO_LABEL[r.tipo] : 'Registrado',
-      r.ignorada ? r.mensagem : undefined,
-      r.ignorada ? undefined : r.codigo
-    );
+    mostrarAviso({
+      ok: true,
+      nome: r.nome,
+      destaque: hora,
+      detalhe: r.tipo ? TIPO_LABEL[r.tipo] : 'Registrado',
+      mensagem: r.ignorada ? r.mensagem : undefined,
+      codigo: r.ignorada ? undefined : r.codigo,
+    });
   };
 
   const confirmarManutencao = async () => {
@@ -141,13 +129,13 @@ const Ponto = () => {
       window.location.href = '/admin';
       return;
     }
-    mostrarAviso(false, undefined, undefined, r.mensagem);
+    mostrarAviso({ ok: false, mensagem: r.mensagem });
   };
 
   if (carregando) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Clock className="h-8 w-8 animate-pulse text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F6F3]">
+        <Clock className="h-8 w-8 animate-pulse text-[#55605F]" />
       </div>
     );
   }
@@ -156,12 +144,12 @@ const Ponto = () => {
   // assim ninguém precisa logar a conta de admin neste computador.
   if (!token || contexto?.ok === false) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 gap-5 text-center">
-        <Clock className="h-12 w-12 text-muted-foreground" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F3] text-[#141B1E] p-6 gap-5 text-center">
+        <Clock className="h-12 w-12 text-[#55605F]" />
         <div>
           <h1 className="text-2xl font-heading">Este computador ainda não bate ponto</h1>
-          <p className="text-muted-foreground max-w-md mt-2">
-            No painel, em <span className="text-foreground">Ponto → Preparar um computador</span>,
+          <p className="text-[#55605F] max-w-md mt-2">
+            No painel, em <span className="text-[#141B1E]">Ponto → Preparar um computador</span>,
             saem seis números. Digite eles aqui.
           </p>
         </div>
@@ -173,10 +161,10 @@ const Ponto = () => {
             inputMode="numeric"
             autoFocus
             placeholder="000000"
-            className="h-16 text-center font-mono text-3xl tracking-[0.3em]"
+            className="h-16 text-center font-mono text-3xl tracking-[0.3em] bg-white border-[#DCDFD8]"
           />
           <Button
-            className="h-14 text-lg w-full mt-3"
+            className="h-14 text-lg w-full mt-3 bg-[#0F6B5C] hover:bg-[#0F6B5C]/90"
             disabled={codigoEstacao.length !== 6 || ativando}
             onClick={async () => {
               setErroRegistro(null);
@@ -194,9 +182,8 @@ const Ponto = () => {
 
         {erroRegistro && <p className="text-sm text-[#C0392B] max-w-sm">{erroRegistro}</p>}
 
-        {/* Caminho antigo, pra quem já está logado como admin aqui mesmo. */}
         <details className="max-w-sm w-full text-left">
-          <summary className="text-sm text-muted-foreground cursor-pointer text-center">
+          <summary className="text-sm text-[#55605F] cursor-pointer text-center">
             Estou logado como administrador neste PC
           </summary>
           <div className="flex flex-col sm:flex-row gap-2 mt-3">
@@ -204,7 +191,7 @@ const Ponto = () => {
               value={nomeEstacao}
               onChange={(e) => setNomeEstacao(e.target.value)}
               placeholder="Nome deste computador"
-              className="h-12"
+              className="h-12 bg-white border-[#DCDFD8]"
             />
             <Button
               variant="outline"
@@ -223,26 +210,26 @@ const Ponto = () => {
     );
   }
 
-  const funcionarios = contexto?.funcionarios ?? [];
-  const autorizados = funcionarios.filter((f) => f.pode_abrir_loja);
+  const temQuemAbra = (contexto?.funcionarios ?? []).some((f) => f.pode_abrir_loja);
+  const secundaria = tela !== 'ponto';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#F5F6F3] text-[#141B1E] flex flex-col">
       {aviso && <Aviso {...aviso} onFim={voltarAoInicio} />}
 
-      <header className="flex items-center justify-between px-4 py-3 border-b">
-        <span className="text-sm text-muted-foreground">
+      <header className="flex items-center justify-between px-5 py-3.5">
+        <span className="text-xs text-[#8A9290] tracking-wide">
           {contexto?.local} · {contexto?.estacao}
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <span
             className={cn(
               'flex items-center gap-1.5 text-xs',
               contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#C0392B]'
             )}
           >
-            {contexto?.rede_ok ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-            {contexto?.rede_ok ? 'rede da loja' : 'fora da rede da loja'}
+            {contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+            {contexto?.rede_ok ? 'rede da loja' : 'fora da rede'}
           </span>
           <button
             type="button"
@@ -250,84 +237,37 @@ const Ponto = () => {
               setPin('');
               setTela('manutencao');
             }}
-            className="text-muted-foreground/40 hover:text-muted-foreground p-1"
+            className="text-[#8A9290]/50 hover:text-[#55605F] p-1"
             aria-label="Sair do modo quiosque"
           >
-            <Unlock className="h-4 w-4" />
+            <Unlock className="h-3.5 w-3.5" />
           </button>
         </div>
       </header>
 
-      {tela === 'inicio' && (
-        <main className="flex-1 flex flex-col items-center justify-center gap-10 p-6">
+      {/* ---------------------------------------------- bater ponto: o centro */}
+      {tela === 'ponto' && (
+        <main className="flex-1 flex flex-col items-center justify-center gap-9 px-6 pb-4">
           <Relogio />
-          <div className="w-full max-w-sm flex flex-col gap-3">
-            <Button className="h-16 text-xl" onClick={() => setTela('bater-quem')}>
-              <Clock className="h-6 w-6 mr-3" />
-              Bater ponto
-            </Button>
-            {/* P20: sem ninguém autorizado, o botão nem aparece. */}
-            {autorizados.length > 0 && (
-              <Button
-                variant="outline"
-                className="h-14 text-base"
-                onClick={() => setTela('abrir-loja')}
-              >
-                <DoorOpen className="h-5 w-5 mr-3" />
-                Abrir loja
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              className="h-14 text-base"
-              onClick={() => setTela('faltante')}
-            >
-              <PackagePlus className="h-5 w-5 mr-3" />
-              Reportar faltante
-            </Button>
+
+          <div className="w-full">
+            <p className="text-center text-sm text-[#55605F] mb-5">
+              Digite seu PIN para bater o ponto
+            </p>
+            <Teclado
+              valor={pin}
+              onChange={setPin}
+              onConfirmar={baterPonto}
+              confirmando={enviando}
+            />
           </div>
-        </main>
-      )}
-
-      {tela === 'bater-quem' && (
-        <EscolherPessoa
-          funcionarios={funcionarios}
-          busca={busca}
-          onBusca={setBusca}
-          onEscolher={(f) => {
-            setPessoa(f);
-            setPin('');
-            setTela('bater-pin');
-          }}
-          onVoltar={voltarAoInicio}
-        />
-      )}
-
-      {tela === 'bater-pin' && pessoa && (
-        <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
-          <div className="text-center">
-            <p className="text-2xl font-heading">{pessoa.nome}</p>
-            <p className="text-muted-foreground mt-1">Digite seu PIN</p>
-          </div>
-
-          <TecladoPin
-            valor={pin}
-            onChange={setPin}
-            onConfirmar={confirmarBatida}
-            confirmando={enviando}
-          />
-
-          <Button variant="ghost" className="h-12" onClick={voltarAoInicio}>
-            Cancelar
-          </Button>
         </main>
       )}
 
       {tela === 'abrir-loja' && (
         <AbrirLoja
-          autorizados={autorizados}
-          abrirLoja={abrirLoja}
-          marcarPresentes={marcarPresentes}
+          abrirLoja={abrirLojaPorPin}
+          marcarPresentes={marcarPresentesPorPin}
           onFim={mostrarAviso}
           onVoltar={voltarAoInicio}
         />
@@ -335,36 +275,80 @@ const Ponto = () => {
 
       {tela === 'faltante' && (
         <ReportarFaltante
-          funcionarios={funcionarios}
           buscarProduto={buscarProduto}
-          reportarFaltante={reportarFaltante}
+          reportarFaltante={reportarFaltantePorPin}
           onFim={mostrarAviso}
           onVoltar={voltarAoInicio}
         />
       )}
 
       {tela === 'manutencao' && (
-        <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+        <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
           <div className="text-center">
-            <p className="text-2xl font-heading">Sair do modo quiosque</p>
-            <p className="text-muted-foreground mt-1 max-w-xs">
+            <p className="text-xl font-heading">Sair do modo quiosque</p>
+            <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
               PIN de manutenção. Vale só neste computador e dentro da loja.
             </p>
           </div>
 
-          <TecladoPin
+          <Teclado
             valor={pin}
             onChange={setPin}
             onConfirmar={confirmarManutencao}
             confirmando={enviando}
-            tamanho={4}
+            tom="loja"
           />
 
-          <Button variant="ghost" className="h-12" onClick={voltarAoInicio}>
+          <button
+            type="button"
+            onClick={voltarAoInicio}
+            className="text-sm text-[#55605F] hover:text-[#141B1E] py-2 px-4"
+          >
             Cancelar
-          </Button>
+          </button>
         </main>
       )}
+
+      {/* ------------------------------------- resto: rodapé, fora do caminho */}
+      <footer className="px-5 pb-5 pt-2">
+        {secundaria ? (
+          <button
+            type="button"
+            onClick={voltarAoInicio}
+            className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] py-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao ponto
+          </button>
+        ) : (
+          <div className="flex items-center justify-center gap-2 border-t border-[#DCDFD8] pt-4">
+            {temQuemAbra && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPin('');
+                  setTela('abrir-loja');
+                }}
+                className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
+              >
+                <DoorOpen className="h-4 w-4" />
+                Abrir loja
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setPin('');
+                setTela('faltante');
+              }}
+              className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
+            >
+              <PackagePlus className="h-4 w-4" />
+              Reportar faltante
+            </button>
+          </div>
+        )}
+      </footer>
     </div>
   );
 };

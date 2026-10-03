@@ -2744,6 +2744,10 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_abrir_loja_por_pin: {
+        Args: { p_estacao_token: string; p_motivo?: string; p_pin: string }
+        Returns: Json
+      }
       ponto_agora_na_loja: { Args: { p_empresa_id: string }; Returns: Json }
       ponto_ativar_estacao: { Args: { p_codigo: string }; Returns: Json }
       ponto_buscar_produto: {
@@ -2801,6 +2805,16 @@ export type Database = {
         Args: { p_empresa_id: string; p_pin: string }
         Returns: Json
       }
+      ponto_dispositivo_por_pin: {
+        Args: {
+          p_apelido?: string
+          p_device_id: string
+          p_pin: string
+          p_qr_token: string
+          p_registrar?: boolean
+        }
+        Returns: Json
+      }
       ponto_duracao_almoco: {
         Args: { p_data?: string; p_funcionario_id: string }
         Returns: number
@@ -2827,12 +2841,24 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_marcar_presentes_por_pin: {
+        Args: {
+          p_estacao_token: string
+          p_funcionarios: string[]
+          p_pin: string
+        }
+        Returns: Json
+      }
       ponto_modelo_vigente: {
         Args: { p_data?: string; p_funcionario_id: string }
         Returns: Database["public"]["Enums"]["ponto_modelo_intervalo"]
       }
       ponto_pin_confere: {
         Args: { p_funcionario_id: string; p_pin: string }
+        Returns: boolean
+      }
+      ponto_pin_disponivel: {
+        Args: { p_empresa_id: string; p_pin: string; p_user_id?: string }
         Returns: boolean
       }
       ponto_preparar_estacao: {
@@ -2844,6 +2870,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["ponto_marcacao_tipo"]
       }
       ponto_qr_contexto: { Args: { p_qr_token: string }; Returns: Json }
+      ponto_quem_tem_o_pin: {
+        Args: { p_empresa_id: string; p_pin: string }
+        Returns: {
+          ambiguo: boolean
+          funcionario_id: string
+        }[]
+      }
       ponto_registrar: {
         Args: {
           p_device_id?: string
@@ -2868,6 +2901,16 @@ export type Database = {
         Args: { p_local_id?: string; p_nome: string }
         Returns: Json
       }
+      ponto_registrar_por_pin: {
+        Args: {
+          p_device_id?: string
+          p_estacao_token?: string
+          p_pin: string
+          p_qr_token?: string
+          p_tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
+        Returns: Json
+      }
       ponto_registrar_tentativa: {
         Args: {
           p_detalhe?: string
@@ -2883,6 +2926,15 @@ export type Database = {
         Args: {
           p_estacao_token: string
           p_funcionario_id: string
+          p_pin: string
+          p_product_id: string
+          p_stock_remaining?: number
+        }
+        Returns: Json
+      }
+      ponto_reportar_faltante_por_pin: {
+        Args: {
+          p_estacao_token: string
           p_pin: string
           p_product_id: string
           p_stock_remaining?: number
