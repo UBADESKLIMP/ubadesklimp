@@ -41,11 +41,17 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
         {groups.map(({ group, items: groupItems }, index) => (
           <div key={group ?? 'ungrouped'} className={index > 0 ? 'mt-3' : undefined}>
             {group && (
+              // O rótulo guarda a mesma altura recolhido e expandido: só some
+              // a tinta. Antes ele tinha altura zero e, ao expandir, empurrava
+              // tudo abaixo dele 41 px pra baixo — o ícone fugia do cursor na
+              // hora do clique.
               <div
                 className={cn(
-                  'px-2 mb-1 text-[9px] uppercase tracking-wider text-blue-300/30 whitespace-nowrap transition-opacity duration-150',
-                  expanded ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'
+                  'px-2 mb-1 h-3 flex items-end text-[9px] leading-none uppercase tracking-wider',
+                  'text-blue-300/30 whitespace-nowrap transition-opacity duration-150',
+                  expanded ? 'opacity-100' : 'opacity-0'
                 )}
+                aria-hidden={!expanded}
               >
                 {ADMIN_NAV_GROUP_LABELS[group]}
               </div>

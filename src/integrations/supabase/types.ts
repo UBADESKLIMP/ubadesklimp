@@ -2346,6 +2346,7 @@ export type Database = {
           duracao_almoco_min: number
           empresa_id: string | null
           escala_id: string | null
+          fora_do_ponto: boolean
           is_admin: boolean
           modelo_intervalo: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde: string | null
@@ -2364,6 +2365,7 @@ export type Database = {
           duracao_almoco_min?: number
           empresa_id?: string | null
           escala_id?: string | null
+          fora_do_ponto?: boolean
           is_admin?: boolean
           modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde?: string | null
@@ -2382,6 +2384,7 @@ export type Database = {
           duracao_almoco_min?: number
           empresa_id?: string | null
           escala_id?: string | null
+          fora_do_ponto?: boolean
           is_admin?: boolean
           modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde?: string | null
@@ -2995,6 +2998,10 @@ export type Database = {
       ponto_tem_pin_manutencao: {
         Args: { p_empresa_id: string }
         Returns: boolean
+      }
+      ponto_tipo_legivel: {
+        Args: { p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"] }
+        Returns: string
       }
       ponto_tipo_para_justificativa: {
         Args: { p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"] }

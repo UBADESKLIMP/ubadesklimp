@@ -202,7 +202,12 @@ export const usePontoInfra = (empresaId: string | null) => {
         .eq('empresa_id', empresaId)
         .order('created_at', { ascending: false })
         .limit(50),
-      supabase.from('staff_members').select('display_name').is('empresa_id', null),
+      // fora_do_ponto = quem não bate ponto de propósito (dono, sócio).
+      supabase
+        .from('staff_members')
+        .select('display_name')
+        .is('empresa_id', null)
+        .eq('fora_do_ponto', false),
     ]);
 
     setSemEmpresa(

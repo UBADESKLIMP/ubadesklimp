@@ -44,6 +44,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const [modelo, setModelo] = useState<string>('almoco_2h');
   const [modeloOriginal, setModeloOriginal] = useState<string>('almoco_2h');
   const [cafeAtivo, setCafeAtivo] = useState(false);
+  const [foraDoPonto, setForaDoPonto] = useState(false);
   const [podeAbrirLoja, setPodeAbrirLoja] = useState(false);
   const [podeAbrirLojaOriginal, setPodeAbrirLojaOriginal] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -66,7 +67,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           supabase
             .from('staff_members')
             .select(
-              'empresa_id, escala_id, almoco_previsto, duracao_almoco_min, termo_assinado_em, modelo_intervalo'
+              'empresa_id, escala_id, almoco_previsto, duracao_almoco_min, termo_assinado_em, modelo_intervalo, fora_do_ponto'
             )
             .eq('user_id', userId)
             .maybeSingle(),
@@ -91,6 +92,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setPapel(papelRow?.papel ?? SEM_VALOR);
       setModelo(member?.modelo_intervalo ?? 'almoco_2h');
       setModeloOriginal(member?.modelo_intervalo ?? 'almoco_2h');
+      setForaDoPonto(Boolean(member?.fora_do_ponto));
       setPodeAbrirLoja(Boolean(aberturaRow));
       setPodeAbrirLojaOriginal(Boolean(aberturaRow));
 
@@ -126,6 +128,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         almoco_previsto: almocoPrevisto || null,
         duracao_almoco_min: Number(duracaoAlmoco) || 120,
         termo_assinado_em: termoAssinadoEm || null,
+        fora_do_ponto: foraDoPonto,
       })
       .eq('user_id', userId);
 
@@ -300,6 +303,30 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           <p className="text-xs text-muted-foreground">
             Retorno esperado = saída real + esta duração.
           </p>
+        </div>
+
+        <div className="space-y-1 sm:col-span-2">
+          <Label>Bate ponto?</Label>
+          <button
+            type="button"
+            onClick={() => setForaDoPonto((v) => !v)}
+            className="flex items-start gap-3 text-left w-full rounded-lg border px-3 py-2.5 hover:bg-accent transition-colors"
+          >
+            <span
+              className={`h-5 w-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center text-[11px] font-bold ${
+                foraDoPonto ? 'border-[#6B7280] bg-[#6B7280] text-white' : 'border-muted-foreground/40'
+              }`}
+            >
+              {foraDoPonto ? '✓' : ''}
+            </span>
+            <span className="text-sm">
+              Esta pessoa não bate ponto
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                Para dono e sócio, que entram por e-mail e senha e não têm PIN. Tira a pessoa dos
+                avisos de cadastro incompleto do Ponto.
+              </span>
+            </span>
+          </button>
         </div>
 
         <div className="space-y-1 sm:col-span-2">
