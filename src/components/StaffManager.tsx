@@ -50,6 +50,13 @@ const StaffManager = () => {
   const { staffMembers, loading, createStaffMember, updatePermissions, updateDisplayName, changePassword, deleteStaffMember } =
     useStaffMembers();
   const adminCount = staffMembers.filter((m) => m.is_admin).length;
+
+  // Administradores em cima: são poucos, mudam pouco e é quem se procura
+  // primeiro quando algo está errado. Dentro de cada grupo, ordem alfabética.
+  const membrosOrdenados = [...staffMembers].sort((a, b) => {
+    if (a.is_admin !== b.is_admin) return a.is_admin ? -1 : 1;
+    return a.display_name.localeCompare(b.display_name, 'pt-BR');
+  });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<StaffFormState>(emptyForm());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -232,8 +239,20 @@ const StaffManager = () => {
           <AdminEmptyState icon={Shield} title="Nenhum funcionário cadastrado ainda." tone="light" />
         ) : (
           <div className="space-y-3">
-            {staffMembers.map((member) => (
-              <div key={member.user_id} className="border rounded-lg p-4 space-y-3">
+            {membrosOrdenados.map((member, i) => (
+              <div key={member.user_id}>
+              {/* Uma linha separa os dois grupos, pra não parecer lista única. */}
+              {i > 0 && !member.is_admin && membrosOrdenados[i - 1].is_admin && (
+                <p className="text-xs uppercase tracking-wider text-muted-foreground pt-4 pb-2">
+                  Funcionários
+                </p>
+              )}
+              {i === 0 && member.is_admin && (
+                <p className="text-xs uppercase tracking-wider text-muted-foreground pb-2">
+                  Administradores
+                </p>
+              )}
+              <div className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{member.display_name}</p>
@@ -343,6 +362,7 @@ const StaffManager = () => {
                     </div>
                   </div>
                 )}
+              </div>
               </div>
             ))}
           </div>
