@@ -34,6 +34,8 @@ export interface MarcacaoDoDia {
   marcado_por: string | null;
   /** Por que o gestor lançou esta batida no lugar da pessoa. */
   motivo_lancamento: string | null;
+  /** A hora que estava antes, quando esta batida é uma correção. */
+  hora_anterior: string | null;
   ip: string | null;
   codigo: string;
 }
@@ -139,7 +141,23 @@ export const usePontoDoDia = (empresaId: string | null, data: string) => {
     return r;
   };
 
-  return { marcacoes, pessoas, loading, recarregar: carregar, lancarMarcacao };
+  /**
+   * Corrige a hora de uma batida. Na tela a hora certa aparece no lugar da
+   * errada; a linha antiga continua no banco, apontada pela nova.
+   */
+  const corrigirMarcacao = async (marcacaoId: string, quando: string, motivo: string) => {
+    const { data, error } = await supabase.rpc('ponto_corrigir_marcacao', {
+      p_marcacao_id: marcacaoId,
+      p_quando: quando,
+      p_motivo: motivo,
+    });
+    if (error) return { ok: false, mensagem: error.message };
+    const r = data as unknown as { ok: boolean; mensagem?: string };
+    if (r?.ok) await carregar();
+    return r;
+  };
+
+  return { marcacoes, pessoas, loading, recarregar: carregar, lancarMarcacao, corrigirMarcacao };
 };
 
 export interface Estacao {

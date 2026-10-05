@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Clock,
   Plus,
+  Pencil,
   Loader2,
   Monitor,
   Wifi,
@@ -25,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import PontoQrLocais from './PontoQrLocais';
 import LancarMarcacaoDialog from './LancarMarcacaoDialog';
+import CorrigirBatidaDialog from './CorrigirBatidaDialog';
 import { lerTokenEstacao, retrancarQuiosque } from '@/hooks/usePontoQuiosque';
 import {
   usePontoAgora,
@@ -37,6 +39,7 @@ import {
   MOTIVO_LABEL,
   TIPO_LABEL,
   type SituacaoAgora,
+  type MarcacaoDoDia,
 } from '@/hooks/usePonto';
 
 const CARD = 'bg-[#12121a] border-blue-500/20 text-white';
@@ -83,8 +86,13 @@ const PontoManager = () => {
   const empresaAtiva = equipeAccess.empresaIds[0] ?? null;
 
   const { pessoas, loading: loadingAgora } = usePontoAgora(empresaAtiva);
-  const { marcacoes, pessoas: pessoasDaEmpresa, loading: loadingDia, lancarMarcacao } =
-    usePontoDoDia(empresaAtiva, dia);
+  const {
+    marcacoes,
+    pessoas: pessoasDaEmpresa,
+    loading: loadingDia,
+    lancarMarcacao,
+    corrigirMarcacao,
+  } = usePontoDoDia(empresaAtiva, dia);
   const {
     estacoes,
     redes,
@@ -118,6 +126,7 @@ const PontoManager = () => {
   const [liberandoRede, setLiberandoRede] = useState(false);
   const [avisoRede, setAvisoRede] = useState<string | null>(null);
   const [lancando, setLancando] = useState(false);
+  const [corrigindo, setCorrigindo] = useState<MarcacaoDoDia | null>(null);
   const [nomeNovaEstacao, setNomeNovaEstacao] = useState('PC da frente');
   const [preparando, setPreparando] = useState(false);
   const [codigo, setCodigo] = useState<string | null>(null);
@@ -464,9 +473,27 @@ const PontoManager = () => {
                           contestada
                         </span>
                       )}
+                      {m.hora_anterior && (
+                        <span
+                          className="text-[10px] uppercase tracking-wider text-blue-300/50"
+                          title={`Antes marcava ${m.hora_anterior}`}
+                        >
+                          corrigida
+                        </span>
+                      )}
                       <span className="font-mono text-[11px] text-blue-300/40 tabular-nums">
                         {m.codigo}
                       </span>
+                      {equipeAccess.isGestorOuAdmin && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-blue-300/60 hover:text-white hover:bg-blue-500/10"
+                          onClick={() => setCorrigindo(m)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -760,6 +787,13 @@ const PontoManager = () => {
           />
         </TabsContent>
       </Tabs>
+
+      <CorrigirBatidaDialog
+        batida={corrigindo}
+        dia={dia}
+        onFechar={() => setCorrigindo(null)}
+        onCorrigir={corrigirMarcacao}
+      />
 
       <LancarMarcacaoDialog
         aberto={lancando}

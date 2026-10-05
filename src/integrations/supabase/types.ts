@@ -1473,6 +1473,7 @@ export type Database = {
           motivo_lancamento: string | null
           origem: Database["public"]["Enums"]["ponto_origem"]
           registrado_em: string
+          substituida_por: string | null
           tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
           user_agent: string | null
         }
@@ -1494,6 +1495,7 @@ export type Database = {
           motivo_lancamento?: string | null
           origem?: Database["public"]["Enums"]["ponto_origem"]
           registrado_em?: string
+          substituida_por?: string | null
           tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"]
           user_agent?: string | null
         }
@@ -1515,6 +1517,7 @@ export type Database = {
           motivo_lancamento?: string | null
           origem?: Database["public"]["Enums"]["ponto_origem"]
           registrado_em?: string
+          substituida_por?: string | null
           tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
           user_agent?: string | null
         }
@@ -1574,6 +1577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ponto_marcacoes_substituida_por_fkey"
+            columns: ["substituida_por"]
+            isOneToOne: false
+            referencedRelation: "ponto_marcacoes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2792,6 +2802,10 @@ export type Database = {
       ponto_confirmar_por_prazo: { Args: never; Returns: number }
       ponto_contexto_do_painel: { Args: never; Returns: Json }
       ponto_convite_aberto: { Args: { p_empresa_id: string }; Returns: Json }
+      ponto_corrigir_marcacao: {
+        Args: { p_marcacao_id: string; p_motivo: string; p_quando: string }
+        Returns: Json
+      }
       ponto_criar_local_qr: {
         Args: {
           p_empresa_id: string
@@ -3015,6 +3029,7 @@ export type Database = {
         Args: { p_tipo: Database["public"]["Enums"]["ponto_marcacao_tipo"] }
         Returns: Database["public"]["Enums"]["equipe_marcacao_ponto"]
       }
+      ponto_ultimo_hash: { Args: { p_empresa_id: string }; Returns: string }
       ponto_user_agent: { Args: never; Returns: string }
       ponto_verificar_integridade: {
         Args: { p_empresa_id: string }
@@ -3114,6 +3129,7 @@ export type Database = {
         | "abertura_coletiva"
         | "lancamento_gestor"
         | "painel"
+        | "correcao"
       ponto_rede_origem: "heartbeat" | "manual"
       staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
     }
@@ -3344,6 +3360,7 @@ export const Constants = {
         "abertura_coletiva",
         "lancamento_gestor",
         "painel",
+        "correcao",
       ],
       ponto_rede_origem: ["heartbeat", "manual"],
       staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
