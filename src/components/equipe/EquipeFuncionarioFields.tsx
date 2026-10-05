@@ -47,6 +47,8 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const [foraDoPonto, setForaDoPonto] = useState(false);
   const [podeAbrirLoja, setPodeAbrirLoja] = useState(false);
   const [podeAbrirLojaOriginal, setPodeAbrirLojaOriginal] = useState(false);
+  const [podeForaDaRede, setPodeForaDaRede] = useState(false);
+  const [podeForaDaRedeOriginal, setPodeForaDaRedeOriginal] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
@@ -72,12 +74,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
             .eq('user_id', userId)
             .maybeSingle(),
           supabase.from('equipe_papeis').select('papel').eq('user_id', userId).maybeSingle(),
-          supabase
-            .from('ponto_permissoes')
-            .select('permissao')
-            .eq('user_id', userId)
-            .eq('permissao', 'abertura_coletiva')
-            .maybeSingle(),
+          supabase.from('ponto_permissoes').select('permissao').eq('user_id', userId),
         ]);
 
       if (cancelado) return;
@@ -93,8 +90,11 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setModelo(member?.modelo_intervalo ?? 'almoco_2h');
       setModeloOriginal(member?.modelo_intervalo ?? 'almoco_2h');
       setForaDoPonto(Boolean(member?.fora_do_ponto));
-      setPodeAbrirLoja(Boolean(aberturaRow));
-      setPodeAbrirLojaOriginal(Boolean(aberturaRow));
+      const permissoes = ((aberturaRow ?? []) as { permissao: string }[]).map((p) => p.permissao);
+      setPodeAbrirLoja(permissoes.includes('abertura_coletiva'));
+      setPodeAbrirLojaOriginal(permissoes.includes('abertura_coletiva'));
+      setPodeForaDaRede(permissoes.includes('bater_pelo_painel'));
+      setPodeForaDaRedeOriginal(permissoes.includes('bater_pelo_painel'));
 
       // O café é por empresa: sem ele ligado, os modelos nem podem ser escolhidos.
       if (member?.empresa_id) {
@@ -201,6 +201,32 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         return;
       }
       setPodeAbrirLojaOriginal(podeAbrirLoja);
+    }
+
+    if (podeForaDaRede !== podeForaDaRedeOriginal) {
+      const { error: foraError } = podeForaDaRede
+        ? await supabase
+            .from('ponto_permissoes')
+            .upsert(
+              { user_id: userId, permissao: 'bater_pelo_painel' },
+              { onConflict: 'user_id,permissao' }
+            )
+        : await supabase
+            .from('ponto_permissoes')
+            .delete()
+            .eq('user_id', userId)
+            .eq('permissao', 'bater_pelo_painel');
+
+      if (foraError) {
+        setSalvando(false);
+        toast({
+          title: 'Dados salvos, mas a permissão de bater fora da loja não',
+          description: foraError.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setPodeForaDaRedeOriginal(podeForaDaRede);
     }
 
     setSalvando(false);
@@ -349,6 +375,30 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
               Pode registrar a abertura e bater a entrada de quem estava na porta
               <span className="block text-xs text-muted-foreground mt-0.5">
                 Sem isso, o botão "Abrir loja" nem aparece no computador da loja para esta pessoa.
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <div className="space-y-1 sm:col-span-2">
+          <Label>Bater fora da loja</Label>
+          <button
+            type="button"
+            onClick={() => setPodeForaDaRede((v) => !v)}
+            className="flex items-start gap-3 text-left w-full rounded-lg border px-3 py-2.5 hover:bg-accent transition-colors"
+          >
+            <span
+              className={`h-5 w-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center text-[11px] font-bold ${
+                podeForaDaRede ? 'border-[#B8860B] bg-[#B8860B] text-white' : 'border-muted-foreground/40'
+              }`}
+            >
+              {podeForaDaRede ? '✓' : ''}
+            </span>
+            <span className="text-sm">
+              Pode bater pelo painel, de qualquer lugar
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                Sem isso o PIN da pessoa só é aceito dentro do Wi-Fi da loja. Marque só para quem
+                administra: a batida de fora perde a prova de que a pessoa estava na loja.
               </span>
             </span>
           </button>

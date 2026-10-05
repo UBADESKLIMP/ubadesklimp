@@ -194,6 +194,51 @@ export const TIPO_LABEL: Record<MarcacaoTipo, string> = {
   retorno_pausa: 'Retorno da pausa',
 };
 
+export interface ContextoPainel {
+  ok: boolean;
+  motivo?: string;
+  mensagem?: string;
+  empresa_id?: string;
+  local?: string;
+  rede_ok?: boolean;
+}
+
+/**
+ * Ponto aberto pelo painel, sem estação física. Funciona como o balcão — o PIN
+ * diz quem bate — e a regra da rede muda por pessoa: na loja qualquer PIN
+ * passa, fora dela só o de quem tem a permissão.
+ */
+export const usePontoPainel = (ativo: boolean) => {
+  const [contexto, setContexto] = useState<ContextoPainel | null>(null);
+  const [carregando, setCarregando] = useState(ativo);
+
+  const carregar = useCallback(async () => {
+    if (!ativo) return;
+    setCarregando(true);
+    const { data, error } = await supabase.rpc('ponto_contexto_do_painel');
+    setCarregando(false);
+    setContexto(
+      error ? { ok: false, motivo: 'erro', mensagem: 'Não conseguimos carregar agora.' }
+            : (data as unknown as ContextoPainel)
+    );
+  }, [ativo]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const bater = async (pin: string, tipo?: MarcacaoTipo): Promise<ResultadoBatida> => {
+    const { data, error } = await supabase.rpc('ponto_registrar_pelo_painel', {
+      p_pin: pin,
+      p_tipo: tipo ?? undefined,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
+    return data as unknown as ResultadoBatida;
+  };
+
+  return { contexto, carregando, recarregar: carregar, bater };
+};
+
 export const usePontoQuiosque = () => {
   const [token, setToken] = useState<string | null>(lerTokenEstacao());
   const [contexto, setContexto] = useState<ContextoEstacao | null>(null);

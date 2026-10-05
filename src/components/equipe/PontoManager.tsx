@@ -245,10 +245,10 @@ const PontoManager = () => {
             <Button
               variant="outline"
               className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-white"
-              onClick={() => window.open('/ponto?demo=1', '_blank', 'noopener')}
+              onClick={() => window.open('/ponto?painel=1', '_blank', 'noopener')}
             >
               <Monitor className="h-4 w-4 mr-2" />
-              Ver ponto
+              Abrir o ponto
             </Button>
             <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => setLancando(true)}>
               <Plus className="h-4 w-4 mr-2" />

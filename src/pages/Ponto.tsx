@@ -10,7 +10,13 @@ import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
-import { usePontoQuiosque, TIPO_LABEL, type Atalho, type FichaDaEstacao } from '@/hooks/usePontoQuiosque';
+import {
+  usePontoQuiosque,
+  usePontoPainel,
+  TIPO_LABEL,
+  type Atalho,
+  type FichaDaEstacao,
+} from '@/hooks/usePontoQuiosque';
 
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
 const SEGUNDOS_ATE_LIMPAR = 30;
@@ -74,6 +80,10 @@ const Ponto = () => {
   // ação devolve um aviso dizendo que foi demonstração.
   const [params] = useSearchParams();
   const demo = params.get('demo') === '1';
+  // Ponto de verdade aberto pelo painel: sem estação, com a regra da rede
+  // valendo por pessoa.
+  const painel = params.get('painel') === '1';
+  const doPainel = usePontoPainel(painel);
 
   const [tela, setTela] = useState<Tela>('ponto');
   const [pin, setPin] = useState('');
@@ -120,6 +130,30 @@ const Ponto = () => {
 
   const baterPonto = async () => {
     if (pin.length !== 4) return;
+
+    if (painel) {
+      setEnviando(true);
+      const r = await doPainel.bater(pin);
+      setEnviando(false);
+      setPin('');
+      if (!r.ok) {
+        mostrarAviso({ ok: false, mensagem: r.mensagem });
+        return;
+      }
+      const h = r.registrado_em
+        ? new Date(r.registrado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        : '';
+      mostrarAviso({
+        ok: true,
+        nome: r.nome,
+        destaque: h,
+        detalhe: r.tipo ? TIPO_LABEL[r.tipo] : 'Registrado',
+        mensagem: r.ignorada ? r.mensagem : undefined,
+        codigo: r.ignorada ? undefined : r.codigo,
+      });
+      return;
+    }
+
     if (demo) {
       setPin('');
       avisoDeDemo();
@@ -176,7 +210,7 @@ const Ponto = () => {
       mensagem: 'Nada foi registrado. No computador da loja isto grava a batida de verdade.',
     });
 
-  if (carregando && !demo) {
+  if ((carregando && !demo && !painel) || (painel && doPainel.carregando)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F6F3]">
         <Clock className="h-8 w-8 animate-pulse text-[#55605F]" />
@@ -186,7 +220,7 @@ const Ponto = () => {
 
   // PC ainda não registrado. O caminho principal é o código gerado no painel:
   // assim ninguém precisa logar a conta de admin neste computador.
-  if (!demo && (!token || contexto?.ok === false)) {
+  if (!demo && !painel && (!token || contexto?.ok === false)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F3] text-[#141B1E] p-6 gap-5 text-center">
         <Clock className="h-12 w-12 text-[#55605F]" />
@@ -258,8 +292,8 @@ const Ponto = () => {
   const temQuemAbra = demo || (contexto?.funcionarios ?? []).some((f) => f.pode_abrir_loja);
   // Abrir loja e reportar faltante escrevem de verdade e precisam da estação.
   // Mostrar meio funcionando numa demonstração é pior que não mostrar.
-  const mostraAbrirLoja = !demo && atalhos.includes('abrir_loja') && temQuemAbra;
-  const mostraFaltante = !demo && atalhos.includes('reportar_faltante');
+  const mostraAbrirLoja = !demo && !painel && atalhos.includes('abrir_loja') && temQuemAbra;
+  const mostraFaltante = !demo && !painel && atalhos.includes('reportar_faltante');
   const secundaria = tela !== 'ponto';
 
   return (
@@ -268,12 +302,26 @@ const Ponto = () => {
 
       <header className="flex items-center justify-between px-5 py-3.5">
         <span className="text-xs text-[#8A9290] tracking-wide">
-          {demo ? 'Demonstração · como a equipe vê' : `${contexto?.local} · ${contexto?.estacao}`}
+          {demo
+            ? 'Demonstração · como a equipe vê'
+            : painel
+              ? `${doPainel.contexto?.local ?? 'Ponto'} · pelo painel`
+              : `${contexto?.local} · ${contexto?.estacao}`}
         </span>
         <div className="flex items-center gap-4">
           {demo ? (
             <span className="text-[10px] uppercase tracking-wider font-semibold bg-[#B8860B] text-white rounded px-2 py-0.5 -rotate-1">
               demonstração
+            </span>
+          ) : painel ? (
+            <span
+              className={cn(
+                'flex items-center gap-1.5 text-xs',
+                doPainel.contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#8A9290]'
+              )}
+            >
+              {doPainel.contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+              {doPainel.contexto?.rede_ok ? 'rede da loja' : 'fora da rede · só quem tem permissão'}
             </span>
           ) : (
             <span
@@ -286,7 +334,7 @@ const Ponto = () => {
               {contexto?.rede_ok ? 'rede da loja' : 'fora da rede'}
             </span>
           )}
-          {!demo && (
+          {!demo && !painel && (
             <button
               type="button"
               onClick={() => {
@@ -399,6 +447,12 @@ const Ponto = () => {
               <p className="text-xs text-[#8A9290] text-center max-w-md">
                 Demonstração: digite quatro números para ver a tela de confirmação. No computador
                 da loja ainda aparecem aqui os botões de abrir a loja e reportar faltante.
+              </p>
+            )}
+            {painel && (
+              <p className="text-xs text-[#8A9290] text-center max-w-md">
+                Isto grava de verdade. Abrir a loja e reportar faltante ficam no computador do
+                balcão, que é onde a equipe usa.
               </p>
             )}
             {mostraAbrirLoja && (

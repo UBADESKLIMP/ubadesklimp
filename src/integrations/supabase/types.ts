@@ -2790,6 +2790,7 @@ export type Database = {
         Returns: Json
       }
       ponto_confirmar_por_prazo: { Args: never; Returns: number }
+      ponto_contexto_do_painel: { Args: never; Returns: Json }
       ponto_convite_aberto: { Args: { p_empresa_id: string }; Returns: Json }
       ponto_criar_local_qr: {
         Args: {
@@ -2929,6 +2930,13 @@ export type Database = {
       }
       ponto_registrar_estacao: {
         Args: { p_local_id?: string; p_nome: string }
+        Returns: Json
+      }
+      ponto_registrar_pelo_painel: {
+        Args: {
+          p_pin: string
+          p_tipo?: Database["public"]["Enums"]["ponto_marcacao_tipo"]
+        }
         Returns: Json
       }
       ponto_registrar_por_pin: {
@@ -3101,7 +3109,11 @@ export type Database = {
         | "sem_ip"
         | "fora_da_janela"
         | "sem_permissao"
-      ponto_origem: "individual" | "abertura_coletiva" | "lancamento_gestor"
+      ponto_origem:
+        | "individual"
+        | "abertura_coletiva"
+        | "lancamento_gestor"
+        | "painel"
       ponto_rede_origem: "heartbeat" | "manual"
       staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
     }
@@ -3327,7 +3339,12 @@ export const Constants = {
         "fora_da_janela",
         "sem_permissao",
       ],
-      ponto_origem: ["individual", "abertura_coletiva", "lancamento_gestor"],
+      ponto_origem: [
+        "individual",
+        "abertura_coletiva",
+        "lancamento_gestor",
+        "painel",
+      ],
       ponto_rede_origem: ["heartbeat", "manual"],
       staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
     },
