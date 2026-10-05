@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,6 +284,28 @@ const Ponto = () => {
             </Button>
           </div>
         </details>
+      </div>
+    );
+  }
+
+  // Ponto do painel sem poder bater: mostrar o teclado aqui é prometer uma
+  // batida que a gravação vai recusar depois. Diz o que falta antes.
+  if (painel && doPainel.contexto?.ok === false) {
+    const semSessao = doPainel.contexto.motivo === 'sem_sessao';
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F3] text-[#141B1E] p-6 gap-5 text-center">
+        <Clock className="h-12 w-12 text-[#55605F]" />
+        <div>
+          <h1 className="text-2xl font-heading">
+            {semSessao ? 'Entre no painel para usar esta tela' : 'Esta tela não é para o seu acesso'}
+          </h1>
+          <p className="text-[#55605F] max-w-md mt-2">
+            {doPainel.contexto.mensagem ?? 'Não conseguimos identificar o seu acesso.'}
+          </p>
+        </div>
+        <Button className="h-14 text-lg px-8 bg-primary hover:bg-primary/90" asChild>
+          <Link to={semSessao ? '/auth' : '/admin'}>{semSessao ? 'Entrar' : 'Voltar ao painel'}</Link>
+        </Button>
       </div>
     );
   }

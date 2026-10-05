@@ -214,7 +214,6 @@ export const usePontoPainel = (ativo: boolean) => {
 
   const carregar = useCallback(async () => {
     if (!ativo) return;
-    setCarregando(true);
     const { data, error } = await supabase.rpc('ponto_contexto_do_painel');
     setCarregando(false);
     setContexto(
@@ -224,8 +223,26 @@ export const usePontoPainel = (ativo: boolean) => {
   }, [ativo]);
 
   useEffect(() => {
-    carregar();
-  }, [carregar]);
+    if (!ativo) return;
+
+    // Quem pode usar a tela depende de quem está logado, e o login só volta do
+    // storage um instante depois da tela subir. Perguntar antes disso fazia o
+    // banco responder "sem sessão" para alguém logado. onAuthStateChange avisa
+    // assim que a sessão está pronta (e de novo se ela cair ou renovar).
+    // Dentro deste callback não dá para chamar getSession: o cliente de auth
+    // segura a trava enquanto roda os ouvintes e a chamada nunca volta.
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      void carregar();
+    });
+
+    // Rede de segurança: se o aviso não vier, não deixa a tela no relógio.
+    const atraso = setTimeout(() => void carregar(), 3000);
+
+    return () => {
+      clearTimeout(atraso);
+      data.subscription.unsubscribe();
+    };
+  }, [ativo, carregar]);
 
   const bater = async (pin: string, tipo?: MarcacaoTipo): Promise<ResultadoBatida> => {
     const { data, error } = await supabase.rpc('ponto_registrar_pelo_painel', {
