@@ -321,7 +321,7 @@ const Ponto = () => {
               )}
             >
               {doPainel.contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-              {doPainel.contexto?.rede_ok ? 'rede da loja' : 'fora da rede · só quem tem permissão'}
+              {doPainel.contexto?.rede_ok ? 'rede da loja' : 'fora da loja'}
             </span>
           ) : (
             <span
@@ -357,7 +357,7 @@ const Ponto = () => {
 
           <div className="w-full">
             <p className="text-center text-sm text-[#55605F] mb-5">
-              Digite seu PIN para bater o ponto
+              {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
             </p>
             <Teclado
               valor={pin}
@@ -451,8 +451,8 @@ const Ponto = () => {
             )}
             {painel && (
               <p className="text-xs text-[#8A9290] text-center max-w-md">
-                Isto grava de verdade. Abrir a loja e reportar faltante ficam no computador do
-                balcão, que é onde a equipe usa.
+                Isto grava de verdade, com o PIN de qualquer pessoa. Se o PIN não for o seu, a
+                batida sai no seu nome e fica pendente de confirmação dela.
               </p>
             )}
             {mostraAbrirLoja && (

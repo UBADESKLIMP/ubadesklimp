@@ -381,7 +381,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         </div>
 
         <div className="space-y-1 sm:col-span-2">
-          <Label>Bater fora da loja</Label>
+          <Label>Bater ponto pelo painel</Label>
           <button
             type="button"
             onClick={() => setPodeForaDaRede((v) => !v)}
@@ -395,10 +395,11 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
               {podeForaDaRede ? '✓' : ''}
             </span>
             <span className="text-sm">
-              Pode bater pelo painel, de qualquer lugar
+              Pode abrir o ponto pelo painel, de qualquer lugar
               <span className="block text-xs text-muted-foreground mt-0.5">
-                Sem isso o PIN da pessoa só é aceito dentro do Wi-Fi da loja. Marque só para quem
-                administra: a batida de fora perde a prova de que a pessoa estava na loja.
+                Dá acesso à tela que bate o ponto de qualquer pessoa, de fora da loja. Gestor e
+                admin já têm. Marque só para quem precisa fazer isso — o funcionário comum bate no
+                computador do balcão.
               </span>
             </span>
           </button>
