@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,8 @@ interface Props {
   pessoas: PessoaDaEmpresa[];
   /** Admin lança direto: sem justificar e sem a batida ficar pendente. */
   souAdmin: boolean;
+  /** Vindo do espelho: já abre no dia e na pessoa que estão furados. */
+  inicial?: { pessoa?: string; data?: string; tipo?: MarcacaoTipo } | null;
   onFechar: () => void;
   onLancar: (
     funcionarioId: string,
@@ -41,13 +43,25 @@ interface Props {
  * Lançar batida no lugar de alguém (PRD R7). Aqui a lista de nomes é certa:
  * quem lança é o gestor, que não sabe — nem deve saber — o PIN de ninguém.
  */
-const LancarMarcacaoDialog = ({ aberto, pessoas, souAdmin, onFechar, onLancar }: Props) => {
+const LancarMarcacaoDialog = ({ aberto, pessoas, souAdmin, inicial, onFechar, onLancar }: Props) => {
   const [pessoa, setPessoa] = useState('');
   const [tipo, setTipo] = useState<MarcacaoTipo>('entrada');
   const [quando, setQuando] = useState(agoraLocal());
   const [motivo, setMotivo] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  // Quando o espelho manda um dia furado, a hora sugerida é a do fim da
+  // jornada: é quase sempre a saída que ninguém bateu.
+  useEffect(() => {
+    if (!aberto || !inicial) return;
+    if (inicial.pessoa) setPessoa(inicial.pessoa);
+    if (inicial.tipo) setTipo(inicial.tipo);
+    if (inicial.data) {
+      const hora = inicial.tipo === 'retorno_almoco' ? '14:00' : '18:00';
+      setQuando(`${inicial.data}T${hora}`);
+    }
+  }, [aberto, inicial]);
 
   const limpar = () => {
     setPessoa('');

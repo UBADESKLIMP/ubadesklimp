@@ -2351,15 +2351,20 @@ export type Database = {
         Row: {
           almoco_previsto: string | null
           bloqueado_em: string | null
+          cargo: string | null
+          cpf: string | null
           created_at: string
           display_name: string
           duracao_almoco_min: number
           empresa_id: string | null
+          endereco: string | null
           escala_id: string | null
           fora_do_ponto: boolean
           is_admin: boolean
+          matricula: string | null
           modelo_intervalo: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde: string | null
+          pis: string | null
           salario_hora: number | null
           tentativas_login: number
           termo_adesao_path: string | null
@@ -2370,15 +2375,20 @@ export type Database = {
         Insert: {
           almoco_previsto?: string | null
           bloqueado_em?: string | null
+          cargo?: string | null
+          cpf?: string | null
           created_at?: string
           display_name: string
           duracao_almoco_min?: number
           empresa_id?: string | null
+          endereco?: string | null
           escala_id?: string | null
           fora_do_ponto?: boolean
           is_admin?: boolean
+          matricula?: string | null
           modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde?: string | null
+          pis?: string | null
           salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
@@ -2389,15 +2399,20 @@ export type Database = {
         Update: {
           almoco_previsto?: string | null
           bloqueado_em?: string | null
+          cargo?: string | null
+          cpf?: string | null
           created_at?: string
           display_name?: string
           duracao_almoco_min?: number
           empresa_id?: string | null
+          endereco?: string | null
           escala_id?: string | null
           fora_do_ponto?: boolean
           is_admin?: boolean
+          matricula?: string | null
           modelo_intervalo?: Database["public"]["Enums"]["ponto_modelo_intervalo"]
           modelo_intervalo_desde?: string | null
+          pis?: string | null
           salario_hora?: number | null
           tentativas_login?: number
           termo_adesao_path?: string | null
@@ -2846,6 +2861,10 @@ export type Database = {
       ponto_duracao_almoco: {
         Args: { p_data?: string; p_funcionario_id: string }
         Returns: number
+      }
+      ponto_espelho_mensal: {
+        Args: { p_empresa_id: string; p_funcionario_id?: string; p_mes: string }
+        Returns: Json
       }
       ponto_estacao_contexto: {
         Args: { p_estacao_token: string }

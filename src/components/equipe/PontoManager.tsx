@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import PontoQrLocais from './PontoQrLocais';
 import LancarMarcacaoDialog from './LancarMarcacaoDialog';
+import EspelhoDePonto from './EspelhoDePonto';
 import CorrigirBatidaDialog from './CorrigirBatidaDialog';
 import { lerTokenEstacao, retrancarQuiosque } from '@/hooks/usePontoQuiosque';
 import {
@@ -40,6 +41,7 @@ import {
   TIPO_LABEL,
   type SituacaoAgora,
   type MarcacaoDoDia,
+  type MarcacaoTipo,
 } from '@/hooks/usePonto';
 
 const CARD = 'bg-[#12121a] border-blue-500/20 text-white';
@@ -127,6 +129,8 @@ const PontoManager = () => {
   const [liberandoRede, setLiberandoRede] = useState(false);
   const [avisoRede, setAvisoRede] = useState<string | null>(null);
   const [lancando, setLancando] = useState(false);
+  const [lancarInicial, setLancarInicial] =
+    useState<{ pessoa?: string; data?: string; tipo?: MarcacaoTipo } | null>(null);
   const [corrigindo, setCorrigindo] = useState<MarcacaoDoDia | null>(null);
   const [nomeNovaEstacao, setNomeNovaEstacao] = useState('PC da frente');
   const [preparando, setPreparando] = useState(false);
@@ -371,6 +375,7 @@ const PontoManager = () => {
         <TabsList className="bg-[#12121a] border border-blue-500/20 flex-wrap h-auto">
           <TabsTrigger value="agora">Agora na loja</TabsTrigger>
           <TabsTrigger value="dia">Batidas do dia</TabsTrigger>
+          <TabsTrigger value="espelho">Espelho do mês</TabsTrigger>
           <TabsTrigger value="recusadas">
             Recusadas
             {recusasHoje > 0 && (
@@ -414,6 +419,25 @@ const PontoManager = () => {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* -------------------------------------------------------- espelho */}
+        <TabsContent value="espelho">
+          <Card className={CARD}>
+            <CardContent className="pt-6">
+              <EspelhoDePonto
+                empresaId={empresaAtiva}
+                onArrumar={(funcionarioId, data, problema) => {
+                  setLancarInicial({
+                    pessoa: funcionarioId,
+                    data,
+                    tipo: problema === 'sem_retorno' ? 'retorno_almoco' : 'saida',
+                  });
+                  setLancando(true);
+                }}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -801,7 +825,11 @@ const PontoManager = () => {
         aberto={lancando}
         pessoas={pessoasDaEmpresa}
         souAdmin={souAdmin}
-        onFechar={() => setLancando(false)}
+        inicial={lancarInicial}
+        onFechar={() => {
+          setLancando(false);
+          setLancarInicial(null);
+        }}
         onLancar={lancarMarcacao}
       />
     </div>
