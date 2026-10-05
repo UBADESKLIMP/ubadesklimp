@@ -11,6 +11,8 @@ interface Props {
   batida: MarcacaoDoDia | null;
   /** O dia da batida, para montar a hora nova sem trocar a data. */
   dia: string;
+  /** Admin corrige direto: sem justificar e sem a batida ficar pendente. */
+  souAdmin: boolean;
   onFechar: () => void;
   onCorrigir: (
     marcacaoId: string,
@@ -24,7 +26,7 @@ interface Props {
  * do dia que está aberto na tela, porque corrigir hora é o caso real; mudar de
  * dia seria outra batida.
  */
-const CorrigirBatidaDialog = ({ batida, dia, onFechar, onCorrigir }: Props) => {
+const CorrigirBatidaDialog = ({ batida, dia, souAdmin, onFechar, onCorrigir }: Props) => {
   const [hora, setHora] = useState('');
   const [motivo, setMotivo] = useState('');
   const [salvando, setSalvando] = useState(false);
@@ -49,7 +51,7 @@ const CorrigirBatidaDialog = ({ batida, dia, onFechar, onCorrigir }: Props) => {
     onFechar();
   };
 
-  const completo = /^\d{2}:\d{2}$/.test(hora) && motivo.trim().length >= 5;
+  const completo = /^\d{2}:\d{2}$/.test(hora) && (souAdmin || motivo.trim().length >= 5);
 
   return (
     <Dialog open={Boolean(batida)} onOpenChange={(o) => !o && onFechar()}>
@@ -77,7 +79,9 @@ const CorrigirBatidaDialog = ({ batida, dia, onFechar, onCorrigir }: Props) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-blue-300/70 text-xs">Por quê</Label>
+              <Label className="text-blue-300/70 text-xs">
+                Por quê {souAdmin && <span className="text-blue-300/40">· opcional</span>}
+              </Label>
               <Textarea
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
@@ -85,8 +89,8 @@ const CorrigirBatidaDialog = ({ batida, dia, onFechar, onCorrigir }: Props) => {
                 className="bg-[#0c0c14] border-blue-500/20 text-white placeholder:text-blue-300/40 min-h-[64px]"
               />
               <p className="text-xs text-blue-300/50">
-                A tela passa a mostrar a hora nova. {batida.nome.split(' ')[0]} confirma ou contesta
-                em Meu ponto.
+                A tela passa a mostrar a hora nova.
+                {!souAdmin && ` ${batida.nome.split(' ')[0]} confirma ou contesta em Meu ponto.`}
               </p>
             </div>
 

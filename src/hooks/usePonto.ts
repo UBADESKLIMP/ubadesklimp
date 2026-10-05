@@ -106,10 +106,17 @@ export const usePontoDoDia = (empresaId: string | null, data: string) => {
   }, [empresaId, data]);
 
   const [pessoas, setPessoas] = useState<PessoaDaEmpresa[]>([]);
+  // Admin não precisa justificar nem esperar a pessoa dar ciência. A tela
+  // pergunta pro banco em vez de adivinhar pelo papel guardado no front.
+  const [souAdmin, setSouAdmin] = useState(false);
 
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    supabase.rpc('ponto_sou_admin').then(({ data }) => setSouAdmin(data === true));
+  }, []);
 
   // A lista de nomes só existe aqui, no painel: o gestor lança por alguém e
   // não sabe — nem deve saber — o PIN de ninguém.
@@ -157,7 +164,7 @@ export const usePontoDoDia = (empresaId: string | null, data: string) => {
     return r;
   };
 
-  return { marcacoes, pessoas, loading, recarregar: carregar, lancarMarcacao, corrigirMarcacao };
+  return { marcacoes, pessoas, souAdmin, loading, recarregar: carregar, lancarMarcacao, corrigirMarcacao };
 };
 
 export interface Estacao {

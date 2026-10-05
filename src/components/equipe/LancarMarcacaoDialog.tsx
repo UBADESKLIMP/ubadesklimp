@@ -26,6 +26,8 @@ const agoraLocal = () => {
 interface Props {
   aberto: boolean;
   pessoas: PessoaDaEmpresa[];
+  /** Admin lança direto: sem justificar e sem a batida ficar pendente. */
+  souAdmin: boolean;
   onFechar: () => void;
   onLancar: (
     funcionarioId: string,
@@ -39,7 +41,7 @@ interface Props {
  * Lançar batida no lugar de alguém (PRD R7). Aqui a lista de nomes é certa:
  * quem lança é o gestor, que não sabe — nem deve saber — o PIN de ninguém.
  */
-const LancarMarcacaoDialog = ({ aberto, pessoas, onFechar, onLancar }: Props) => {
+const LancarMarcacaoDialog = ({ aberto, pessoas, souAdmin, onFechar, onLancar }: Props) => {
   const [pessoa, setPessoa] = useState('');
   const [tipo, setTipo] = useState<MarcacaoTipo>('entrada');
   const [quando, setQuando] = useState(agoraLocal());
@@ -68,7 +70,7 @@ const LancarMarcacaoDialog = ({ aberto, pessoas, onFechar, onLancar }: Props) =>
     onFechar();
   };
 
-  const completo = pessoa && quando && motivo.trim().length >= 5;
+  const completo = Boolean(pessoa && quando && (souAdmin || motivo.trim().length >= 5));
 
   return (
     <Dialog
@@ -86,13 +88,15 @@ const LancarMarcacaoDialog = ({ aberto, pessoas, onFechar, onLancar }: Props) =>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex items-start gap-2 rounded-lg bg-[#f0b429]/10 border border-[#f0b429]/30 p-3">
-            <AlertTriangle className="h-4 w-4 text-[#f0b429] shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-300/80">
-              A batida sai com o seu nome e o motivo que você escrever, e a pessoa confirma ou
-              contesta em Meu ponto. É assim que ela continua valendo como prova da jornada.
-            </p>
-          </div>
+          {!souAdmin && (
+            <div className="flex items-start gap-2 rounded-lg bg-[#f0b429]/10 border border-[#f0b429]/30 p-3">
+              <AlertTriangle className="h-4 w-4 text-[#f0b429] shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-300/80">
+                A batida sai com o seu nome e o motivo que você escrever, e a pessoa confirma ou
+                contesta em Meu ponto. É assim que ela continua valendo como prova da jornada.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label className="text-blue-300/70 text-xs">Quem</Label>
@@ -140,7 +144,9 @@ const LancarMarcacaoDialog = ({ aberto, pessoas, onFechar, onLancar }: Props) =>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-blue-300/70 text-xs">Por quê</Label>
+            <Label className="text-blue-300/70 text-xs">
+              Por quê {souAdmin && <span className="text-blue-300/40">· opcional</span>}
+            </Label>
             <Textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
@@ -148,7 +154,9 @@ const LancarMarcacaoDialog = ({ aberto, pessoas, onFechar, onLancar }: Props) =>
               className="bg-[#0c0c14] border-blue-500/20 text-white placeholder:text-blue-300/40 min-h-[72px]"
             />
             <p className="text-xs text-blue-300/50">
-              Fica guardado junto com a batida. Sem motivo o registro não vale como prova.
+              {souAdmin
+                ? 'Fica guardado junto com a batida, se você escrever.'
+                : 'Fica guardado junto com a batida. Sem motivo o registro não vale como prova.'}
             </p>
           </div>
 

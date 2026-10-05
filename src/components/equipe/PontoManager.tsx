@@ -89,6 +89,7 @@ const PontoManager = () => {
   const {
     marcacoes,
     pessoas: pessoasDaEmpresa,
+    souAdmin,
     loading: loadingDia,
     lancarMarcacao,
     corrigirMarcacao,
@@ -791,6 +792,7 @@ const PontoManager = () => {
       <CorrigirBatidaDialog
         batida={corrigindo}
         dia={dia}
+        souAdmin={souAdmin}
         onFechar={() => setCorrigindo(null)}
         onCorrigir={corrigirMarcacao}
       />
@@ -798,6 +800,7 @@ const PontoManager = () => {
       <LancarMarcacaoDialog
         aberto={lancando}
         pessoas={pessoasDaEmpresa}
+        souAdmin={souAdmin}
         onFechar={() => setLancando(false)}
         onLancar={lancarMarcacao}
       />

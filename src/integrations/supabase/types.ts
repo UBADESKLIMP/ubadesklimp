@@ -2855,6 +2855,7 @@ export type Database = {
         Args: { p_estacao_token: string; p_pin: string }
         Returns: Json
       }
+      ponto_exige_ciencia: { Args: never; Returns: boolean }
       ponto_heartbeat: { Args: { p_estacao_token: string }; Returns: Json }
       ponto_ip_origem: { Args: never; Returns: unknown }
       ponto_lancar_marcacao: {
@@ -3009,6 +3010,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ponto_sou_admin: { Args: never; Returns: boolean }
       ponto_status_dispositivo: {
         Args: { p_device_id: string; p_funcionario_id: string }
         Returns: Json
