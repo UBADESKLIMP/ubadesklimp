@@ -1019,6 +1019,104 @@ export type Database = {
           },
         ]
       }
+      equipe_rodizio_pessoa: {
+        Row: {
+          created_at: string
+          lado: string
+          rodizio_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          lado: string
+          rodizio_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          lado?: string
+          rodizio_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_rodizio_pessoa_rodizio_id_fkey"
+            columns: ["rodizio_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_rodizios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_rodizio_pessoa_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_rodizio_pessoa_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      equipe_rodizios: {
+        Row: {
+          ancora: string
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          escala_a_id: string
+          escala_b_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ancora: string
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          escala_a_id: string
+          escala_b_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ancora?: string
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          escala_a_id?: string
+          escala_b_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_rodizios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_rodizios_escala_a_id_fkey"
+            columns: ["escala_a_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_rodizios_escala_b_id_fkey"
+            columns: ["escala_b_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_escalas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keep_alive_log: {
         Row: {
           id: number
@@ -2761,6 +2859,28 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      equipe_escala_do_rodizio: {
+        Args: { p_data: string; p_user: string }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          dias_semana: number[]
+          empresa_id: string
+          entrada: string
+          id: string
+          nome: string
+          saida: string
+          tol_dia_min: number
+          tol_marcacao_min: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "equipe_escalas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       equipe_fechar_competencia: {
         Args: { p_competencia: string; p_empresa_id: string }
         Returns: string
@@ -2805,6 +2925,14 @@ export type Database = {
           ocorrencias_compensadas: number
           ocorrencias_na_tolerancia: number
         }[]
+      }
+      equipe_rodizio_trocar_semanas: {
+        Args: { p_rodizio_id: string }
+        Returns: Json
+      }
+      equipe_rodizios_do_mes: {
+        Args: { p_empresa_id: string; p_mes: string }
+        Returns: Json
       }
       equipe_sugerir_medida: {
         Args: { p_colaborador_id: string; p_referencia: string }

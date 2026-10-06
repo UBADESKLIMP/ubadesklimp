@@ -137,3 +137,47 @@ export const usePontoEspelho = (
 
   return { espelho, carregando, erro, recarregar: carregar };
 };
+
+export interface RodizioSemana {
+  data: string;
+  quem: { nome: string; escala: string | null; entrada: string | null }[];
+}
+
+export interface Rodizio {
+  id: string;
+  nome: string;
+  pessoas: string[];
+  semanas: RodizioSemana[];
+}
+
+/**
+ * Revezamento de turno. É calculado a partir de uma data âncora, então não
+ * precisa de manutenção semanal — mas por isso mesmo precisa ficar à vista: se
+ * começar na semana errada, inverte tudo em silêncio.
+ */
+export const useRodizios = (empresaId: string | null, mes: string) => {
+  const [rodizios, setRodizios] = useState<Rodizio[]>([]);
+
+  const carregar = useCallback(async () => {
+    if (!empresaId) {
+      setRodizios([]);
+      return;
+    }
+    const { data } = await supabase.rpc('equipe_rodizios_do_mes', {
+      p_empresa_id: empresaId,
+      p_mes: `${mes}-01`,
+    });
+    setRodizios((data as unknown as Rodizio[]) ?? []);
+  }, [empresaId, mes]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const trocarSemanas = async (rodizioId: string) => {
+    await supabase.rpc('equipe_rodizio_trocar_semanas', { p_rodizio_id: rodizioId });
+    await carregar();
+  };
+
+  return { rodizios, trocarSemanas, recarregar: carregar };
+};

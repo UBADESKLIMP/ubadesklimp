@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
-  usePontoEspelho, hhmm, saldoHhmm, diaDaSemana, diaDoMes, mesPorExtenso,
-  PROBLEMA_LABEL, mesPassado,
-  type DiaDoEspelho, type PessoaDoEspelho,
+  usePontoEspelho, useRodizios, hhmm, saldoHhmm, diaDaSemana, diaDoMes,
+  mesPorExtenso, PROBLEMA_LABEL, mesPassado,
+  type DiaDoEspelho, type PessoaDoEspelho, type Rodizio,
 } from '@/hooks/usePontoEspelho';
 
 interface Props {
@@ -32,6 +32,7 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
   const { espelho, carregando, erro } = usePontoEspelho(
     empresaId, mes, pessoa === 'todos' ? null : pessoa
   );
+  const { rodizios, trocarSemanas } = useRodizios(empresaId, mes);
 
   // A lista do seletor não pode encolher quando o filtro já está aplicado.
   const [nomes, setNomes] = useState<{ id: string; nome: string }[]>([]);
@@ -176,6 +177,10 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
         </>
       )}
 
+      {rodizios.map((r) => (
+        <PainelDoRodizio key={r.id} rodizio={r} onTrocar={() => trocarSemanas(r.id)} />
+      ))}
+
       {/* --------------------------------------------------------- na tela */}
       {espelho?.pessoas.map((p) => (
         <CartaoDaPessoa key={p.funcionario_id} pessoa={p} onArrumar={onArrumar} />
@@ -203,6 +208,52 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
 };
 
 /* ------------------------------------------------------------------ tela */
+
+/**
+ * Quem está em qual turno a cada semana. Deduzir isso pela batida seria cômodo
+ * e errado: o horário esperado viraria o que a pessoa fez, e ninguém mais
+ * conseguiria se atrasar. Então a regra fica aqui, antes da batida — e com um
+ * botão para inverter, que é o único jeito de errar um revezamento calculado.
+ */
+const PainelDoRodizio = ({ rodizio, onTrocar }: { rodizio: Rodizio; onTrocar: () => void }) => (
+  <section className="rounded-xl border border-blue-500/15 bg-[#0c0c14] px-5 py-4 mb-6">
+    <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
+      <h3 className="text-white text-sm">
+        {rodizio.nome}
+        <span className="text-blue-300/50 font-normal"> — {rodizio.pessoas.join(' e ')}</span>
+      </h3>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 text-xs text-blue-300/70 hover:text-white hover:bg-blue-500/10"
+        onClick={onTrocar}
+      >
+        Trocar as semanas
+      </Button>
+    </div>
+
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {rodizio.semanas.map((sem) => (
+        <div key={sem.data} className="rounded-lg border border-blue-500/10 px-3 py-2">
+          <p className="font-mono text-xs text-blue-300/40 mb-1.5">
+            {diaDaSemana(sem.data)} {diaDoMes(sem.data)}
+          </p>
+          {sem.quem.map((q) => (
+            <p key={q.nome} className="text-sm text-blue-100/80 flex justify-between gap-2">
+              <span className="truncate">{q.nome}</span>
+              <span className="font-mono tabular-nums text-white">{q.entrada}</span>
+            </p>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    <p className="text-xs text-blue-300/50 mt-3">
+      Se as semanas estiverem invertidas, use "Trocar as semanas" — o revezamento inteiro vira,
+      para trás e para frente.
+    </p>
+  </section>
+);
 
 const Carimbo = ({ texto, grau }: { texto: string; grau: 'furo' | 'aviso' }) => (
   <span
