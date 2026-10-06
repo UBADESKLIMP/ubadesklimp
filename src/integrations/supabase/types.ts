@@ -477,6 +477,46 @@ export type Database = {
           },
         ]
       }
+      equipe_escalas_pessoa: {
+        Row: {
+          created_at: string
+          escala_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          escala_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          escala_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_escalas_pessoa_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_escalas_pessoa_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "equipe_funcionarios_gestor"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_escalas_pessoa_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       equipe_eventos_falha: {
         Row: {
           created_at: string
@@ -2699,6 +2739,28 @@ export type Database = {
         Returns: number
       }
       equipe_empresas_visiveis: { Args: never; Returns: string[] }
+      equipe_escala_do_dia: {
+        Args: { p_data: string; p_user: string }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          dias_semana: number[]
+          empresa_id: string
+          entrada: string
+          id: string
+          nome: string
+          saida: string
+          tol_dia_min: number
+          tol_marcacao_min: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "equipe_escalas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       equipe_fechar_competencia: {
         Args: { p_competencia: string; p_empresa_id: string }
         Returns: string

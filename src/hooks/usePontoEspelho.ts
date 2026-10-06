@@ -10,6 +10,12 @@ export interface DiaDoEspelho {
   data: string;
   previsto: boolean;
   fora_da_escala: boolean;
+  /** Qual escala valeu neste dia — no sábado é o turno da pessoa. */
+  escala_nome: string | null;
+  escala_entrada: string | null;
+  escala_saida: string | null;
+  /** Minutos previstos neste dia; 0 quando o dia não é de trabalho. */
+  jornada_min: number;
   entrada: string | null;
   saida_almoco: string | null;
   retorno_almoco: string | null;

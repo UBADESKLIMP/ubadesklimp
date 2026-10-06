@@ -21,6 +21,7 @@ interface Escala {
   nome: string;
   empresa_id: string;
   entrada: string;
+  dias_semana: number[] | null;
 }
 
 const SEM_VALOR = 'nenhum';
@@ -37,6 +38,8 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const [escalas, setEscalas] = useState<Escala[]>([]);
   const [empresaId, setEmpresaId] = useState<string>(SEM_VALOR);
   const [escalaId, setEscalaId] = useState<string>(SEM_VALOR);
+  const [escalaSabadoId, setEscalaSabadoId] = useState<string>(SEM_VALOR);
+  const [escalaSabadoOriginal, setEscalaSabadoOriginal] = useState<string>(SEM_VALOR);
   const [papel, setPapel] = useState<string>(SEM_VALOR);
   const [almocoPrevisto, setAlmocoPrevisto] = useState('');
   const [duracaoAlmoco, setDuracaoAlmoco] = useState('120');
@@ -63,9 +66,13 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         { data: member },
         { data: papelRow },
         { data: aberturaRow },
+        { data: escalasExtras },
       ] = await Promise.all([
           supabase.from('empresas').select('id, razao_social').eq('ativo', true).order('razao_social'),
-          supabase.from('equipe_escalas').select('id, nome, empresa_id, entrada').eq('ativo', true),
+          supabase
+            .from('equipe_escalas')
+            .select('id, nome, empresa_id, entrada, dias_semana')
+            .eq('ativo', true),
           supabase
             .from('staff_members')
             .select(
@@ -75,6 +82,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
             .maybeSingle(),
           supabase.from('equipe_papeis').select('papel').eq('user_id', userId).maybeSingle(),
           supabase.from('ponto_permissoes').select('permissao').eq('user_id', userId),
+          supabase.from('equipe_escalas_pessoa').select('escala_id').eq('user_id', userId),
         ]);
 
       if (cancelado) return;
@@ -96,6 +104,15 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setPodeForaDaRede(permissoes.includes('bater_pelo_painel'));
       setPodeForaDaRedeOriginal(permissoes.includes('bater_pelo_painel'));
 
+      // Turno de sábado: é uma escala de um dia só que a pessoa segue além da
+      // principal. Guardada no genérico, mostrada aqui como um campo direto.
+      const extras = ((escalasExtras ?? []) as { escala_id: string }[]).map((x) => x.escala_id);
+      const sab = (escalasData ?? []).find(
+        (e) => extras.includes(e.id) && (e.dias_semana ?? []).includes(6)
+      );
+      setEscalaSabadoId(sab?.id ?? SEM_VALOR);
+      setEscalaSabadoOriginal(sab?.id ?? SEM_VALOR);
+
       // O café é por empresa: sem ele ligado, os modelos nem podem ser escolhidos.
       if (member?.empresa_id) {
         const { data: ativo } = await supabase.rpc('ponto_cafe_ativo', {
@@ -116,6 +133,11 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const escalasDaEmpresa = escalas.filter(
     (e) => empresaId === SEM_VALOR || e.empresa_id === empresaId
   );
+  // Uma escala de sábado só é oferecida no campo de sábado, e vice-versa.
+  const eSoSabado = (e: Escala) =>
+    (e.dias_semana ?? []).length === 1 && (e.dias_semana ?? []).includes(6);
+  const escalasDaSemana = escalasDaEmpresa.filter((e) => !eSoSabado(e));
+  const turnosDeSabado = escalasDaEmpresa.filter(eSoSabado);
 
   const salvar = async () => {
     setSalvando(true);
@@ -136,6 +158,24 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
       setSalvando(false);
       toast({ title: 'Não foi possível salvar', description: membroError.message, variant: 'destructive' });
       return;
+    }
+
+    // Troca o turno de sábado só quando mudou: a tabela é genérica e pode
+    // guardar outras escalas que não são deste campo.
+    if (escalaSabadoId !== escalaSabadoOriginal) {
+      if (escalaSabadoOriginal !== SEM_VALOR) {
+        await supabase
+          .from('equipe_escalas_pessoa')
+          .delete()
+          .eq('user_id', userId)
+          .eq('escala_id', escalaSabadoOriginal);
+      }
+      if (escalaSabadoId !== SEM_VALOR) {
+        await supabase
+          .from('equipe_escalas_pessoa')
+          .insert({ user_id: userId, escala_id: escalaSabadoId });
+      }
+      setEscalaSabadoOriginal(escalaSabadoId);
     }
 
     if (papel === SEM_VALOR) {
@@ -275,20 +315,41 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         </div>
 
         <div className="space-y-1">
-          <Label>Escala</Label>
+          <Label>Escala da semana</Label>
           <Select value={escalaId} onValueChange={setEscalaId}>
             <SelectTrigger>
               <SelectValue placeholder="Sem escala" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={SEM_VALOR}>Sem escala</SelectItem>
-              {escalasDaEmpresa.map((e) => (
+              {escalasDaSemana.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
                   {e.nome} (entra {e.entrada.slice(0, 5)})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-1">
+          <Label>Turno de sábado</Label>
+          <Select value={escalaSabadoId} onValueChange={setEscalaSabadoId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Não trabalha sábado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={SEM_VALOR}>Não trabalha sábado</SelectItem>
+              {turnosDeSabado.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            No sábado vale este horário, não o da semana. É ele que decide o atraso e as horas
+            previstas do dia.
+          </p>
         </div>
 
         <div className="space-y-1">
