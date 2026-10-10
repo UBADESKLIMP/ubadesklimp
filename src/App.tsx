@@ -9,6 +9,7 @@ import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Ponto from "./pages/Ponto";
 import PontoQr from "./pages/PontoQr";
+import Entregas from "./pages/Entregas";
 import GuardaQuiosque from "./components/ponto/GuardaQuiosque";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
@@ -54,6 +55,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/ponto" element={<Ponto />} />
               <Route path="/ponto/q/:token" element={<PontoQr />} />
+              {/* Fora do /admin de propósito: o entregador não tem conta de
+                  painel, entra pelo PIN como no ponto. */}
+              <Route path="/entregas" element={<Entregas />} />
               <Route 
                 path="/profile" 
                 element={

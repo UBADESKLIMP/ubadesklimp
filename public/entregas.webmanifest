@@ -1,0 +1,19 @@
+{
+  "name": "Entregas Ubadesklimp",
+  "short_name": "Entregas",
+  "description": "A rota do dia e o registro de cada parada",
+  "start_url": "/entregas",
+  "scope": "/entregas",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F6F3",
+  "theme_color": "#0F6B5C",
+  "icons": [
+    {
+      "src": "/ponto-icone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

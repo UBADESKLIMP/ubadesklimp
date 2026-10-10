@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { z } from 'zod';
 
 const Auth = () => {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const [params] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
@@ -23,9 +24,14 @@ const Auth = () => {
     confirmPassword: ''
   });
 
+  // Quem chegou aqui de outra tela volta pra ela depois de entrar. Só caminho
+  // interno: um "next" apontando pra fora viraria redirecionamento aberto.
+  const proximo = params.get('next');
+  const destino = proximo && proximo.startsWith('/') && !proximo.startsWith('//') ? proximo : '/';
+
   // Redirect if already authenticated
   if (user && !authLoading) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={destino} replace />;
   }
 
   const handleSubmit = async (type: 'signin' | 'signup') => {
