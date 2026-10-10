@@ -388,15 +388,38 @@ export interface ResultadoRegistro extends ResultadoRpc {
  */
 const SEGUNDOS_ESPERANDO_GPS = 8;
 
+/**
+ * O timeout do getCurrentPosition não vale enquanto o navegador está mostrando
+ * o pedido de permissão: se ninguém tocar naquela bolinha, nenhum dos dois
+ * callbacks acontece, e a tela fica em "Registrando..." pra sempre. Na rua isso
+ * é a entrega sumindo sem ninguém perceber. Por isso a contagem é nossa, por
+ * fora, e vale mesmo que o navegador nunca responda.
+ */
 const pegarLocalizacao = (): Promise<GeolocationCoordinates | null> =>
   new Promise((resolve) => {
     if (!('geolocation' in navigator)) {
       resolve(null);
       return;
     }
+
+    let respondido = false;
+    const encerrar = (coords: GeolocationCoordinates | null) => {
+      if (respondido) return;
+      respondido = true;
+      resolve(coords);
+    };
+
+    const desistir = setTimeout(() => encerrar(null), SEGUNDOS_ESPERANDO_GPS * 1000);
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => resolve(pos.coords),
-      () => resolve(null),
+      (pos) => {
+        clearTimeout(desistir);
+        encerrar(pos.coords);
+      },
+      () => {
+        clearTimeout(desistir);
+        encerrar(null);
+      },
       { enableHighAccuracy: true, timeout: SEGUNDOS_ESPERANDO_GPS * 1000, maximumAge: 30000 }
     );
   });
