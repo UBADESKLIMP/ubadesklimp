@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 .superpowers/
+
+# Estado de ferramenta local, nao do projeto
+.claude/
+.playwright-mcp/
+.sim.json
