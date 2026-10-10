@@ -18,6 +18,7 @@ import StaffManager from '@/components/StaffManager';
 import SupplierManager from '@/components/SupplierManager';
 import MissingProductsManager from '@/components/MissingProductsManager';
 import CotacoesManager from '@/components/quotes/CotacoesManager';
+import EntregasManager from '@/components/entregas/EntregasManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import EquipeManager from '@/components/equipe/EquipeManager';
@@ -362,6 +363,9 @@ const Admin = () => {
 
       case 'quotes':
         return <CotacoesManager products={products} />;
+
+      case 'entregas':
+        return <EntregasManager />;
 
       case 'staff':
         return <StaffManager />;

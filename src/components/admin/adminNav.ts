@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Shield,
   Receipt,
+  Route,
   Users,
   Clock,
   ClipboardCheck as ClipboardCheckIcon,
@@ -29,6 +30,7 @@ export type AdminSection =
   | 'suppliers'
   | 'missing'
   | 'quotes'
+  | 'entregas'
   | 'staff'
   | 'equipe'
   | 'ponto'
@@ -71,6 +73,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'suppliers', label: 'Fornecedores', icon: Truck, permission: 'fornecedores', group: 'operacao' },
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, permission: 'faltantes', group: 'operacao' },
   { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
+  // Entregas fica no eixo de equipe, não no de staff_permission: as RPCs do
+  // módulo guardam por is_equipe_gestor_ou_admin(), então quem monta a rota é
+  // quem manda na equipe — não quem tem permissão de catálogo.
+  { key: 'entregas', label: 'Entregas', icon: Route, equipeAcesso: 'gestor_ou_admin', group: 'operacao' },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
   { key: 'equipe', label: 'Atrasos', icon: Users, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
   { key: 'ponto', label: 'Ponto', icon: Clock, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
