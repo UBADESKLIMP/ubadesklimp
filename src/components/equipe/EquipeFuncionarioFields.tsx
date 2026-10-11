@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,12 @@ import { useEquipeAccess, type EquipePapel } from '@/hooks/useEquipeAccess';
 
 interface Props {
   userId: string;
+  /**
+   * Quando o pai entrega esta função, ele passa a mandar no salvamento e este
+   * bloco esconde o próprio botão. Dois "Salvar" no mesmo formulário é um
+   * convite a salvar metade e achar que salvou tudo.
+   */
+  onRegistrarSalvar?: (salvar: () => Promise<boolean>) => void;
 }
 
 interface Empresa {
@@ -31,7 +37,7 @@ const SEM_VALOR = 'nenhum';
  * O caminho do termo de adesão só é lido/gravado aqui porque esta tela é
  * admin-only — gestor usa a view equipe_funcionarios_gestor, que não expõe o path.
  */
-const EquipeFuncionarioFields = ({ userId }: Props) => {
+const EquipeFuncionarioFields = ({ userId, onRegistrarSalvar }: Props) => {
   const { toast } = useToast();
   const { isEquipeAdmin } = useEquipeAccess();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -139,7 +145,23 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
   const escalasDaSemana = escalasDaEmpresa.filter((e) => !eSoSabado(e));
   const turnosDeSabado = escalasDaEmpresa.filter(eSoSabado);
 
-  const salvar = async () => {
+  const salvar = async (): Promise<boolean> => {
+    // Este bloco nem aparece pra quem não é admin de equipe: se ele gravasse
+    // assim mesmo, gravaria campo que ninguém viu nem preencheu.
+    if (!isEquipeAdmin) return true;
+
+    // E nunca gravar o que ainda não foi lido. Antes do load terminar, empresa,
+    // escala e papel valem "nenhum" — salvar nesse instante apaga o vínculo de
+    // quem já tinha, calado. Aconteceu uma vez, com o cadastro do entregador.
+    if (carregando) {
+      toast({
+        title: 'Os dados de equipe ainda estavam carregando',
+        description: 'Nada foi alterado. Espere um instante e salve de novo.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     setSalvando(true);
 
     const { error: membroError } = await supabase
@@ -157,7 +179,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
     if (membroError) {
       setSalvando(false);
       toast({ title: 'Não foi possível salvar', description: membroError.message, variant: 'destructive' });
-      return;
+      return false;
     }
 
     // Troca o turno de sábado só quando mudou: a tabela é genérica e pode
@@ -191,7 +213,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           description: papelError.message,
           variant: 'destructive',
         });
-        return;
+        return false;
       }
     }
 
@@ -210,7 +232,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           description: modeloError.message,
           variant: 'destructive',
         });
-        return;
+        return false;
       }
       setModeloOriginal(modelo);
     }
@@ -238,7 +260,7 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           description: permError.message,
           variant: 'destructive',
         });
-        return;
+        return false;
       }
       setPodeAbrirLojaOriginal(podeAbrirLoja);
     }
@@ -264,14 +286,25 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
           description: foraError.message,
           variant: 'destructive',
         });
-        return;
+        return false;
       }
       setPodeForaDaRedeOriginal(podeForaDaRede);
     }
 
     setSalvando(false);
-    toast({ title: 'Dados de equipe salvos' });
+    // Quem manda no salvamento avisa uma vez só; aqui o aviso é nosso
+    // apenas quando este bloco ainda tem o próprio botão.
+    if (!onRegistrarSalvar) toast({ title: 'Dados de equipe salvos' });
+    return true;
   };
+
+  // O pai guarda uma referência estável que sempre chama a versão atual:
+  // salvar() lê uma dúzia de estados, e congelar a função congelaria eles.
+  const salvarRef = useRef(salvar);
+  salvarRef.current = salvar;
+  useEffect(() => {
+    onRegistrarSalvar?.(() => salvarRef.current());
+  }, [onRegistrarSalvar]);
 
   if (!isEquipeAdmin) return null;
 
@@ -506,9 +539,11 @@ const EquipeFuncionarioFields = ({ userId }: Props) => {
         </div>
       </div>
 
-      <Button size="sm" variant="outline" onClick={salvar} disabled={salvando}>
-        {salvando ? 'Salvando...' : 'Salvar dados de equipe'}
-      </Button>
+      {!onRegistrarSalvar && (
+        <Button size="sm" variant="outline" onClick={salvar} disabled={salvando}>
+          {salvando ? 'Salvando...' : 'Salvar dados de equipe'}
+        </Button>
+      )}
     </div>
   );
 };

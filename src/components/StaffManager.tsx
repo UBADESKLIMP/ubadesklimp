@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import EquipeFuncionarioFields from '@/components/equipe/EquipeFuncionarioFields';
 import { Plus, Trash2, Shield, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,18 @@ import {
 } from '@/components/ui/dialog';
 import { useStaffMembers, StaffMember } from '@/hooks/useStaffMembers';
 import { StaffPermission } from '@/hooks/useStaffAccess';
+import { toast } from '@/hooks/use-toast';
+import {
+  funcoesConhecidas,
+  normalizarFuncao,
+  permissoesSugeridas,
+} from '@/lib/funcoesDaEquipe';
 import AdminLoadingState from './admin/AdminLoadingState';
 import AdminEmptyState from './admin/AdminEmptyState';
 import AdminPageHeader from './admin/AdminPageHeader';
+
+/** Uma lista só para todos os campos de função da tela. */
+const LISTA_DE_FUNCOES = 'funcoes-da-equipe';
 
 const PERMISSION_LABELS: Record<StaffPermission, string> = {
   faltantes: 'Faltantes',
@@ -34,6 +43,7 @@ interface StaffFormState {
   username: string;
   password: string;
   displayName: string;
+  cargo: string;
   isAdmin: boolean;
   permissions: Set<StaffPermission>;
 }
@@ -42,14 +52,21 @@ const emptyForm = (): StaffFormState => ({
   username: '',
   password: '',
   displayName: '',
+  cargo: '',
   isAdmin: false,
   permissions: new Set(),
 });
 
 const StaffManager = () => {
-  const { staffMembers, loading, createStaffMember, updatePermissions, updateDisplayName, changePassword, deleteStaffMember } =
+  const { staffMembers, loading, createStaffMember, updatePermissions, updatePerfil, changePassword, deleteStaffMember } =
     useStaffMembers();
   const adminCount = staffMembers.filter((m) => m.is_admin).length;
+
+  // As sugeridas mais as que já estão em uso: digitou uma vez, vira opção.
+  const funcoes = useMemo(
+    () => funcoesConhecidas(staffMembers.map((m) => m.cargo)),
+    [staffMembers]
+  );
 
   // Administradores em cima: são poucos, mudam pouco e é quem se procura
   // primeiro quando algo está errado. Dentro de cada grupo, ordem alfabética.
@@ -64,9 +81,17 @@ const StaffManager = () => {
   const [editPermissions, setEditPermissions] = useState<Set<StaffPermission>>(new Set());
   const [editIsAdmin, setEditIsAdmin] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState('');
+  const [editCargo, setEditCargo] = useState('');
   const [editNewPassword, setEditNewPassword] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // O bloco de Equipe entrega aqui o próprio salvamento, pra existir um botão
+  // "Salvar" só na tela em vez de dois que gravam metades diferentes.
+  const salvarEquipeRef = useRef<(() => Promise<boolean>) | null>(null);
+  const registrarSalvarEquipe = useCallback((salvar: () => Promise<boolean>) => {
+    salvarEquipeRef.current = salvar;
+  }, []);
 
   const togglePermission = (set: Set<StaffPermission>, permission: StaffPermission): Set<StaffPermission> => {
     const next = new Set(set);
@@ -83,6 +108,7 @@ const StaffManager = () => {
         username: createForm.username,
         password: createForm.password,
         displayName: createForm.displayName || undefined,
+        cargo: normalizarFuncao(createForm.cargo, funcoes) || undefined,
         isAdmin: createForm.isAdmin,
         permissions: Array.from(createForm.permissions),
       });
@@ -100,7 +126,9 @@ const StaffManager = () => {
     setEditIsAdmin(member.is_admin);
     setEditPermissions(new Set(member.permissions));
     setEditDisplayName(member.display_name);
+    setEditCargo(member.cargo ?? '');
     setEditNewPassword('');
+    salvarEquipeRef.current = null;
   };
 
   const saveEditing = async () => {
@@ -108,10 +136,18 @@ const StaffManager = () => {
     setIsSavingProfile(true);
     try {
       const trimmedName = editDisplayName.trim();
-      await Promise.all([
-        updatePermissions(editingUserId, editIsAdmin, Array.from(editPermissions)),
-        trimmedName ? updateDisplayName(editingUserId, trimmedName) : Promise.resolve(),
-      ]);
+      await updatePermissions(editingUserId, editIsAdmin, Array.from(editPermissions));
+      await updatePerfil(editingUserId, {
+        displayName: trimmedName || undefined,
+        cargo: normalizarFuncao(editCargo, funcoes),
+      });
+
+      // Os campos de Equipe avisam sozinhos quando falham, e o que já foi
+      // gravado acima continua gravado — por isso não desfaz nem esconde o erro.
+      const equipeOk = salvarEquipeRef.current ? await salvarEquipeRef.current() : true;
+      if (!equipeOk) return;
+
+      toast({ title: 'Funcionário salvo' });
       setEditingUserId(null);
     } catch {
       // erro já mostrado via toast dentro dos hooks
@@ -140,6 +176,12 @@ const StaffManager = () => {
 
   return (
     <Card>
+      {/* Uma lista só, usada pelo campo de função do cadastro e de cada edição. */}
+      <datalist id={LISTA_DE_FUNCOES}>
+        {funcoes.map((f) => (
+          <option key={f} value={f} />
+        ))}
+      </datalist>
       <CardHeader className="bg-[#12121a] border-b border-blue-500/20 rounded-t-lg">
         <AdminPageHeader
           icon={Shield}
@@ -190,6 +232,30 @@ const StaffManager = () => {
                   value={createForm.displayName}
                   onChange={(e) => setCreateForm((f) => ({ ...f, displayName: e.target.value }))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="staff-cargo">Função</Label>
+                <Input
+                  id="staff-cargo"
+                  list={LISTA_DE_FUNCOES}
+                  placeholder="Entregador"
+                  value={createForm.cargo}
+                  onChange={(e) => {
+                    const cargo = e.target.value;
+                    const sugestao = permissoesSugeridas(cargo);
+                    setCreateForm((f) => ({
+                      ...f,
+                      cargo,
+                      // Cadastro novo não tem nada a perder: a função já deixa
+                      // as caixas prováveis marcadas e quem cadastra corrige.
+                      permissions: sugestao ? new Set(sugestao) : f.permissions,
+                    }));
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  O que a pessoa faz na loja. Serve de etiqueta e sugere as permissões abaixo — não
+                  manda nelas. Pode escrever uma função que não está na lista.
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -255,7 +321,14 @@ const StaffManager = () => {
               <div className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{member.display_name}</p>
+                    <p className="font-medium">
+                      {member.display_name}
+                      {member.cargo && (
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                          {member.cargo}
+                        </span>
+                      )}
+                    </p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       {member.is_admin ? (
                         <Badge>Administrador</Badge>
@@ -295,6 +368,46 @@ const StaffManager = () => {
                         value={editDisplayName}
                         onChange={(e) => setEditDisplayName(e.target.value)}
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`edit-cargo-${member.user_id}`}>Função</Label>
+                      <Input
+                        id={`edit-cargo-${member.user_id}`}
+                        list={LISTA_DE_FUNCOES}
+                        placeholder="Sem função definida"
+                        value={editCargo}
+                        onChange={(e) => setEditCargo(e.target.value)}
+                      />
+                      {/* Em quem já existe a sugestão nunca mexe sozinha: trocar
+                          permissão de quem já trabalha é mudança de acesso, e
+                          isso é escolha de quem está olhando a tela. */}
+                      {!editIsAdmin &&
+                        (() => {
+                          const sugestao = permissoesSugeridas(editCargo);
+                          if (!sugestao) return null;
+                          const iguais =
+                            sugestao.length === editPermissions.size &&
+                            sugestao.every((p) => editPermissions.has(p));
+                          if (iguais) return null;
+                          return (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-xs text-muted-foreground">
+                                {sugestao.length === 0
+                                  ? 'Esta função normalmente não precisa de nenhuma permissão de painel.'
+                                  : `Esta função normalmente usa: ${sugestao
+                                      .map((p) => PERMISSION_LABELS[p])
+                                      .join(', ')}.`}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditPermissions(new Set(sugestao))}
+                              >
+                                Usar essas
+                              </Button>
+                            </div>
+                          );
+                        })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -351,7 +464,10 @@ const StaffManager = () => {
                         </Button>
                       </div>
                     </div>
-                    <EquipeFuncionarioFields userId={member.user_id} />
+                    <EquipeFuncionarioFields
+                      userId={member.user_id}
+                      onRegistrarSalvar={registrarSalvarEquipe}
+                    />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={saveEditing} disabled={isSavingProfile}>
                         {isSavingProfile ? 'Salvando...' : 'Salvar'}

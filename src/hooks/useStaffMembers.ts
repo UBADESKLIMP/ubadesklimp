@@ -8,6 +8,8 @@ export interface StaffMember {
   user_id: string;
   is_admin: boolean;
   display_name: string;
+  /** O que a pessoa faz na loja. Etiqueta, não permissão — ver funcoesDaEquipe.ts. */
+  cargo: string | null;
   created_at: string;
   permissions: StaffPermission[];
 }
@@ -22,7 +24,7 @@ export const useStaffMembers = () => {
       const [membersResult, permissionsResult] = await Promise.all([
         supabase
           .from('staff_members')
-          .select('user_id,is_admin,display_name,created_at')
+          .select('user_id,is_admin,display_name,cargo,created_at')
           .order('created_at', { ascending: true }),
         supabase.from('staff_permissions').select('user_id,permission'),
       ]);
@@ -58,17 +60,27 @@ export const useStaffMembers = () => {
     username: string;
     password: string;
     displayName?: string;
+    cargo?: string;
     isAdmin: boolean;
     permissions: StaffPermission[];
   }) => {
+    const { cargo, ...paraFuncao } = input;
     const { data, error } = await supabase.functions.invoke('criar-funcionario', {
-      body: input,
+      body: paraFuncao,
     });
 
     if (error) {
       const message = await extractFunctionErrorMessage(error, 'Não foi possível criar o funcionário.');
       toast({ title: 'Erro ao criar funcionário', description: message, variant: 'destructive' });
       throw error;
+    }
+
+    // A função vai num update à parte, de propósito: a edge function cria a
+    // conta no auth e não deve ser redeployada por causa de um campo de
+    // etiqueta. Se este update falhar, a conta continua válida — é só editar.
+    const novoId = (data as { userId?: string } | null)?.userId;
+    if (cargo && novoId) {
+      await supabase.from('staff_members').update({ cargo }).eq('user_id', novoId);
     }
 
     toast({ title: 'Funcionário criado', description: `${input.username} já pode fazer login.` });
@@ -94,7 +106,8 @@ export const useStaffMembers = () => {
         if (insertError) throw insertError;
       }
 
-      toast({ title: 'Permissões atualizadas' });
+      // Sem toast aqui: quem salva o funcionário grava várias coisas de uma vez
+      // e um aviso por parte vira enxurrada. O aviso único é de quem chamou.
       await fetchStaffMembers();
     } catch (error) {
       console.error('Error updating staff permissions:', error);
@@ -107,21 +120,24 @@ export const useStaffMembers = () => {
     }
   };
 
-  const updateDisplayName = async (userId: string, displayName: string) => {
-    try {
-      const { error } = await supabase
-        .from('staff_members')
-        .update({ display_name: displayName })
-        .eq('user_id', userId);
-      if (error) throw error;
+  const updatePerfil = async (
+    userId: string,
+    perfil: { displayName?: string; cargo?: string | null }
+  ) => {
+    const mudancas: { display_name?: string; cargo?: string | null } = {};
+    if (perfil.displayName !== undefined) mudancas.display_name = perfil.displayName;
+    if (perfil.cargo !== undefined) mudancas.cargo = perfil.cargo || null;
+    if (Object.keys(mudancas).length === 0) return;
 
-      toast({ title: 'Nome atualizado' });
+    try {
+      const { error } = await supabase.from('staff_members').update(mudancas).eq('user_id', userId);
+      if (error) throw error;
       await fetchStaffMembers();
     } catch (error) {
-      console.error('Error updating staff display name:', error);
+      console.error('Error updating staff profile:', error);
       toast({
-        title: 'Erro ao atualizar nome',
-        description: 'Não foi possível salvar o nome de exibição.',
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar o nome e a função.',
         variant: 'destructive',
       });
       throw error;
@@ -166,7 +182,7 @@ export const useStaffMembers = () => {
     loading,
     createStaffMember,
     updatePermissions,
-    updateDisplayName,
+    updatePerfil,
     changePassword,
     deleteStaffMember,
     refetch: fetchStaffMembers,
