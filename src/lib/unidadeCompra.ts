@@ -1,39 +1,23 @@
 export type UnidadeCompra = 'unidade' | 'caixa';
 
 /**
- * Lê a observação que o fornecedor mandou junto do preço e diz se ela indica
- * compra por caixa.
+ * Como a loja compra por padrão: caixa.
  *
- * Os padrões saíram das observações reais das cotações, não de suposição:
- * "CXA 1X6", "CXA 10X10", "Amable, CXA 1X12" (o CXA pode vir depois de outra
- * informação), "Maxi caixa c/12". Fica de fora o que não diz nada sobre
- * embalagem de compra — "3L", "500ml", "6500K Bivolt", "Ourolux", "Ref 3796".
+ * Era unidade, e a unidade vinha de uma leitura da observação do fornecedor
+ * ("CXA 1X6", "caixa c/12") pra sugerir caixa quando o texto dizia. Na prática
+ * a loja reabastece em caixa quase sempre, e o padrão errado custava um toque
+ * por item na hora de fechar o pedido — item nenhum some por isso, mas o
+ * trabalho repetido some.
  *
- * "FD" (fardo) e "Pack" também são compra em volume, mas não são caixa e o
- * sistema só tem unidade/caixa — ficam de fora de propósito, pra sugestão
- * errada não passar batida. Quem decide é a pessoa.
+ * Caixa como padrão engloba o que aquela leitura fazia: ela só sabia apontar
+ * caixa, nunca o contrário. O que ficou de fora continua fora — "FD" (fardo) e
+ * "Pack" também são volume e não são caixa, e o sistema só tem unidade/caixa.
+ *
+ * O que já foi decidido vence o padrão: quem marcou "un" num item não vê a
+ * marca voltar pra cx sozinha.
  */
-export const observacaoIndicaCaixa = (observacao: string | null | undefined): boolean => {
-  if (!observacao) return false;
+export const PADRAO_UNIDADE_COMPRA: UnidadeCompra = 'caixa';
 
-  const texto = observacao
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
-
-  // "cxa 1x6", "cx 12", "caixa c/12" — sempre como palavra inteira, pra não
-  // casar com pedaço de outra palavra.
-  return /\b(cxa?|caixas?)\b/.test(texto);
-};
-
-/**
- * O que mostrar marcado: o que já foi decidido vence; sem decisão, a
- * observação sugere.
- */
 export const unidadeSugerida = (
-  gravada: UnidadeCompra | null | undefined,
-  observacao: string | null | undefined
-): UnidadeCompra => {
-  if (gravada) return gravada;
-  return observacaoIndicaCaixa(observacao) ? 'caixa' : 'unidade';
-};
+  gravada: UnidadeCompra | null | undefined
+): UnidadeCompra => gravada ?? PADRAO_UNIDADE_COMPRA;

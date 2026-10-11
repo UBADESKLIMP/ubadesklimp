@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { observacaoIndicaCaixa, unidadeSugerida, type UnidadeCompra } from '@/lib/unidadeCompra';
+import { PADRAO_UNIDADE_COMPRA, unidadeSugerida, type UnidadeCompra } from '@/lib/unidadeCompra';
 
 export type { UnidadeCompra } from '@/lib/unidadeCompra';
 
@@ -70,7 +70,7 @@ const ConfirmarQuantidadesDialog = ({
     );
     setUnidades(
       Object.fromEntries(
-        itens.map((i) => [i.itemId, unidadeSugerida(i.unidadeCompra, i.observacao)])
+        itens.map((i) => [i.itemId, unidadeSugerida(i.unidadeCompra)])
       )
     );
   }, [open, itens]);
@@ -93,7 +93,7 @@ const ConfirmarQuantidadesDialog = ({
     try {
       const linhas: Record<string, LinhaConfirmada> = {};
       for (const [itemId, quantidade] of Object.entries(parsed)) {
-        linhas[itemId] = { quantidade, unidadeCompra: unidades[itemId] ?? 'unidade' };
+        linhas[itemId] = { quantidade, unidadeCompra: unidades[itemId] ?? PADRAO_UNIDADE_COMPRA };
       }
       await onConfirmar(linhas);
       onOpenChange(false);
@@ -130,15 +130,12 @@ const ConfirmarQuantidadesDialog = ({
                   {item.observacao && (
                     <p className="text-xs text-muted-foreground">
                       Fornecedor anotou: {item.observacao}
-                      {!item.unidadeCompra && observacaoIndicaCaixa(item.observacao) && (
-                        <span className="text-primary"> · marcamos cx por isso</span>
-                      )}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
                     {formatPrice(item.unitPrice)} cada
                     {qtd
-                      ? ` · ${qtd} ${(unidades[item.itemId] ?? 'unidade') === 'caixa' ? 'cx' : 'un'} = ${formatPrice(qtd * item.unitPrice)}`
+                      ? ` · ${qtd} ${(unidades[item.itemId] ?? PADRAO_UNIDADE_COMPRA) === 'caixa' ? 'cx' : 'un'} = ${formatPrice(qtd * item.unitPrice)}`
                       : ''}
                   </p>
                 </div>
@@ -154,10 +151,12 @@ const ConfirmarQuantidadesDialog = ({
                   className="h-10 w-20 shrink-0"
                 />
 
-                {/* "10" sozinho é ambíguo pro fornecedor: 10 frascos ou 10 caixas? */}
+                {/* "10" sozinho é ambíguo pro fornecedor: 10 frascos ou 10 caixas?
+                    Caixa vem primeiro porque é o padrão: o que está marcado é o
+                    primeiro que o olho encontra. */}
                 <div className="flex shrink-0 rounded-md border overflow-hidden">
-                  {(['unidade', 'caixa'] as UnidadeCompra[]).map((opcao) => {
-                    const ativo = (unidades[item.itemId] ?? 'unidade') === opcao;
+                  {(['caixa', 'unidade'] as UnidadeCompra[]).map((opcao) => {
+                    const ativo = (unidades[item.itemId] ?? PADRAO_UNIDADE_COMPRA) === opcao;
                     return (
                       <button
                         key={opcao}

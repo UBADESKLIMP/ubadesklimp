@@ -136,7 +136,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
       name: d.name,
       quantity: d.quantity ?? 1,
       unitPrice: d.unitPrice,
-      unidadeCompra: unidadeSugerida(d.unidadeCompra, d.observacao),
+      unidadeCompra: unidadeSugerida(d.unidadeCompra),
     }));
 
   const handleArchive = async () => {
