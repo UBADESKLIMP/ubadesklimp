@@ -2176,6 +2176,38 @@ export type Database = {
           },
         ]
       }
+      product_purchase_info: {
+        Row: {
+          product_id: string
+          purchase_max_quantity: string | null
+          purchase_min_quantity: string | null
+          purchase_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          product_id: string
+          purchase_max_quantity?: string | null
+          purchase_min_quantity?: string | null
+          purchase_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          product_id?: string
+          purchase_max_quantity?: string | null
+          purchase_min_quantity?: string | null
+          purchase_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_purchase_info_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_fragrances: {
         Row: {
           available_literages: string[] | null

@@ -59,16 +59,26 @@ export const useProducts = (options?: UseProductsOptions) => {
       'application_area',
       'line_type',
       'brand',
-      'is_public',
-      'purchase_min_quantity',
-      'purchase_max_quantity',
-      'purchase_notes'
+      'is_public'
     ];
     const payload: Record<string, any> = {};
     for (const key of allowedKeys) {
       if (key in data) payload[key] = (data as any)[key];
     }
     return payload;
+  };
+
+  // Dados internos de compra ficam em product_purchase_info (só a equipe lê),
+  // não em products, que o site público consulta.
+  const savePurchaseInfo = async (productId: string, data: any) => {
+    const keys = ['purchase_min_quantity', 'purchase_max_quantity', 'purchase_notes'] as const;
+    if (!data || !keys.some((key) => key in data)) return;
+    const row: { product_id: string } & Record<string, any> = { product_id: productId };
+    for (const key of keys) {
+      if (key in data) row[key] = data[key] ?? null;
+    }
+    const { error } = await supabase.from('product_purchase_info').upsert(row, { onConflict: 'product_id' });
+    if (error) throw error;
   };
 
   const fetchProducts = async () => {
@@ -82,7 +92,7 @@ export const useProducts = (options?: UseProductsOptions) => {
       // Buscar todos os produtos, variações e fragrâncias em paralelo (3 queries ao invés de N+1)
       let productsQuery = supabase
         .from('products')
-        .select('id,slug,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,purchase_min_quantity,purchase_max_quantity,purchase_notes,display_order,created_at,updated_at')
+        .select('id,slug,name,description,price,category,image_url,priority,priority_order,has_variations,has_fragrances,highlight_type,material,validity,specifications,out_of_stock,literage_single,size_unit,price_position,action_type,ph_level,application_area,line_type,brand,is_public,display_order,created_at,updated_at')
         .order('display_order', { ascending: true })
         .order('priority', { ascending: false })
         .order('priority_order', { ascending: true })
@@ -92,7 +102,7 @@ export const useProducts = (options?: UseProductsOptions) => {
         productsQuery = productsQuery.eq('is_public', true);
       }
 
-      const [productsResult, variationsResult, fragrancesResult] = await Promise.all([
+      const [productsResult, variationsResult, fragrancesResult, purchaseResult] = await Promise.all([
         productsQuery,
         supabase
           .from('product_variations')
@@ -101,10 +111,19 @@ export const useProducts = (options?: UseProductsOptions) => {
         supabase
           .from('product_fragrances')
           .select('id,product_id,name,description,image_url,available_literages,order_index')
-          .order('order_index', { ascending: true })
+          .order('order_index', { ascending: true }),
+        // Só o admin pede os dados internos de compra; o site público nem consulta.
+        includeNonPublic
+          ? supabase
+              .from('product_purchase_info')
+              .select('product_id,purchase_min_quantity,purchase_max_quantity,purchase_notes')
+          : Promise.resolve({ data: [] as any[], error: null })
       ]);
 
       if (productsResult.error) throw productsResult.error;
+      const purchaseByProduct = new Map<string, any>(
+        (purchaseResult.data || []).map((row: any) => [row.product_id, row])
+      );
 
       const productsData = productsResult.data || [];
       const allVariations = variationsResult.data || [];
@@ -142,9 +161,9 @@ export const useProducts = (options?: UseProductsOptions) => {
           out_of_stock: product.out_of_stock || false,
           literage_single: product.literage_single,
           is_public: (product as any).is_public ?? true,
-          purchase_min_quantity: (product as any).purchase_min_quantity ?? null,
-          purchase_max_quantity: (product as any).purchase_max_quantity ?? null,
-          purchase_notes: (product as any).purchase_notes ?? null,
+          purchase_min_quantity: purchaseByProduct.get(product.id)?.purchase_min_quantity ?? null,
+          purchase_max_quantity: purchaseByProduct.get(product.id)?.purchase_max_quantity ?? null,
+          purchase_notes: purchaseByProduct.get(product.id)?.purchase_notes ?? null,
           size_unit: (product.size_unit || 'litros') as 'litros' | 'cm' | 'ml' | 'kg' | 'g' | 'unidades',
           price_position: (product.price_position || 'below_text') as 'below_image' | 'below_text',
           action_type: product.action_type || null,
@@ -185,6 +204,7 @@ export const useProducts = (options?: UseProductsOptions) => {
 
       if (error) throw error;
 
+      await savePurchaseInfo(data.id, productData);
       await fetchProducts();
       toast({
         title: "Produto criado",
@@ -214,6 +234,7 @@ export const useProducts = (options?: UseProductsOptions) => {
 
       if (error) throw error;
 
+      await savePurchaseInfo(id, productData);
       await fetchProducts();
       toast({
         title: "Produto atualizado",
