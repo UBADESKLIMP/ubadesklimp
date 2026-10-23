@@ -80,7 +80,7 @@ export const useSalesStats = (categoryFilter?: string, startDate?: Date, endDate
       // Parse items JSON
       const parsedOrders = (data || []).map((order) => ({
         ...order,
-        items: (order.items as unknown as OrderItem[]) || []
+        items: Array.isArray(order.items) ? (order.items as unknown as OrderItem[]) : []
       }));
 
       setOrders(parsedOrders);
