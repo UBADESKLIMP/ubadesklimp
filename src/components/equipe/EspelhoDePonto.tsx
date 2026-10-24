@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Printer, AlertTriangle } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
-  usePontoEspelho, useRodizios, hhmm, saldoHhmm, diaDaSemana, diaDoMes,
+  usePontoEspelho, hhmm, saldoHhmm, diaDaSemana, diaDoMes,
   mesPorExtenso, PROBLEMA_LABEL, mesPassado,
-  type DiaDoEspelho, type PessoaDoEspelho, type Rodizio,
+  type DiaDoEspelho, type PessoaDoEspelho,
 } from '@/hooks/usePontoEspelho';
 
 interface Props {
@@ -32,7 +32,6 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
   const { espelho, carregando, erro } = usePontoEspelho(
     empresaId, mes, pessoa === 'todos' ? null : pessoa
   );
-  const { rodizios, trocarSemanas } = useRodizios(empresaId, mes);
 
   // A lista do seletor não pode encolher quando o filtro já está aplicado.
   const [nomes, setNomes] = useState<{ id: string; nome: string }[]>([]);
@@ -42,20 +41,7 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
     }
   }, [espelho, pessoa]);
 
-  const pendencias = useMemo(() => {
-    if (!espelho) return [];
-    return espelho.pessoas
-      .map((p) => ({
-        id: p.funcionario_id,
-        nome: p.nome,
-        qtd: p.totais.furos,
-      }))
-      .filter((x) => x.qtd > 0);
-  }, [espelho]);
-
-  const totalPendente = pendencias.reduce((s, p) => s + p.qtd, 0);
   const totalAvisos = espelho?.pessoas.reduce((s, p) => s + p.totais.avisos, 0) ?? 0;
-  const diasForaDaEscala = espelho?.pessoas.reduce((s, p) => s + p.totais.dias_fora_da_escala, 0) ?? 0;
 
   return (
     <div>
@@ -118,68 +104,12 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
         </p>
       )}
 
-      {/* ------------------------------------------------- o que falta arrumar */}
-      {espelho && espelho.pessoas.length > 0 && (
-        <>
-        <div
-          className={cn(
-            'rounded-xl border px-5 py-4 mb-6',
-            totalPendente > 0
-              ? 'border-[#C0392B]/40 bg-[#C0392B]/10'
-              : 'border-[#2F9E44]/30 bg-[#2F9E44]/10'
-          )}
-        >
-          {totalPendente > 0 ? (
-            <>
-              <p className="text-white">
-                <span className="font-mono text-2xl tabular-nums mr-2">{totalPendente}</span>
-                {totalPendente === 1 ? 'dia para arrumar' : 'dias para arrumar'} antes de fechar{' '}
-                {mesPorExtenso(espelho.mes)}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {pendencias.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPessoa(p.id)}
-                    className="rounded-md border border-[#C0392B]/40 bg-[#C0392B]/15 px-2.5 py-1 text-sm text-white hover:bg-[#C0392B]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8a7a]"
-                  >
-                    {p.nome}
-                    <span className="ml-1.5 font-mono tabular-nums text-[#ff8a7a]">{p.qtd}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-white">
-              Nenhum dia furado em {mesPorExtenso(espelho.mes)}. Pode mandar pra contabilidade.
-            </p>
-          )}
-
-          {totalAvisos > 0 && (
-            <p className="text-sm text-blue-300/60 mt-3">
-              Além disso, {totalAvisos} dias passaram de 6 horas sem ninguém bater o almoço. Não
-              travam o fechamento, mas o intervalo fica sem registro.
-            </p>
-          )}
-        </div>
-
-        {diasForaDaEscala > 0 && (
-          <div className="rounded-xl border border-[#f0b429]/30 bg-[#f0b429]/10 px-5 py-3 mb-6 flex gap-3">
-            <AlertTriangle className="h-4 w-4 text-[#f0b429] shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-100/80">
-              A escala cadastrada vai de segunda a sexta, mas houve {diasForaDaEscala} dias
-              trabalhados fora dela — os sábados. Como o sistema não os espera, as horas desses
-              dias entram inteiras no saldo. Ajuste a escala antes de usar esse saldo como banco
-              de horas.
-            </p>
-          </div>
-        )}
-        </>
+      {totalAvisos > 0 && (
+        <p className="text-sm text-blue-300/60 mb-6">
+          {totalAvisos} {totalAvisos === 1 ? 'dia passou' : 'dias passaram'} de 6 horas sem ninguém bater o
+          almoço. O intervalo fica sem registro.
+        </p>
       )}
-
-      {rodizios.map((r) => (
-        <PainelDoRodizio key={r.id} rodizio={r} onTrocar={() => trocarSemanas(r.id)} />
-      ))}
 
       {/* --------------------------------------------------------- na tela */}
       {espelho?.pessoas.map((p) => (
@@ -209,58 +139,12 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
 
 /* ------------------------------------------------------------------ tela */
 
-/**
- * Quem está em qual turno a cada semana. Deduzir isso pela batida seria cômodo
- * e errado: o horário esperado viraria o que a pessoa fez, e ninguém mais
- * conseguiria se atrasar. Então a regra fica aqui, antes da batida — e com um
- * botão para inverter, que é o único jeito de errar um revezamento calculado.
- */
-const PainelDoRodizio = ({ rodizio, onTrocar }: { rodizio: Rodizio; onTrocar: () => void }) => (
-  <section className="rounded-xl border border-blue-500/15 bg-[#0c0c14] px-5 py-4 mb-6">
-    <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
-      <h3 className="text-white text-sm">
-        {rodizio.nome}
-        <span className="text-blue-300/50 font-normal"> — {rodizio.pessoas.join(' e ')}</span>
-      </h3>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 text-xs text-blue-300/70 hover:text-white hover:bg-blue-500/10"
-        onClick={onTrocar}
-      >
-        Trocar as semanas
-      </Button>
-    </div>
-
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      {rodizio.semanas.map((sem) => (
-        <div key={sem.data} className="rounded-lg border border-blue-500/10 px-3 py-2">
-          <p className="font-mono text-xs text-blue-300/40 mb-1.5">
-            {diaDaSemana(sem.data)} {diaDoMes(sem.data)}
-          </p>
-          {sem.quem.map((q) => (
-            <p key={q.nome} className="text-sm text-blue-100/80 flex justify-between gap-2">
-              <span className="truncate">{q.nome}</span>
-              <span className="font-mono tabular-nums text-white">{q.entrada}</span>
-            </p>
-          ))}
-        </div>
-      ))}
-    </div>
-
-    <p className="text-xs text-blue-300/50 mt-3">
-      Se as semanas estiverem invertidas, use "Trocar as semanas" — o revezamento inteiro vira,
-      para trás e para frente.
-    </p>
-  </section>
-);
-
 const Carimbo = ({ texto, grau }: { texto: string; grau: 'furo' | 'aviso' }) => (
   <span
     className={cn(
       'inline-block -rotate-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
       grau === 'furo'
-        ? 'bg-[#C0392B] text-white'
+        ? 'border border-blue-500/30 text-blue-300/70'
         : 'border border-[#f0b429]/40 text-[#f0b429]'
     )}
   >
@@ -316,8 +200,6 @@ export const CartaoDaPessoa = ({
               `, ${pessoa.totais.faltas} ${pessoa.totais.faltas === 1 ? 'falta' : 'faltas'}`}
             {pessoa.totais.atrasos > 0 &&
               `, ${pessoa.totais.atrasos} ${pessoa.totais.atrasos === 1 ? 'atraso' : 'atrasos'}`}
-            {pessoa.totais.dias_fora_da_escala > 0 &&
-              `, ${hhmm(pessoa.totais.min_fora_da_escala)} em sábados`}
           </td>
           <td className="text-right py-2.5 pl-4">{hhmm(pessoa.totais.trabalhado_min)}</td>
           <td
@@ -348,7 +230,6 @@ const LinhaDoDia = ({ dia, onArrumar }: { dia: DiaDoEspelho; onArrumar: () => vo
     <tr
       className={cn(
         'border-b border-blue-500/5',
-        furo && 'bg-[#C0392B]/10',
         (aviso || atrasado) && !furo && 'bg-[#f0b429]/[0.04]'
       )}
     >
