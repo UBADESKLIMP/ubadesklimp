@@ -59,24 +59,24 @@ const Shortcut = ({ icon: Icon, title, description, onClick, large }: ShortcutPr
     type="button"
     onClick={onClick}
     className={cn(
-      'group flex items-center gap-4 rounded-xl border border-[#DCDFD8] bg-white text-left shadow-sm',
-      'transition hover:border-[#0F6B5C]/50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0F6B5C]',
+      'group flex items-center gap-4 rounded-xl border border-adm-line bg-adm-surface text-left shadow-sm',
+      'transition hover:border-adm-accent/50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-adm-accent',
       large ? 'p-6 min-h-[112px]' : 'p-4'
     )}
   >
     <div
       className={cn(
-        'shrink-0 rounded-xl bg-[#0F6B5C]/10 text-[#0F6B5C] flex items-center justify-center',
+        'shrink-0 rounded-xl bg-adm-accent-soft text-adm-accent flex items-center justify-center',
         large ? 'h-14 w-14' : 'h-11 w-11'
       )}
     >
       <Icon className={large ? 'h-7 w-7' : 'h-5 w-5'} />
     </div>
     <div className="flex-1 min-w-0">
-      <p className={cn('font-semibold text-[#141B1E]', large ? 'text-lg' : 'text-base')}>{title}</p>
-      <p className="text-sm text-[#55605F]">{description}</p>
+      <p className={cn('font-semibold text-adm-ink', large ? 'text-lg' : 'text-base')}>{title}</p>
+      <p className="text-sm text-adm-muted">{description}</p>
     </div>
-    <ChevronRight className="h-5 w-5 text-[#8A9290] shrink-0 transition-transform group-hover:translate-x-0.5" />
+    <ChevronRight className="h-5 w-5 text-adm-faint shrink-0 transition-transform group-hover:translate-x-0.5" />
   </button>
 );
 
@@ -92,18 +92,18 @@ const NumberCard = ({ label, value, hint, tone = 'normal', onClick }: NumberCard
   <button
     type="button"
     onClick={onClick}
-    className="rounded-xl border border-[#DCDFD8] bg-white p-5 text-left shadow-sm transition hover:border-[#0F6B5C]/50 hover:shadow-md"
+    className="rounded-xl border border-adm-line bg-adm-surface p-5 text-left shadow-sm transition hover:border-adm-accent/50 hover:shadow-md"
   >
-    <p className="text-sm font-medium text-[#55605F]">{label}</p>
+    <p className="text-sm font-medium text-adm-muted">{label}</p>
     <p
       className={cn(
         'mt-1 font-mono text-4xl font-semibold tabular-nums',
-        tone === 'alert' && value > 0 ? 'text-[#C0392B]' : 'text-[#141B1E]'
+        tone === 'alert' && value > 0 ? 'text-adm-alert' : 'text-adm-ink'
       )}
     >
       {value}
     </p>
-    <p className="mt-1 text-xs text-[#8A9290]">{hint}</p>
+    <p className="mt-1 text-xs text-adm-faint">{hint}</p>
   </button>
 );
 
@@ -130,11 +130,11 @@ const AdminHome = ({ staffAccess, visibleItems, onNavigate }: AdminHomeProps) =>
   const firstName = displayName?.split(' ')[0];
   const header = (
     <div className="mb-6">
-      <h2 className="text-2xl font-semibold text-[#141B1E]">
+      <h2 className="text-2xl font-semibold text-adm-ink">
         {greeting()}
         {firstName ? `, ${firstName}` : ''}
       </h2>
-      <p className="text-sm text-[#55605F] first-letter:uppercase">{today()}</p>
+      <p className="text-sm text-adm-muted first-letter:uppercase">{today()}</p>
     </div>
   );
 
@@ -206,7 +206,7 @@ const AdminHome = ({ staffAccess, visibleItems, onNavigate }: AdminHomeProps) =>
 
       {!isSimple && numbers.length > 0 && (
         <section className="mb-8">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#55605F]">O que fazer hoje</h3>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-adm-muted">O que fazer hoje</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {numbers.map((card) => (
               <NumberCard key={card.label} {...card} />
@@ -217,7 +217,7 @@ const AdminHome = ({ staffAccess, visibleItems, onNavigate }: AdminHomeProps) =>
 
       <section>
         {!isSimple && (
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#55605F]">Ir para</h3>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-adm-muted">Ir para</h3>
         )}
         <div className={cn('grid gap-4', isSimple ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3')}>
           {shortcuts.map((item) => {

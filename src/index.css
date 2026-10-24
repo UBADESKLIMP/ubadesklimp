@@ -290,17 +290,31 @@
 
 
 /* ==========================================================================
-   Painel administrativo: tema claro (briefing de design).
-   A classe admin-light fica no <body> enquanto o painel está aberto.
+   Painel administrativo: temas claro e escuro.
+   O body recebe admin-themed + admin-light ou admin-dark enquanto o painel
+   está aberto (ver useAdminTheme). As cores do painel vêm das variáveis
+   --adm-* abaixo; no Tailwind elas viram bg-adm-surface, text-adm-ink etc.
 
-   Boa parte dos módulos do painel foi escrita com cores escuras fixas
-   (fundo #12121a, texto branco, azul). Em vez de reescrever cada arquivo de
-   uma vez, esta camada traduz essas cores para a paleta clara, só dentro do
-   painel. Cada módulo pode ser limpo aos poucos e perde a tradução ao usar as
-   cores novas direto.
-   Paleta: fundo #F5F6F3, tinta #141B1E, acento #0F6B5C, borda #DCDFD8.
+   Boa parte dos módulos antigos foi escrita com cores escuras fixas (fundo
+   #12121a, texto branco, azul). Em vez de reescrever cada arquivo de uma vez,
+   a camada de tradução mais abaixo converte essas cores para as variáveis,
+   só dentro do painel. Cada módulo pode ser limpo aos poucos.
    ========================================================================== */
 body.admin-light {
+  --adm-bg: #F5F6F3;
+  --adm-surface: #FFFFFF;
+  --adm-ink: #141B1E;
+  --adm-muted: #55605F;
+  --adm-faint: #8A9290;
+  --adm-line: #DCDFD8;
+  --adm-accent: #0F6B5C;
+  --adm-accent-strong: #0C5A4D;
+  --adm-accent-soft: rgba(15, 107, 92, 0.10);
+  --adm-alert: #C0392B;
+  --adm-warn: #9A6B00;
+  --adm-danger-text: #B5362A;
+  --adm-ok-text: #1F7A4C;
+  --adm-on-accent: #FFFFFF;
   --background: 72 12% 96%;
   --foreground: 200 18% 10%;
   --card: 0 0% 100%;
@@ -316,78 +330,130 @@ body.admin-light {
   --muted-foreground: 190 8% 36%;
   --accent: 171 40% 92%;
   --accent-foreground: 200 18% 10%;
-  font-family: 'IBM Plex Sans', 'Inter', sans-serif;
-  background: #F5F6F3;
+  --destructive: 6 63% 46%;
+  --destructive-foreground: 0 0% 100%;
 }
-.admin-light .font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-.admin-light .font-heading { font-family: 'IBM Plex Sans', 'Inter', sans-serif; font-weight: 600; }
+body.admin-dark {
+  --adm-bg: #0E1315;
+  --adm-surface: #171E21;
+  --adm-ink: #E8ECEA;
+  --adm-muted: #A3AEAB;
+  --adm-faint: #76817E;
+  --adm-line: #2A3437;
+  --adm-accent: #3CC2A8;
+  --adm-accent-strong: #5FD3BB;
+  --adm-accent-soft: rgba(60, 194, 168, 0.14);
+  --adm-alert: #FF6B5B;
+  --adm-warn: #F0B429;
+  --adm-danger-text: #FF8A7A;
+  --adm-ok-text: #4ADE80;
+  --adm-on-accent: #07201B;
+  --background: 195 17% 7%;
+  --foreground: 150 8% 92%;
+  --card: 195 14% 11%;
+  --card-foreground: 150 8% 92%;
+  --popover: 195 14% 11%;
+  --popover-foreground: 150 8% 92%;
+  --primary: 168 52% 51%;
+  --primary-foreground: 170 70% 8%;
+  --ring: 168 52% 51%;
+  --border: 195 12% 19%;
+  --input: 195 12% 19%;
+  --muted: 195 12% 15%;
+  --muted-foreground: 165 7% 66%;
+  --accent: 195 12% 17%;
+  --accent-foreground: 150 8% 92%;
+  --destructive: 6 90% 62%;
+  --destructive-foreground: 0 0% 100%;
+}
+body.admin-themed {
+  font-family: 'IBM Plex Sans', 'Inter', sans-serif;
+  background: var(--adm-bg);
+  color: var(--adm-ink);
+}
+.admin-themed .font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.admin-themed .font-heading { font-family: 'IBM Plex Sans', 'Inter', sans-serif; font-weight: 600; }
 
-/* Superfícies escuras viram claras */
-.admin-light .bg-\[\#0a0a0f\] { background-color: #F5F6F3; }
-.admin-light .bg-\[\#0c0c14\],
-.admin-light .bg-\[\#12121a\],
-.admin-light .bg-\[\#16161f\],
-.admin-light .bg-\[\#0f0f18\] { background-color: #FFFFFF; }
-.admin-light .bg-slate-900\/90 { background-color: #FFFFFF; }
-.admin-light .bg-blue-900\/20 { background-color: rgba(15, 107, 92, 0.08); }
+/* Superfícies escuras fixas viram as variáveis */
+.admin-themed .bg-\[\#0a0a0f\] { background-color: var(--adm-bg); }
+.admin-themed .bg-\[\#0c0c14\],
+.admin-themed .bg-\[\#12121a\],
+.admin-themed .bg-\[\#16161f\],
+.admin-themed .bg-\[\#0f0f18\],
+.admin-themed .bg-slate-900\/90 { background-color: var(--adm-surface); }
+.admin-themed .bg-blue-900\/20 { background-color: var(--adm-accent-soft); }
 
 /* Texto */
-.admin-light .text-white { color: #141B1E; }
-.admin-light .text-blue-100\/80,
-.admin-light .text-blue-200,
-.admin-light .hover\:text-blue-200:hover,
-.admin-light .hover\:text-white:hover { color: #141B1E; }
-.admin-light .text-blue-300,
-.admin-light .hover\:text-blue-300:hover,
-.admin-light .text-blue-400,
-.admin-light .text-blue-500,
-.admin-light .text-blue-600 { color: #0F6B5C; }
-.admin-light .text-blue-300\/80,
-.admin-light .text-blue-300\/70,
-.admin-light .text-blue-300\/60,
-.admin-light .text-blue-300\/55,
-.admin-light .text-blue-400\/60 { color: #55605F; }
-.admin-light .text-blue-300\/50,
-.admin-light .text-blue-300\/40,
-.admin-light .text-blue-300\/30,
-.admin-light .text-blue-500\/60,
-.admin-light .text-blue-500\/40,
-.admin-light .placeholder\:text-blue-300\/40::placeholder { color: #8A9290; }
-.admin-light .text-\[\#f0b429\] { color: #9A6B00; }
-.admin-light .text-\[\#ff8a7a\] { color: #B5362A; }
-.admin-light .text-\[\#4ade80\] { color: #1F7A4C; }
+.admin-themed .text-white,
+.admin-themed .text-blue-100\/80,
+.admin-themed .text-blue-200,
+.admin-themed .hover\:text-blue-200:hover,
+.admin-themed .hover\:text-white:hover { color: var(--adm-ink); }
+.admin-themed .text-blue-300,
+.admin-themed .hover\:text-blue-300:hover,
+.admin-themed .text-blue-400,
+.admin-themed .text-blue-500,
+.admin-themed .text-blue-600 { color: var(--adm-accent); }
+.admin-themed .text-blue-300\/80,
+.admin-themed .text-blue-300\/70,
+.admin-themed .text-blue-300\/60,
+.admin-themed .text-blue-300\/55,
+.admin-themed .text-blue-400\/60 { color: var(--adm-muted); }
+.admin-themed .text-blue-300\/50,
+.admin-themed .text-blue-300\/40,
+.admin-themed .text-blue-300\/30,
+.admin-themed .text-blue-500\/60,
+.admin-themed .text-blue-500\/40,
+.admin-themed .placeholder\:text-blue-300\/40::placeholder { color: var(--adm-faint); }
+.admin-themed .text-\[\#f0b429\] { color: var(--adm-warn); }
+.admin-themed .text-\[\#ff8a7a\] { color: var(--adm-danger-text); }
+.admin-themed .text-\[\#4ade80\] { color: var(--adm-ok-text); }
 
 /* Bordas */
-.admin-light .border-blue-500\/10,
-.admin-light .border-blue-500\/15,
-.admin-light .border-blue-500\/20,
-.admin-light .border-blue-500\/30,
-.admin-light .divide-blue-500\/10 > :not([hidden]) ~ :not([hidden]) { border-color: #DCDFD8; }
-.admin-light .border-blue-500\/40,
-.admin-light .border-blue-500\/50,
-.admin-light .border-blue-500\/60,
-.admin-light .hover\:border-blue-500\/40:hover { border-color: #0F6B5C; }
+.admin-themed .border-blue-500\/10,
+.admin-themed .border-blue-500\/15,
+.admin-themed .border-blue-500\/20,
+.admin-themed .border-blue-500\/30,
+.admin-themed .divide-blue-500\/10 > :not([hidden]) ~ :not([hidden]) { border-color: var(--adm-line); }
+.admin-themed .border-blue-500\/40,
+.admin-themed .border-blue-500\/50,
+.admin-themed .border-blue-500\/60,
+.admin-themed .hover\:border-blue-500\/40:hover { border-color: var(--adm-accent); }
 
 /* Botões e fundos azuis viram o verde-petróleo */
-.admin-light .bg-blue-600 { background-color: #0F6B5C; }
-.admin-light .bg-blue-600\/80 { background-color: rgba(15, 107, 92, 0.85); }
-.admin-light .hover\:bg-blue-500:hover { background-color: #0C5A4D; }
-.admin-light .bg-blue-600\/30,
-.admin-light .bg-blue-600\/20,
-.admin-light .bg-blue-600\/10,
-.admin-light .bg-blue-500\/20,
-.admin-light .focus\:bg-blue-500\/20:focus,
-.admin-light .hover\:bg-blue-500\/20:hover { background-color: rgba(15, 107, 92, 0.14); }
-.admin-light .bg-blue-500\/10,
-.admin-light .bg-blue-500\/5,
-.admin-light .hover\:bg-blue-500\/10:hover,
-.admin-light .hover\:bg-blue-600\/10:hover { background-color: rgba(15, 107, 92, 0.07); }
+.admin-themed .bg-blue-600,
+.admin-themed .bg-blue-600\/80 { background-color: var(--adm-accent); }
+.admin-themed .hover\:bg-blue-500:hover { background-color: var(--adm-accent-strong); }
+.admin-themed .bg-blue-600\/30,
+.admin-themed .bg-blue-600\/20,
+.admin-themed .bg-blue-600\/10,
+.admin-themed .bg-blue-500\/20,
+.admin-themed .focus\:bg-blue-500\/20:focus,
+.admin-themed .hover\:bg-blue-500\/20:hover,
+.admin-themed .bg-blue-500\/10,
+.admin-themed .bg-blue-500\/5,
+.admin-themed .hover\:bg-blue-500\/10:hover,
+.admin-themed .hover\:bg-blue-600\/10:hover { background-color: var(--adm-accent-soft); }
 
-/* Texto branco continua branco sobre fundo colorido */
-.admin-light :is(.bg-blue-600, .bg-blue-600\/80, .bg-primary, .bg-destructive, .bg-emerald-600, .bg-amber-600,
+/* Texto sobre fundo colorido continua legível (branco no claro, escuro no
+   escuro, porque o acento do tema escuro é claro). */
+.admin-themed :is(.bg-blue-600, .bg-blue-600\/80, .bg-primary)
+  :is(.text-white, svg, span),
+.admin-themed :is(.bg-blue-600, .bg-blue-600\/80, .bg-primary).text-white { color: var(--adm-on-accent); }
+.admin-themed :is(.bg-destructive, .bg-emerald-600, .bg-amber-600,
   .bg-\[\#0F6B5C\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\])
   :is(.text-white, svg, span),
-.admin-light :is(.bg-blue-600, .bg-blue-600\/80, .bg-primary, .bg-destructive, .bg-emerald-600, .bg-amber-600,
+.admin-themed :is(.bg-destructive, .bg-emerald-600, .bg-amber-600,
   .bg-\[\#0F6B5C\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\]).text-white {
   color: #FFFFFF;
 }
+
+/* Cores do briefing que alguns módulos já usam direto: acompanham o tema */
+.admin-themed .bg-white { background-color: var(--adm-surface); }
+.admin-themed .bg-\[\#F5F6F3\],
+.admin-themed .bg-\[\#ECEEE9\] { background-color: var(--adm-bg); }
+.admin-themed .text-\[\#141B1E\] { color: var(--adm-ink); }
+.admin-themed .text-\[\#55605F\] { color: var(--adm-muted); }
+.admin-themed .text-\[\#8A9290\],
+.admin-themed .placeholder\:text-\[\#8A9290\]::placeholder { color: var(--adm-faint); }
+.admin-themed .border-\[\#DCDFD8\] { border-color: var(--adm-line); }

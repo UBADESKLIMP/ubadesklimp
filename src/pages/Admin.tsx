@@ -17,6 +17,7 @@ import PriorityProductsManager from '@/components/PriorityProductsManager';
 import StaffManager from '@/components/StaffManager';
 import SupplierManager from '@/components/SupplierManager';
 import MissingProductsManager from '@/components/MissingProductsManager';
+import AvisarFaltaSimples from '@/components/AvisarFaltaSimples';
 import CotacoesManager from '@/components/quotes/CotacoesManager';
 import EntregasManager from '@/components/entregas/EntregasManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
@@ -345,6 +346,10 @@ const Admin = () => {
         return <SupplierManager />;
 
       case 'missing':
+        // Quem não é admin nem tem "fornecedores" só avisa o que acabou.
+        if (!staffAccess.isAdmin && !staffAccess.permissions.has('fornecedores')) {
+          return <AvisarFaltaSimples products={products} />;
+        }
         return (
           <MissingProductsManager
             products={products}
