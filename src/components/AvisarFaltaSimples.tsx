@@ -33,7 +33,7 @@ const Chip = ({ ativo, children, onClick }: { ativo: boolean; children: React.Re
       'min-h-12 rounded-xl border px-4 text-base font-medium transition-colors',
       ativo
         ? 'border-adm-accent bg-adm-accent text-adm-on-accent'
-        : 'border-adm-line bg-adm-surface text-adm-ink hover:border-adm-accent/50'
+        : 'border-adm-line bg-adm-surface text-adm-ink hover:border-adm-accent-line'
     )}
   >
     {children}
@@ -168,7 +168,7 @@ const AvisarFaltaSimples = ({ products }: AvisarFaltaSimplesProps) => {
                   key={p.id}
                   type="button"
                   onClick={() => escolher(p.id)}
-                  className="flex min-h-16 w-full items-center rounded-xl border border-adm-line bg-adm-surface px-5 text-left text-lg font-medium text-adm-ink transition hover:border-adm-accent/50"
+                  className="flex min-h-16 w-full items-center rounded-xl border border-adm-line bg-adm-surface px-5 text-left text-lg font-medium text-adm-ink transition hover:border-adm-accent-line"
                 >
                   {p.name}
                   {p.brand ? <span className="ml-2 text-sm font-normal text-adm-muted">{p.brand}</span> : null}
@@ -185,7 +185,7 @@ const AvisarFaltaSimples = ({ products }: AvisarFaltaSimplesProps) => {
                   key={item.id}
                   type="button"
                   onClick={() => escolher(item.product_id, item.fragrance_id, item.variation_id)}
-                  className="flex min-h-16 w-full items-center rounded-xl border border-adm-line bg-adm-surface px-5 text-left text-base font-medium text-adm-ink transition hover:border-adm-accent/50"
+                  className="flex min-h-16 w-full items-center rounded-xl border border-adm-line bg-adm-surface px-5 text-left text-base font-medium text-adm-ink transition hover:border-adm-accent-line"
                 >
                   {buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id)}
                 </button>

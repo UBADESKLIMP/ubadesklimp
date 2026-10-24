@@ -15,6 +15,12 @@ const resumoDosItens = (itens: ItemEntrega[]) => {
     .join(' · ');
 };
 
+const BORDA_DA_SITUACAO: Record<string, string> = {
+  entregue: 'border-l-[#2F9E44]',
+  nao_entregue: 'border-l-[#C0392B]',
+  em_rota: 'border-l-[#f0b429]',
+};
+
 const SortableParada = ({
   parada,
   posicao,
@@ -36,9 +42,9 @@ const SortableParada = ({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`rounded-lg border px-3 py-2.5 transition ${
-        isDragging ? 'border-blue-500/60 bg-blue-600/10 shadow-lg' : 'border-blue-500/10'
-      } ${resolvida ? 'opacity-70' : ''}`}
+      className={`rounded-xl border border-l-4 bg-adm-surface px-4 py-3 shadow-sm transition ${
+        isDragging ? 'border-adm-accent shadow-lg' : 'border-adm-line'
+      } ${BORDA_DA_SITUACAO[parada.situacao] ?? ''} ${resolvida ? 'opacity-80' : ''}`}
     >
       <div className="flex items-start gap-3">
         {podeArrastar ? (
@@ -56,13 +62,13 @@ const SortableParada = ({
 
         {/* O número da parada é dado, não enfeite: é por ele que a loja fala
             com o entregador no telefone ("você já passou da 7?"). */}
-        <span className="mt-0.5 shrink-0 font-mono text-sm font-semibold tabular-nums text-blue-400">
+        <span className="mt-0.5 shrink-0 font-mono text-base font-semibold tabular-nums text-adm-accent">
           {String(posicao).padStart(2, '0')}
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-white truncate">{parada.cliente_nome}</span>
+            <span className="truncate text-base font-semibold text-adm-ink">{parada.cliente_nome}</span>
             <SeloEntrega situacao={parada.situacao} />
           </div>
 
@@ -72,7 +78,7 @@ const SortableParada = ({
             {parada.bairro && <span>{parada.bairro}</span>}
           </div>
 
-          <p className="mt-1 inline-flex items-start gap-1 text-xs text-blue-300/70">
+          <p className="mt-1.5 inline-flex items-start gap-1 text-sm text-adm-ink">
             <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
             <span>{parada.entregar_em || parada.endereco || 'Sem endereço no cadastro'}</span>
           </p>
@@ -83,17 +89,17 @@ const SortableParada = ({
             <div className="mt-2 flex items-center gap-3">
               <a
                 href={`tel:${parada.cliente_telefone}`}
-                className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-adm-line px-3 text-sm font-medium text-adm-ink hover:bg-adm-accent-soft"
               >
-                <Phone className="h-3 w-3" /> Ligar
+                <Phone className="h-4 w-4" /> Ligar
               </a>
               <a
                 href={buildWhatsAppLink(parada.cliente_telefone)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-adm-line px-3 text-sm font-medium text-adm-ink hover:bg-adm-accent-soft"
               >
-                <MessageCircle className="h-3 w-3" /> WhatsApp
+                <MessageCircle className="h-4 w-4" /> WhatsApp
               </a>
             </div>
           )}

@@ -60,7 +60,7 @@ const Shortcut = ({ icon: Icon, title, description, onClick, large }: ShortcutPr
     onClick={onClick}
     className={cn(
       'group flex items-center gap-4 rounded-xl border border-adm-line bg-adm-surface text-left shadow-sm',
-      'transition hover:border-adm-accent/50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-adm-accent',
+      'transition hover:border-adm-accent-line hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-adm-accent',
       large ? 'p-6 min-h-[112px]' : 'p-4'
     )}
   >
@@ -92,7 +92,7 @@ const NumberCard = ({ label, value, hint, tone = 'normal', onClick }: NumberCard
   <button
     type="button"
     onClick={onClick}
-    className="rounded-xl border border-adm-line bg-adm-surface p-5 text-left shadow-sm transition hover:border-adm-accent/50 hover:shadow-md"
+    className="rounded-xl border border-adm-line bg-adm-surface p-5 text-left shadow-sm transition hover:border-adm-accent-line hover:shadow-md"
   >
     <p className="text-sm font-medium text-adm-muted">{label}</p>
     <p

@@ -367,6 +367,9 @@ body.admin-dark {
   --destructive-foreground: 0 0% 100%;
 }
 body.admin-themed {
+  --adm-accent-line: color-mix(in srgb, var(--adm-accent) 45%, transparent);
+  --adm-alert-soft: color-mix(in srgb, var(--adm-alert) 12%, transparent);
+  --adm-alert-line: color-mix(in srgb, var(--adm-alert) 55%, transparent);
   font-family: 'IBM Plex Sans', 'Inter', sans-serif;
   background: var(--adm-bg);
   color: var(--adm-ink);
