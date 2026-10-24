@@ -22,7 +22,7 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0c0c14] border-t border-blue-500/10 flex items-stretch pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#DCDFD8] flex items-stretch pb-[env(safe-area-inset-bottom)]">
         {bar.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.key;
@@ -32,11 +32,11 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
               type="button"
               onClick={() => handleSelect(item.key)}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] text-[11px]',
-                isActive ? 'text-blue-300' : 'text-blue-300/50'
+                'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[60px] text-[11px] font-medium',
+                isActive ? 'text-[#0F6B5C]' : 'text-[#55605F]'
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" />
               {item.label}
             </button>
           );
@@ -46,20 +46,20 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
             type="button"
             onClick={() => setMoreOpen(true)}
             className={cn(
-              'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] text-[11px]',
-              overflowHasActive ? 'text-blue-300' : 'text-blue-300/50'
+              'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[60px] text-[11px] font-medium',
+              overflowHasActive ? 'text-[#0F6B5C]' : 'text-[#55605F]'
             )}
           >
-            <MoreHorizontal className="h-5 w-5" />
+            <MoreHorizontal className="h-6 w-6" />
             Mais
           </button>
         )}
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="bg-[#0c0c14] border-blue-500/10 text-white">
+        <SheetContent side="bottom" className="bg-white border-[#DCDFD8] text-[#141B1E]">
           <SheetHeader>
-            <SheetTitle className="text-white">Mais opções</SheetTitle>
+            <SheetTitle className="text-[#141B1E]">Mais opções</SheetTitle>
           </SheetHeader>
           <div className="grid grid-cols-3 gap-3 mt-4 pb-4">
             {overflow.map((item) => {
@@ -71,15 +71,15 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
                   type="button"
                   onClick={() => handleSelect(item.key)}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-4 text-xs min-h-[44px]',
-                    isActive ? 'bg-blue-600/30 text-white' : 'bg-blue-500/5 text-blue-300/70',
+                    'flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-4 text-xs min-h-[64px]',
+                    isActive ? 'bg-[#0F6B5C]/10 text-[#0F6B5C] font-semibold' : 'bg-[#F5F6F3] text-[#55605F]',
                     item.comingSoon && 'opacity-60'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" />
                   <span className="text-center leading-tight">{item.label}</span>
                   {item.comingSoon && (
-                    <span className="text-[9px] uppercase tracking-wide text-blue-300/40">em breve</span>
+                    <span className="text-[9px] uppercase tracking-wide text-[#8A9290]">em breve</span>
                   )}
                 </button>
               );

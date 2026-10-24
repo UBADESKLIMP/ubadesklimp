@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdminSidebar from './AdminSidebar';
@@ -13,16 +13,23 @@ interface AdminShellProps {
 }
 
 const AdminShell = ({ items, activeSection, onSelectSection, children }: AdminShellProps) => {
+  // O tema claro do painel vale também para janelas e menus que o Radix abre
+  // fora desta árvore (diálogos, listas); por isso a classe vai no body.
+  useEffect(() => {
+    document.body.classList.add('admin-light');
+    return () => document.body.classList.remove('admin-light');
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex">
+    <div className="min-h-screen bg-[#F5F6F3] text-[#141B1E] flex">
       <AdminSidebar items={items} activeSection={activeSection} onSelect={onSelectSection} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-end px-4 md:px-8 py-4 border-b border-blue-500/10">
+        <div className="flex items-center justify-end px-4 md:px-8 py-3 border-b border-[#DCDFD8] bg-white">
           <Button
             variant="outline"
             onClick={() => (window.location.href = '/')}
-            className="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-900 text-blue-300 hover:text-blue-200 border-slate-800 shadow-lg shadow-black/20"
+            className="flex items-center space-x-2 border-[#DCDFD8] bg-white text-[#141B1E] hover:bg-[#F5F6F3]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Voltar para o Site</span>

@@ -207,7 +207,7 @@ const Admin = () => {
   const renderSection = () => {
     switch (activeSection) {
       case 'home':
-        return <AdminHome staffAccess={staffAccess} onNavigate={setActiveSection} />;
+        return <AdminHome staffAccess={staffAccess} visibleItems={visibleNavItems} onNavigate={setActiveSection} />;
 
       case 'financeiro':
         return <AdminDashboard />;

@@ -22,14 +22,17 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       className={cn(
-        'hidden md:flex flex-col shrink-0 sticky top-0 h-screen self-start bg-[#0c0c14] border-r border-blue-500/10 py-4 transition-[width] duration-200 ease-out overflow-hidden',
-        expanded ? 'w-52' : 'w-[52px]'
+        'hidden md:flex flex-col shrink-0 sticky top-0 h-screen self-start bg-white border-r border-[#DCDFD8] py-4 transition-[width] duration-200 ease-out overflow-hidden',
+        expanded ? 'w-56' : 'w-[60px]'
       )}
     >
-      <div className="px-3 mb-4 h-4">
+      <div className="px-3 mb-5 h-9 flex items-center gap-3">
+        <span className="h-9 w-9 shrink-0 rounded-lg bg-[#0F6B5C] text-white flex items-center justify-center font-semibold text-sm">
+          U
+        </span>
         <span
           className={cn(
-            'block text-[10px] uppercase tracking-wider text-blue-300/40 whitespace-nowrap transition-opacity duration-150',
+            'whitespace-nowrap text-sm font-semibold text-[#141B1E] transition-opacity duration-150',
             expanded ? 'opacity-100' : 'opacity-0'
           )}
         >
@@ -37,7 +40,7 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
         </span>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1 px-2">
+      <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
         {groups.map(({ group, items: groupItems }, index) => (
           <div key={group ?? 'ungrouped'} className={index > 0 ? 'mt-3' : undefined}>
             {group && (
@@ -47,8 +50,8 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
               // hora do clique.
               <div
                 className={cn(
-                  'px-2 mb-1 h-3 flex items-end text-[9px] leading-none uppercase tracking-wider',
-                  'text-blue-300/30 whitespace-nowrap transition-opacity duration-150',
+                  'px-2 mb-1 h-3 flex items-end text-[10px] leading-none uppercase tracking-wider font-medium',
+                  'text-[#8A9290] whitespace-nowrap transition-opacity duration-150',
                   expanded ? 'opacity-100' : 'opacity-0'
                 )}
                 aria-hidden={!expanded}
@@ -64,15 +67,17 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
                   key={item.key}
                   type="button"
                   onClick={() => onSelect(item.key)}
+                  title={item.label}
                   className={cn(
-                    'w-full flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                    'relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
                     isActive
-                      ? 'bg-blue-600/30 text-white font-medium'
-                      : 'text-blue-300/70 hover:bg-blue-500/10 hover:text-blue-200',
+                      ? 'bg-[#0F6B5C]/10 text-[#0F6B5C] font-semibold'
+                      : 'text-[#55605F] hover:bg-[#F5F6F3] hover:text-[#141B1E]',
                     item.comingSoon && 'opacity-60'
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r bg-[#0F6B5C]" />}
+                  <Icon className="h-[18px] w-[18px] shrink-0" />
                   <span
                     className={cn(
                       'whitespace-nowrap transition-opacity duration-150',
@@ -82,7 +87,7 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
                     {item.label}
                   </span>
                   {item.comingSoon && expanded && (
-                    <span className="ml-auto text-[9px] uppercase tracking-wide text-blue-300/40 whitespace-nowrap">
+                    <span className="ml-auto text-[9px] uppercase tracking-wide text-[#8A9290] whitespace-nowrap">
                       em breve
                     </span>
                   )}

@@ -10,14 +10,14 @@ interface AdminStatCardProps {
 
 const AdminStatCard = ({ icon: Icon, label, value, hint }: AdminStatCardProps) => {
   return (
-    <Card className="bg-[#12121a] border-blue-500/20">
+    <Card className="bg-white border-[#DCDFD8] shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-blue-300/70">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-blue-400" />
+        <CardTitle className="text-sm font-medium text-[#55605F]">{label}</CardTitle>
+        <Icon className="h-4 w-4 text-[#0F6B5C]" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-blue-400">{value}</div>
-        {hint && <p className="text-xs text-blue-300/50 mt-1">{hint}</p>}
+        <div className="font-mono text-3xl font-semibold tabular-nums text-[#141B1E]">{value}</div>
+        {hint && <p className="text-xs text-[#8A9290] mt-1">{hint}</p>}
       </CardContent>
     </Card>
   );
