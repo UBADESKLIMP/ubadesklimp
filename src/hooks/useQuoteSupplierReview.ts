@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -39,11 +39,14 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
   const [files, setFiles] = useState<QuoteFile[]>([]);
   const [lineItems, setLineItems] = useState<QuoteLineItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const loadedKey = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [extracting, setExtracting] = useState(false);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // Só a primeira carga mostra "carregando"; recargas depois de uma ação
+    // são silenciosas pra tela não piscar nem a rolagem pular.
+    if (loadedKey.current !== quoteBatchSupplierId) setLoading(true);
     try {
       const [filesResult, lineItemsResult] = await Promise.all([
         supabase
@@ -70,6 +73,7 @@ export const useQuoteSupplierReview = (quoteBatchSupplierId: string) => {
         variant: 'destructive',
       });
     } finally {
+      loadedKey.current = quoteBatchSupplierId;
       setLoading(false);
     }
   }, [quoteBatchSupplierId]);

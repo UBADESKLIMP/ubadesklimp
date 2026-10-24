@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { useQuoteBatches } from '@/hooks/useQuoteBatches';
 import { useMissingProducts } from '@/hooks/useMissingProducts';
 import { useSuppliers } from '@/hooks/useSuppliers';
+import { useExclusiveBrands } from '@/hooks/useExclusiveBrands';
+import { normalizeText } from '@/lib/utils';
 import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
 import { ProductWithVariations } from '@/types/product';
 import AdminLoadingState from '../admin/AdminLoadingState';
@@ -42,7 +44,8 @@ interface CreateQuoteBatchDialogProps {
 }
 
 const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: CreateQuoteBatchDialogProps) => {
-  const { missingProducts, loading: loadingMissing } = useMissingProducts();
+  const { missingProducts: allMissingProducts, loading: loadingMissing } = useMissingProducts();
+  const { exclusiveBrands } = useExclusiveBrands();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const { openItemIds, createBatch } = useQuoteBatches();
   const [selectedItems, setSelectedItems] = useState<Map<string, number | null>>(new Map());
@@ -50,6 +53,17 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const productById = new Map(products.map((p) => [p.id, p]));
+
+  // Produto de marca exclusiva tem fornecedor fixo e vai direto a ele (aba
+  // Faltantes > Marca exclusiva). Não faz sentido pedir preço a vários
+  // fornecedores, então sai desta lista.
+  const exclusiveBrandNames = new Set(exclusiveBrands.map((eb) => normalizeText(eb.brand)));
+  const isExclusiveItem = (item: (typeof allMissingProducts)[number]) => {
+    const brand = productById.get(item.product_id)?.brand;
+    return !!(brand && exclusiveBrandNames.has(normalizeText(brand)));
+  };
+  const missingProducts = allMissingProducts.filter((item) => !isExclusiveItem(item));
+  const hiddenExclusiveCount = allMissingProducts.length - missingProducts.length;
 
   const toggleItem = (id: string) => {
     setSelectedItems((prev) => {
@@ -142,6 +156,13 @@ const CreateQuoteBatchDialog = ({ products, open, onOpenChange, onCreated }: Cre
                 </Button>
               )}
             </div>
+            {hiddenExclusiveCount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {hiddenExclusiveCount} {hiddenExclusiveCount === 1 ? 'item não aparece' : 'itens não aparecem'} aqui
+                porque {hiddenExclusiveCount === 1 ? 'é de' : 'são de'} marca com fornecedor fixo. Eles vão direto
+                ao fornecedor, na aba Faltantes &gt; Marca exclusiva.
+              </p>
+            )}
             {loadingMissing ? (
               <AdminLoadingState rows={2} tone="light" />
             ) : missingProducts.length === 0 ? (

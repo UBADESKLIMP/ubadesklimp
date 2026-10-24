@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -33,9 +33,12 @@ export const useQuoteBatchDetail = (batchId: string) => {
   const [items, setItems] = useState<QuoteBatchDetailItem[]>([]);
   const [suppliers, setSuppliers] = useState<QuoteBatchDetailSupplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const loadedKey = useRef<string | null>(null);
 
   const fetchDetail = useCallback(async () => {
-    setLoading(true);
+    // Só a primeira carga mostra "carregando"; recargas depois de uma ação
+    // são silenciosas pra tela não piscar nem a rolagem pular.
+    if (loadedKey.current !== batchId) setLoading(true);
     try {
       const { data: batchRow, error: batchError } = await supabase
         .from('quote_batches')
@@ -107,6 +110,7 @@ export const useQuoteBatchDetail = (batchId: string) => {
         variant: 'destructive',
       });
     } finally {
+      loadedKey.current = batchId;
       setLoading(false);
     }
   }, [batchId]);

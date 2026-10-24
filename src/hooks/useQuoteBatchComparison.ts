@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -32,6 +32,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
   const { user } = useAuth();
   const { displayName } = useCurrentStaffName();
   const [loading, setLoading] = useState(true);
+  const loadedBatchId = useRef<string | null>(null);
   const [batchStatus, setBatchStatus] = useState<'aberto' | 'cancelado' | 'concluido' | null>(null);
   const [items, setItems] = useState<ComparisonItem[]>([]);
   const [suppliers, setSuppliers] = useState<ComparisonSupplier[]>([]);
@@ -65,7 +66,11 @@ export const useQuoteBatchComparison = (batchId: string) => {
   );
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // Só a primeira carga troca a tabela por "carregando". As recargas depois
+    // de clicar num preço, excluir ou gerar pedido são silenciosas: antes a
+    // tabela sumia a cada clique e a rolagem da página pulava pra cima e pra
+    // baixo no meio da compra.
+    if (loadedBatchId.current !== batchId) setLoading(true);
     try {
       const { data: batchRow, error: batchError } = await supabase
         .from('quote_batches')
@@ -307,6 +312,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
         variant: 'destructive',
       });
     } finally {
+      loadedBatchId.current = batchId;
       setLoading(false);
     }
   }, [batchId, user, displayName]);

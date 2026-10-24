@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Upload, RotateCcw, Sparkles, Check, ClipboardPaste, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuoteSupplierReview } from '@/hooks/useQuoteSupplierReview';
-import { buildMissingItemDisplayName } from '@/lib/missingProductDisplay';
+import { buildMissingItemDisplayName, compareMissingItems } from '@/lib/missingProductDisplay';
 import { parseQuoteRequestExcel } from '@/lib/quoteExcel';
 import { toast } from '@/hooks/use-toast';
 import { QuoteBatchDetailItem } from '@/hooks/useQuoteBatchDetail';
@@ -59,6 +59,18 @@ const QuoteBatchSupplierReview = ({
 
   const productById = new Map(products.map((p) => [p.id, p]));
   const lineItemByItemId = new Map(lineItems.map((li) => [li.quote_batch_item_id, li]));
+  // Mesma ordem da tela de comparação (variações do mesmo produto juntas):
+  // antes o item mudava de posição de uma tela pra outra e confundia.
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort((a, b) =>
+        compareMissingItems(
+          { product: productById.get(a.product_id), fragranceId: a.fragrance_id, variationId: a.variation_id },
+          { product: productById.get(b.product_id), fragranceId: b.fragrance_id, variationId: b.variation_id }
+        )
+      ),
+    [items, products]
+  );
 
   // Não pode substituir draftPrices inteiro toda vez que lineItems muda —
   // updatePrice troca a identidade do array a cada save bem-sucedido, o que
@@ -182,7 +194,7 @@ const QuoteBatchSupplierReview = ({
           </Button>
           <Button size="sm" onClick={handleMarkReviewed} disabled={isMarking}>
             <Check className="h-4 w-4 mr-2" />
-            Marcar como revisado
+            Terminei de anotar os preços
           </Button>
         </div>
         <h2 className="text-2xl font-heading text-white">{supplierName}</h2>
@@ -206,7 +218,7 @@ const QuoteBatchSupplierReview = ({
                       onClick={() => reprocessFile(file.id)}
                     >
                       <RotateCcw className="h-3 w-3 mr-1" />
-                      Processar de novo
+                      Ler de novo
                     </Button>
                   )}
                 </div>
@@ -231,11 +243,11 @@ const QuoteBatchSupplierReview = ({
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4 mr-2" />
-              {uploading ? 'Enviando...' : 'Enviar arquivo(s)'}
+              {uploading ? 'Enviando...' : 'Enviar foto ou PDF'}
             </Button>
             <Button size="sm" disabled={busy || unprocessedCount === 0 || isReadOnly} onClick={() => runExtraction()}>
               <Sparkles className="h-4 w-4 mr-2" />
-              {extracting ? 'Extraindo...' : `Extrair com IA (${unprocessedCount} novo(s))`}
+              {extracting ? 'Lendo...' : `Ler os preços automaticamente (${unprocessedCount} novo(s))`}
             </Button>
             <Button
               variant="outline"
@@ -281,14 +293,14 @@ const QuoteBatchSupplierReview = ({
                 onClick={handleExtractFromText}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                {extracting ? 'Extraindo...' : 'Extrair do texto colado'}
+                {extracting ? 'Lendo...' : 'Ler os preços do texto'}
               </Button>
             </div>
           )}
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">Preços</p>
+          <p className="text-sm font-medium">Preços do fornecedor (digite e aperte Enter para ir ao próximo)</p>
           {loading ? (
             <AdminLoadingState rows={3} tone="light" />
           ) : (
@@ -301,7 +313,7 @@ const QuoteBatchSupplierReview = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item) => {
+                {sortedItems.map((item) => {
                   const product = productById.get(item.product_id);
                   const displayName = buildMissingItemDisplayName(product, item.fragrance_id, item.variation_id);
                   const lineItem = lineItemByItemId.get(item.id);
@@ -314,9 +326,20 @@ const QuoteBatchSupplierReview = ({
                           step="0.01"
                           min="0"
                           placeholder="—"
+                          inputMode="decimal"
+                          data-price-input
                           value={draftPrices[item.id] ?? ''}
                           disabled={isReadOnly}
                           onChange={(e) => setDraftPrices((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            // Enter salva e pula pro preço do próximo item.
+                            if (e.key !== 'Enter') return;
+                            e.preventDefault();
+                            const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('[data-price-input]'));
+                            const next = inputs[inputs.indexOf(e.currentTarget) + 1];
+                            e.currentTarget.blur();
+                            next?.focus();
+                          }}
                           onFocus={() => setFocusedItemId(item.id)}
                           onBlur={() => {
                             setFocusedItemId((current) => (current === item.id ? null : current));
@@ -324,7 +347,7 @@ const QuoteBatchSupplierReview = ({
                           }}
                         />
                         {lineItem && lineItem.price !== null && (
-                          <p className="text-xs text-muted-foreground mt-1">por {lineItem.updated_by_name}</p>
+                          <p className="text-xs text-emerald-700 mt-1">✓ Salvo por {lineItem.updated_by_name}</p>
                         )}
                       </TableCell>
                       <TableCell>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, MessageCircle, FileDown, Pencil, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, MessageCircle, FileDown, Pencil, X, RotateCcw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   AlertDialog,
@@ -66,6 +67,8 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
   const [editingPriceValue, setEditingPriceValue] = useState('');
   const productById = new Map(products.map((p) => [p.id, p]));
   const [confirmandoSupplierId, setConfirmandoSupplierId] = useState<string | null>(null);
+  const [showAllPrices, setShowAllPrices] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const isReadOnly = batchStatus !== 'aberto';
   // Agrupa variações do mesmo produto lado a lado (tabela, subtotais e pedido
   // final), em vez da ordem de inserção no banco.
@@ -98,15 +101,6 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     }
   };
 
-  const subtotalBySupplier = new Map<string, number>();
-  for (const item of items) {
-    const winnerId = winners.get(item.id);
-    if (!winnerId) continue;
-    const price = getPrice(item.id, winnerId);
-    if (price === null) continue;
-    subtotalBySupplier.set(winnerId, (subtotalBySupplier.get(winnerId) ?? 0) + price * (item.quantity ?? 1));
-  }
-
   // Guarda o itemId junto: a tela de confirmar quantidades precisa dele pra
   // gravar a quantidade de cada item antes de disparar o pedido.
   const orderDetailsBySupplier = new Map<string, ItemDoPedido[]>();
@@ -138,6 +132,29 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
       unitPrice: d.unitPrice,
       unidadeCompra: unidadeSugerida(d.unidadeCompra),
     }));
+
+  const itemsWithoutWinner = sortedItems.filter((item) => {
+    const winnerId = winners.get(item.id);
+    return !winnerId || getPrice(item.id, winnerId) === null;
+  });
+
+  // Um cartão por fornecedor que ganhou pelo menos um item.
+  const supplierCards = Array.from(orderDetailsBySupplier.entries()).map(([supplierId, details]) => {
+    const supplier = suppliers.find((s) => s.id === supplierId);
+    const orderItems = orderItemsOf(details);
+    const rows = details.map((d) => {
+      const item = sortedItems.find((i) => i.id === d.itemId)!;
+      return { item, name: d.name, price: d.unitPrice, source: getWinnerSource(d.itemId) ?? 'auto' };
+    });
+    return {
+      supplierId,
+      supplier,
+      rows,
+      orderItems,
+      total: orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
+      alreadySent: Boolean(supplier?.order_generated_at) || isReadOnly,
+    };
+  });
 
   const handleArchive = async () => {
     setIsArchiving(true);
@@ -215,7 +232,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
           Voltar
         </Button>
         <div>
-          <h2 className="text-2xl font-heading text-white">Comparação de preços</h2>
+          <h2 className="text-2xl font-heading text-white">Comprar pelo menor preço</h2>
           <p className="text-sm text-blue-300/60 mt-1">
             {items.length} item(ns) · {suppliers.length} fornecedor(es)
             {isReadOnly && ' · somente leitura'}
@@ -223,6 +240,150 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
         </div>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
+        {itemsWithoutWinner.length > 0 && (
+          <div className="border rounded-lg p-4 space-y-1 bg-muted/30">
+            <p className="font-medium text-sm">Ainda sem preço ({itemsWithoutWinner.length})</p>
+            <p className="text-xs text-muted-foreground">
+              Nenhum fornecedor mandou preço para estes itens. Eles continuam pendentes em Faltantes.
+            </p>
+            <ul className="text-sm list-disc pl-5">
+              {itemsWithoutWinner.map((item) => (
+                <li key={item.id}>
+                  {buildMissingItemDisplayName(productById.get(item.product_id), item.fragrance_id, item.variation_id)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {supplierCards.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Ainda não há preços para comparar. Volte e anote os preços de cada fornecedor.
+          </p>
+        )}
+
+        {supplierCards.map(({ supplierId, supplier, rows, orderItems, total, alreadySent }) => (
+          <div key={supplierId} className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <div>
+                <p className="font-semibold">
+                  {supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'Fornecedor'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {rows.length} item(ns)
+                  {supplier?.order_generated_at &&
+                    ` · Pedido montado em ${new Date(supplier.order_generated_at).toLocaleDateString('pt-BR')}`}
+                </p>
+              </div>
+              <p className="text-lg font-semibold">{formatPrice(total)}</p>
+            </div>
+
+            <div className="divide-y">
+              {rows.map(({ item, name, price, source }) => {
+                const options = suppliers.filter(
+                  (s) => getPrice(item.id, s.id) !== null && !getExcluded(item.id, s.id)
+                );
+                return (
+                  <div key={item.id} className="py-2 flex items-center gap-3 flex-wrap">
+                    <Input
+                      key={item.id}
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      disabled={isReadOnly}
+                      defaultValue={item.quantity ?? ''}
+                      placeholder="Qtd"
+                      className="h-9 w-20"
+                      onBlur={(e) => handleQuantityBlur(item.id, e.target.value)}
+                    />
+                    <span className="text-sm flex-1 min-w-40">{name}</span>
+                    <span className="text-sm font-medium">{formatPrice(price)}</span>
+                    {source !== 'auto' && <Badge variant="secondary" className="text-[10px]">Escolhido por você</Badge>}
+                    {!isReadOnly && options.length > 1 && (
+                      <Select value={supplierId} onValueChange={(value) => setWinner(item.id, value)}>
+                        <SelectTrigger className="h-9 w-44 text-xs">
+                          <SelectValue placeholder="Trocar fornecedor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {options.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.company_name} · {formatPrice(getPrice(item.id, s.id) ?? 0)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {batchStatus !== 'cancelado' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {!alreadySent && (
+                  <Button
+                    disabled={generatingSupplierId === supplierId}
+                    onClick={() => setConfirmandoSupplierId(supplierId)}
+                  >
+                    Montar pedido deste fornecedor
+                  </Button>
+                )}
+                {alreadySent && (
+                  <>
+                    {!isReadOnly && (
+                      <Button
+                        variant="outline"
+                        disabled={generatingSupplierId === supplierId}
+                        onClick={() => setConfirmandoSupplierId(supplierId)}
+                      >
+                        Corrigir quantidades e reenviar
+                      </Button>
+                    )}
+                    <Button asChild variant="outline">
+                      <a
+                        href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Enviar pelo WhatsApp
+                      </a>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        downloadPurchaseOrderPdf(
+                          supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'fornecedor',
+                          orderItems
+                        )
+                      }
+                    >
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Baixar PDF
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <ConfirmarQuantidadesDialog
+              open={confirmandoSupplierId === supplierId}
+              onOpenChange={(aberto) => setConfirmandoSupplierId(aberto ? supplierId : null)}
+              fornecedor={supplier?.company_name ?? 'Este fornecedor'}
+              itens={orderDetailsBySupplier.get(supplierId) ?? []}
+              jaGerado={alreadySent}
+              onConfirmar={(quantidades) => handleConfirmarQuantidades(supplierId, quantidades)}
+            />
+          </div>
+        ))}
+
+        <div className="space-y-3">
+          <Button variant="outline" size="sm" onClick={() => setShowAllPrices((prev) => !prev)}>
+            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showAllPrices ? 'rotate-180' : ''}`} />
+            {showAllPrices ? 'Esconder todos os preços' : 'Ver todos os preços lado a lado'}
+          </Button>
+          {showAllPrices && (
+            <>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -361,17 +522,19 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
             </TableBody>
           </Table>
         </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium">Subtotal por fornecedor</p>
-          {suppliers.map((supplier) => (
-            <p key={supplier.id} className="text-sm text-muted-foreground">
-              {supplier.company_name} ({supplier.contact_name}): {formatPrice(subtotalBySupplier.get(supplier.id) ?? 0)}
-            </p>
-          ))}
+            </>
+          )}
         </div>
+
         {!isReadOnly && (
+          <div className="space-y-3">
+            <Button variant="ghost" size="sm" onClick={() => setShowAdvanced((prev) => !prev)}>
+              <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+              Avançado
+            </Button>
+            {showAdvanced && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Pedir ajuste à IA</p>
+            <p className="text-sm font-medium">Pedir ajuste ao assistente</p>
             <div className="flex items-center gap-2">
               <Input
                 placeholder='Ex: "tira o Fornecedor X, passa os itens dele pro próximo colocado"'
@@ -396,92 +559,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
               </div>
             )}
           </div>
-        )}
-
-        {batchStatus !== 'cancelado' && orderDetailsBySupplier.size > 0 && (
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Pedidos de compra</p>
-            {Array.from(orderDetailsBySupplier.entries()).map(([supplierId, orderDetails]) => {
-              const orderItems = orderItemsOf(orderDetails);
-              const supplier = suppliers.find((s) => s.id === supplierId);
-              const total = orderItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-              // Lote arquivado (isReadOnly) sempre conta como "já enviado" mesmo
-              // sem order_generated_at — lotes concluídos antes desta coluna
-              // existir (sem backfill) não podem voltar a mostrar "Gerar
-              // pedido", que exigiria um lote aberto pra confirmar.
-              const alreadySent = Boolean(supplier?.order_generated_at) || isReadOnly;
-              return (
-                <div key={supplierId} className="border rounded-lg p-4 space-y-2">
-                  <p className="font-medium text-sm">
-                    {supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'Fornecedor'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {orderItems.length} item(ns) · Total: {formatPrice(total)}
-                    {supplier?.order_generated_at &&
-                      ` · Pedido gerado em ${new Date(supplier.order_generated_at).toLocaleDateString('pt-BR')}`}
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {!alreadySent && (
-                      <Button
-                        size="sm"
-                        disabled={generatingSupplierId === supplierId}
-                        onClick={() => setConfirmandoSupplierId(supplierId)}
-                      >
-                        Definir quantidades e gerar pedido
-                      </Button>
-                    )}
-                    {alreadySent && (
-                      <>
-                        {!isReadOnly && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={generatingSupplierId === supplierId}
-                            onClick={() => setConfirmandoSupplierId(supplierId)}
-                          >
-                            Corrigir quantidades / reenviar
-                          </Button>
-                        )}
-                        <Button asChild size="sm" variant="outline">
-                          <a
-                            href={buildWhatsAppLink(supplier?.phone ?? '', buildPurchaseOrderMessage(orderItems))}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            WhatsApp
-                          </a>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            downloadPurchaseOrderPdf(
-                              supplier ? `${supplier.company_name} (${supplier.contact_name})` : 'fornecedor',
-                              orderItems
-                            )
-                          }
-                        >
-                          <FileDown className="h-4 w-4 mr-2" />
-                          Baixar PDF
-                        </Button>
-                      </>
-                    )}
-                  </div>
-
-                  <ConfirmarQuantidadesDialog
-                    open={confirmandoSupplierId === supplierId}
-                    onOpenChange={(aberto) => setConfirmandoSupplierId(aberto ? supplierId : null)}
-                    fornecedor={supplier?.company_name ?? 'Este fornecedor'}
-                    itens={orderDetails}
-                    jaGerado={alreadySent}
-                    onConfirmar={(quantidades) =>
-                      handleConfirmarQuantidades(supplierId, quantidades)
-                    }
-                  />
-                </div>
-              );
-            })}
+            )}
           </div>
         )}
 
@@ -489,20 +567,20 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" disabled={isArchiving} className="w-full">
-                Arquivar lote
+                Encerrar esta cotação
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Arquivar este lote?</AlertDialogTitle>
+                <AlertDialogTitle>Encerrar esta cotação?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Só organiza a lista de lotes — itens ainda sem vencedor continuam pendentes em Faltantes
-                  normalmente, sem mudança. Não tem como desarquivar.
+                  Só tira esta cotação da lista de abertas. Itens que ficaram sem preço continuam pendentes em Faltantes
+                  normalmente. Não dá para reabrir depois.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Voltar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleArchive}>Arquivar</AlertDialogAction>
+                <AlertDialogAction onClick={handleArchive}>Encerrar</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
