@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, MessageCircle, FileDown, Pencil, X, RotateCcw, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MessageCircle, FileDown, Pencil, X, RotateCcw, ChevronDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +53,7 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
     applyCommand,
     setPriceExcluded,
     correctPrice,
+    removeItem,
     updateItemQuantity,
     updateItemPedido,
     generateSupplierOrder,
@@ -297,7 +298,36 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                       onBlur={(e) => handleQuantityBlur(item.id, e.target.value)}
                     />
                     <span className="text-sm flex-1 min-w-40">{name}</span>
-                    <span className="text-sm font-medium">{formatPrice(price)}</span>
+                    {editingCell?.itemId === item.id && editingCell?.supplierId === supplierId ? (
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        autoFocus
+                        className="h-9 w-28"
+                        value={editingPriceValue}
+                        onChange={(e) => setEditingPriceValue(e.target.value)}
+                        onBlur={saveEditingPrice}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                          if (e.key === 'Escape') setEditingCell(null);
+                        }}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isReadOnly}
+                        title="Clique para corrigir o preço"
+                        onClick={() => startEditingPrice(item.id, supplierId, price)}
+                        className="text-sm font-medium inline-flex items-center gap-1 rounded px-1.5 py-1 hover:bg-muted/60 disabled:hover:bg-transparent"
+                      >
+                        {formatPrice(price)}
+                        {!isReadOnly && <Pencil className="h-3 w-3 text-muted-foreground" />}
+                      </button>
+                    )}
+                    {getCorrected(item.id, supplierId) && (
+                      <Badge variant="secondary" className="text-[10px]">Preço corrigido</Badge>
+                    )}
                     {source !== 'auto' && <Badge variant="secondary" className="text-[10px]">Escolhido por você</Badge>}
                     {!isReadOnly && options.length > 1 && (
                       <Select value={supplierId} onValueChange={(value) => setWinner(item.id, value)}>
@@ -312,6 +342,23 @@ const QuoteBatchComparison = ({ batchId, products, onBack }: QuoteBatchCompariso
                           ))}
                         </SelectContent>
                       </Select>
+                    )}
+                    {!isReadOnly && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                        title="Tirar este produto da cotação"
+                        aria-label="Tirar este produto da cotação"
+                        onClick={() => {
+                          if (window.confirm(`Tirar "${name}" desta cotação? Ele continua pendente em Faltantes.`)) {
+                            removeItem(item.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 );

@@ -436,6 +436,32 @@ export const useQuoteBatchComparison = (batchId: string) => {
     }
   };
 
+  // Tira o produto desta cotação (some de todos os fornecedores). O item
+  // continua pendente em Faltantes e pode entrar numa cotação nova depois.
+  const removeItem = async (itemId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('quote_batch_items')
+        .delete()
+        .eq('id', itemId)
+        .eq('quote_batch_id', batchId)
+        .select('id');
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Item não encontrado nesta cotação.');
+      await fetchData();
+      toast({ title: 'Produto tirado da cotação' });
+      return true;
+    } catch (error) {
+      console.error('Error removing quote batch item:', error);
+      toast({
+        title: 'Erro ao tirar produto',
+        description: 'Não foi possível tirar o produto da cotação.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   const updateItemQuantity = async (itemId: string, quantity: number | null) => {
     try {
       const { error } = await supabase.from('quote_batch_items').update({ quantity }).eq('id', itemId);
@@ -583,6 +609,7 @@ export const useQuoteBatchComparison = (batchId: string) => {
     applyCommand,
     setPriceExcluded,
     correctPrice,
+    removeItem,
     updateItemQuantity,
     updateItemPedido,
     generateSupplierOrder,
