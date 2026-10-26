@@ -3067,6 +3067,10 @@ export type Database = {
       }
     }
     Functions: {
+      entrega_excluir: {
+        Args: { p_empresa_id: string; p_entrega_ids: string[] }
+        Returns: Json
+      }
       entrega_fila: { Args: { p_empresa_id: string }; Returns: Json }
       entrega_importar_lote: {
         Args: { p_empresa_id: string; p_linhas: Json }

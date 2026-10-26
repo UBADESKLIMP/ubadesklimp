@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, MapPin, Phone, PackageX } from 'lucide-react';
+import { AlertTriangle, MapPin, Phone, PackageX, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,7 @@ interface Props {
   erro: string | null;
   jaNaRota: Set<string>;
   onMontarRota: (ids: string[]) => Promise<ResultadoRpc>;
+  onExcluir: (ids: string[]) => Promise<ResultadoRpc>;
 }
 
 /**
@@ -29,10 +30,11 @@ interface Props {
  * norte pro sul. A tela não reordena nada — só separa a dívida num bloco
  * próprio, porque é o que se perde hoje e precisa doer na vista.
  */
-const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota }: Props) => {
+const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcluir }: Props) => {
   const [escolhidas, setEscolhidas] = useState<Set<string>>(new Set());
   const [montando, setMontando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   const divida = useMemo(() => fila.filter((e) => e.situacao === 'nao_entregue'), [fila]);
   const esperando = useMemo(() => fila.filter((e) => e.situacao !== 'nao_entregue'), [fila]);
@@ -77,6 +79,24 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota }: Prop
       return;
     }
     setEscolhidas(new Set());
+  };
+
+  // Só exclui o que ainda não foi para a rua: fora da rota e sem ter voltado.
+  // O banco confere de novo; aqui só evita o clique que não teria efeito.
+  const idsDaDivida = new Set(divida.map((e) => e.id));
+  const podeExcluir =
+    escolhidas.size > 0 && [...escolhidas].every((id) => !jaNaRota.has(id) && !idsDaDivida.has(id));
+
+  const excluir = async () => {
+    const quantas = escolhidas.size;
+    const frase = quantas === 1 ? 'esta entrega' : `estas ${quantas} entregas`;
+    if (!window.confirm(`Excluir ${frase}? Elas ainda não saíram em rota. Se o ERP mandar de novo, voltam a aparecer.`)) return;
+    setExcluindo(true);
+    setAviso(null);
+    const r = await onExcluir([...escolhidas]);
+    setExcluindo(false);
+    setAviso(r.mensagem ?? null);
+    if (r.ok) setEscolhidas(new Set());
   };
 
   if (carregando && fila.length === 0) return <AdminLoadingState label="Carregando a fila..." />;
@@ -206,11 +226,27 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota }: Prop
 
       {/* Fica colado embaixo: no celular, no chão do estoque, a ação não pode
           exigir rolar até o fim de 30 entregas. */}
-      <div className="sticky bottom-20 md:bottom-4 z-10">
+      <div className="sticky bottom-20 md:bottom-4 z-10 flex gap-2">
+        {escolhidas.size > 0 && (
+          <Button
+            onClick={excluir}
+            disabled={!podeExcluir || excluindo || montando}
+            variant="outline"
+            title={
+              podeExcluir
+                ? 'Excluir as entregas marcadas'
+                : 'Só dá para excluir entrega que ainda não entrou em rota e não voltou'
+            }
+            className="h-12 shrink-0 border-[#C0392B]/60 bg-[#12121a] text-[#C0392B] hover:bg-[#C0392B]/10"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {excluindo ? 'Excluindo...' : 'Excluir'}
+          </Button>
+        )}
         <Button
           onClick={montar}
-          disabled={escolhidas.size === 0 || montando}
-          className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
+          disabled={escolhidas.size === 0 || montando || excluindo}
+          className="flex-1 h-12 bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
         >
           {montando
             ? 'Montando...'

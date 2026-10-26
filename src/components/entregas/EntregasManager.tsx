@@ -160,6 +160,7 @@ const EntregasManager = () => {
             erro={fila.erro}
             jaNaRota={jaNaRota}
             onMontarRota={montarRota}
+            onExcluir={fila.excluir}
           />
         </TabsContent>
 

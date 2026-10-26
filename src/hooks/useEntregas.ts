@@ -151,7 +151,21 @@ export const useFilaDeEntregas = (empresaId: string | null) => {
     carregar();
   }, [carregar]);
 
-  return { fila, carregando, erro, recarregar: carregar };
+  // Só apaga o que nunca entrou em rota; o banco confere e devolve quantas
+  // foram de fato excluídas.
+  const excluir = async (entregaIds: string[]): Promise<ResultadoRpc> => {
+    if (!empresaId) return { ok: false, mensagem: 'Nenhuma empresa selecionada.' };
+    const { data: res, error } = await supabase.rpc('entrega_excluir', {
+      p_empresa_id: empresaId,
+      p_entrega_ids: entregaIds,
+    });
+    if (error) return { ok: false, mensagem: MENSAGEM_DE_REDE };
+    const r = res as unknown as ResultadoRpc;
+    await carregar();
+    return r;
+  };
+
+  return { fila, carregando, erro, recarregar: carregar, excluir };
 };
 
 /**
