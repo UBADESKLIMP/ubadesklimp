@@ -40,7 +40,7 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
         </span>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
+      <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto overflow-x-hidden">
         {groups.map(({ group, items: groupItems }, index) => (
           <div key={group ?? 'ungrouped'} className={index > 0 ? 'mt-3' : undefined}>
             {group && (
