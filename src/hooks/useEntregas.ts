@@ -229,6 +229,16 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
     return r;
   };
 
+  // Tira a parada da rota de hoje e devolve a entrega para a fila. Não refaz a
+  // ordem das outras, então o arrasto manual de quem montou a rota continua.
+  const tirarDaRota = async (paradaId: string): Promise<ResultadoRpc> => {
+    const { data: res, error } = await supabase.rpc('entrega_tirar_da_rota', { p_parada_id: paradaId });
+    if (error) return { ok: false, mensagem: MENSAGEM_DE_REDE };
+    const r = res as unknown as ResultadoRpc;
+    if (r?.ok) await carregar();
+    return r;
+  };
+
   const inverterRota = async (): Promise<ResultadoRpc> => {
     if (!rota?.rota_id) return { ok: false, mensagem: 'Monte a rota antes de invertê-la.' };
     const { data: res, error } = await supabase.rpc('entrega_inverter_rota', {
@@ -290,6 +300,7 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
     recarregar: carregar,
     montarRota,
     inverterRota,
+    tirarDaRota,
     moverParadas,
     importarLote,
   };

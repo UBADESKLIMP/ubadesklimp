@@ -3089,6 +3089,10 @@ export type Database = {
         Args: { p_nova_ordem: number; p_parada_id: string }
         Returns: Json
       }
+      entrega_tirar_da_rota: {
+        Args: { p_parada_id: string }
+        Returns: Json
+      }
       entrega_registrar: {
         Args: {
           p_entrega_id: string

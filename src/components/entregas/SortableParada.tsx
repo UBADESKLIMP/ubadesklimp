@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, MapPin, Phone, MessageCircle } from 'lucide-react';
+import { GripVertical, MapPin, Phone, MessageCircle, X } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { SeloEntrega } from './SeloEntrega';
 import { MOTIVO_LABEL, emReais, type ItemEntrega, type ParadaDaRota } from '@/hooks/useEntregas';
@@ -25,10 +25,13 @@ const SortableParada = ({
   parada,
   posicao,
   podeArrastar,
+  onTirar,
 }: {
   parada: ParadaDaRota;
   posicao: number;
   podeArrastar: boolean;
+  /** Só existe para parada ainda em rota: tira da rota de hoje e volta para a fila. */
+  onTirar?: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: parada.parada_id,
@@ -145,6 +148,17 @@ const SortableParada = ({
             </div>
           )}
         </div>
+        {onTirar && (
+          <button
+            type="button"
+            onClick={onTirar}
+            title="Tirar da rota de hoje (volta para a fila)"
+            aria-label={`Tirar ${parada.cliente_nome} da rota de hoje`}
+            className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-adm-muted transition hover:bg-adm-alert-soft hover:text-adm-alert"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </div>
   );

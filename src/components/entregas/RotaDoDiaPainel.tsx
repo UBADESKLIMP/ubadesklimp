@@ -30,6 +30,7 @@ interface Props {
   data: string;
   onInverter: () => Promise<ResultadoRpc>;
   onMover: (nova: ParadaDaRota[]) => Promise<ResultadoRpc>;
+  onTirar: (paradaId: string) => Promise<ResultadoRpc>;
   onRecarregar: () => void;
   onIrParaFila: () => void;
 }
@@ -45,6 +46,7 @@ const RotaDoDiaPainel = ({
   data,
   onInverter,
   onMover,
+  onTirar,
   onRecarregar,
   onIrParaFila,
 }: Props) => {
@@ -91,6 +93,15 @@ const RotaDoDiaPainel = ({
     const r = await onMover(arrayMove(paradas, de, para));
     setMexendo(false);
     if (!r.ok) setAviso(r.mensagem ?? 'Não conseguimos guardar a nova ordem.');
+  };
+
+  const tirar = async (parada: ParadaDaRota) => {
+    if (!window.confirm(`Tirar ${parada.cliente_nome} da rota de hoje? Ela volta para a fila.`)) return;
+    setMexendo(true);
+    setAviso(null);
+    const r = await onTirar(parada.parada_id);
+    setMexendo(false);
+    if (!r.ok) setAviso(r.mensagem ?? 'Não foi possível tirar da rota.');
   };
 
   const inverter = async () => {
@@ -200,6 +211,7 @@ const RotaDoDiaPainel = ({
                       // Parada já resolvida não se arrasta: mexer na ordem do
                       // que já aconteceu não muda nada e só confunde.
                       podeArrastar={parada.situacao === 'em_rota'}
+                      onTirar={parada.situacao === 'em_rota' ? () => tirar(parada) : undefined}
                     />
                   ))}
                 </div>
