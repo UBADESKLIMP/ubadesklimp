@@ -95,7 +95,7 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
 
                 {/* Mostra o impacto antes de decidir, que é o que o PRD pede. */}
                 {j.tipo === 'compensacao_atraso' && j.minutos_compensados != null && (
-                  <p className="text-xs text-[#0F6B5C]">
+                  <p className="text-xs text-[#1573D6]">
                     Aprovar compensa{' '}
                     <span className="font-mono">{j.minutos_compensados} min</span> do atraso deste
                     dia — sai do desconto, mas continua contando no escalonamento.

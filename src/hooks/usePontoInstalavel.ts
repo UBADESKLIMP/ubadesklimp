@@ -16,7 +16,7 @@ export const usePontoInstalavel = () => {
 
     const cor = document.createElement('meta');
     cor.name = 'theme-color';
-    cor.content = '#0F6B5C';
+    cor.content = '#1573D6';
     document.head.appendChild(cor);
 
     if ('serviceWorker' in navigator) {

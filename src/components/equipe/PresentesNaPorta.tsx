@@ -105,7 +105,7 @@ const PresentesNaPorta = ({ colaboradores, presentes, horaAbertura, salvando, on
                 className={cn(
                   'flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 transition-colors',
                   marcado
-                    ? 'border-[#0F6B5C]/50 bg-[#0F6B5C]/10'
+                    ? 'border-[#1573D6]/50 bg-[#1573D6]/10'
                     : 'border-blue-500/10 bg-[#0c0c14]'
                 )}
               >
@@ -118,7 +118,7 @@ const PresentesNaPorta = ({ colaboradores, presentes, horaAbertura, salvando, on
                     className={cn(
                       'h-5 w-5 rounded border-2 shrink-0 flex items-center justify-center text-[11px] font-bold',
                       marcado
-                        ? 'border-[#0F6B5C] bg-[#0F6B5C] text-white'
+                        ? 'border-[#1573D6] bg-[#1573D6] text-white'
                         : 'border-blue-500/30'
                     )}
                   >

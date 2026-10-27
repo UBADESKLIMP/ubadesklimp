@@ -27,7 +27,7 @@ const ATRASO_TOM: Record<AtrasoStatus, string> = {
   sem_ciencia: 'text-[#C0392B] border-[#C0392B]/70 bg-[#C0392B]/10',
   justificativa_pendente: 'text-[#f0b429] border-[#f0b429]/70 bg-[#f0b429]/10',
   abonado: 'text-[#6B7280] border-[#6B7280]/70 bg-[#6B7280]/10 line-through',
-  compensado: 'text-[#0F6B5C] border-[#0F6B5C]/80 bg-[#0F6B5C]/15',
+  compensado: 'text-[#1573D6] border-[#1573D6]/80 bg-[#1573D6]/15',
   substituido: 'text-[#6B7280] border-[#6B7280]/60 bg-transparent line-through',
 };
 

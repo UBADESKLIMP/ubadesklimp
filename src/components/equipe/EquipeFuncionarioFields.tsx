@@ -459,7 +459,7 @@ const EquipeFuncionarioFields = ({ userId, onRegistrarSalvar }: Props) => {
             <span
               className={`h-5 w-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center text-[11px] font-bold ${
                 podeAbrirLoja
-                  ? 'border-[#0F6B5C] bg-[#0F6B5C] text-white'
+                  ? 'border-[#1573D6] bg-[#1573D6] text-white'
                   : 'border-muted-foreground/40'
               }`}
             >

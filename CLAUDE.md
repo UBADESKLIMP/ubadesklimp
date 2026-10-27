@@ -29,7 +29,7 @@ Pelo menos 2 papéis:
 ## Design (resumo — ver `Briefing-Design-Ubadesk-Compras.md` para detalhe completo)
 
 - **Não usar o combo fundo creme + verde-menta genérico** — é o visual padrão de qualquer app gerado sem direção.
-- Paleta: fundo `#F5F6F3`, tinta `#141B1E`, acento de marca `#0F6B5C` (verde-petróleo), selo Urgente `#C0392B`, selo Comprado `#2F9E44`, selo Pendente `#6B7280`.
+- Paleta: fundo `#F5F6F3`, tinta `#141B1E`, acento de marca `#1573D6` (azul da loja; trocou o verde-petróleo `#0F6B5C` em 2026-10-27), selo Urgente `#C0392B`, selo Comprado `#2F9E44`, selo Pendente `#6B7280`.
 - Tipografia: grotesca técnica pra labels/título (IBM Plex Sans ou Space Grotesk), Inter/Plex pro corpo, monoespaçada (IBM Plex Mono/JetBrains Mono) pra números e quantidades.
 - Elemento de assinatura: badges de status tipo "carimbo/selo" (leve rotação, caixa alta, cor sólida forte) — remete à origem do produto (lista de papel → dado digital).
 - Referências reais a seguir: **Linear** (tratamento de status/badge), **Sortly** (cartão de item mobile-first), **Bling** (navegação persistente + consistência entre telas de um ERP brasileiro).

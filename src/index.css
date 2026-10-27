@@ -307,9 +307,9 @@ body.admin-light {
   --adm-muted: #55605F;
   --adm-faint: #8A9290;
   --adm-line: #DCDFD8;
-  --adm-accent: #0F6B5C;
-  --adm-accent-strong: #0C5A4D;
-  --adm-accent-soft: rgba(15, 107, 92, 0.10);
+  --adm-accent: #1573D6;
+  --adm-accent-strong: #0F5CB0;
+  --adm-accent-soft: rgba(21, 115, 214, 0.10);
   --adm-alert: #C0392B;
   --adm-warn: #9A6B00;
   --adm-danger-text: #B5362A;
@@ -321,14 +321,14 @@ body.admin-light {
   --card-foreground: 200 18% 10%;
   --popover: 0 0% 100%;
   --popover-foreground: 200 18% 10%;
-  --primary: 171 75% 24%;
+  --primary: 211 82% 46%;
   --primary-foreground: 0 0% 100%;
-  --ring: 171 75% 24%;
+  --ring: 211 82% 46%;
   --border: 80 9% 85%;
   --input: 80 9% 85%;
   --muted: 72 12% 94%;
   --muted-foreground: 190 8% 36%;
-  --accent: 171 40% 92%;
+  --accent: 211 60% 94%;
   --accent-foreground: 200 18% 10%;
   --destructive: 6 63% 46%;
   --destructive-foreground: 0 0% 100%;
@@ -340,23 +340,23 @@ body.admin-dark {
   --adm-muted: #A3AEAB;
   --adm-faint: #76817E;
   --adm-line: #2A3437;
-  --adm-accent: #3CC2A8;
-  --adm-accent-strong: #5FD3BB;
-  --adm-accent-soft: rgba(60, 194, 168, 0.14);
+  --adm-accent: #4C9BFF;
+  --adm-accent-strong: #7DB6FF;
+  --adm-accent-soft: rgba(76, 155, 255, 0.15);
   --adm-alert: #FF6B5B;
   --adm-warn: #F0B429;
   --adm-danger-text: #FF8A7A;
   --adm-ok-text: #4ADE80;
-  --adm-on-accent: #07201B;
+  --adm-on-accent: #06142B;
   --background: 195 17% 7%;
   --foreground: 150 8% 92%;
   --card: 195 14% 11%;
   --card-foreground: 150 8% 92%;
   --popover: 195 14% 11%;
   --popover-foreground: 150 8% 92%;
-  --primary: 168 52% 51%;
-  --primary-foreground: 170 70% 8%;
-  --ring: 168 52% 51%;
+  --primary: 213 100% 65%;
+  --primary-foreground: 220 60% 8%;
+  --ring: 213 100% 65%;
   --border: 195 12% 19%;
   --input: 195 12% 19%;
   --muted: 195 12% 15%;
@@ -423,7 +423,7 @@ body.admin-themed {
 .admin-themed .border-blue-500\/60,
 .admin-themed .hover\:border-blue-500\/40:hover { border-color: var(--adm-accent); }
 
-/* Botões e fundos azuis viram o verde-petróleo */
+/* Botões e fundos azuis viram o azul da loja */
 .admin-themed .bg-blue-600,
 .admin-themed .bg-blue-600\/80 { background-color: var(--adm-accent); }
 .admin-themed .hover\:bg-blue-500:hover { background-color: var(--adm-accent-strong); }
@@ -444,10 +444,10 @@ body.admin-themed {
   :is(.text-white, svg, span),
 .admin-themed :is(.bg-blue-600, .bg-blue-600\/80, .bg-primary).text-white { color: var(--adm-on-accent); }
 .admin-themed :is(.bg-destructive, .bg-emerald-600, .bg-amber-600,
-  .bg-\[\#0F6B5C\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\])
+  .bg-\[\#1573D6\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\])
   :is(.text-white, svg, span),
 .admin-themed :is(.bg-destructive, .bg-emerald-600, .bg-amber-600,
-  .bg-\[\#0F6B5C\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\]).text-white {
+  .bg-\[\#1573D6\], .bg-\[\#C0392B\], .bg-\[\#2F9E44\], .bg-\[\#6B7280\], .bg-\[\#B5362A\], .bg-\[\#1F7A4C\]).text-white {
   color: #FFFFFF;
 }
 
