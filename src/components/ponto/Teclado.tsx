@@ -12,21 +12,31 @@ interface Props {
   tom?: 'ponto' | 'loja';
   /** Quando muda pra um texto, o teclado chacoalha: é o "PIN errado" sem precisar ler nada. */
   erro?: string | null;
+  /**
+   * Sem o painel escuro em volta e com teclas maiores: é para telas que já são
+   * inteiras o degradê (quiosque do ponto, entregador). Quem usa precisa
+   * colocar o fundo em volta.
+   */
+  plano?: boolean;
 }
 
 // O painel tem o próprio fundo escuro com degradê da cor do tom, então o
 // teclado fica igual em qualquer tela (clara ou escura) onde for usado.
-const FUNDO = {
+export const FUNDO = {
   ponto: 'radial-gradient(120% 75% at 50% 0%, color-mix(in srgb, hsl(var(--primary)) 62%, #0b1020), #0b1020 72%)',
   loja: 'radial-gradient(120% 75% at 50% 0%, color-mix(in srgb, #B8860B 62%, #0b1020), #0b1020 72%)',
 };
+
+/** O degradê da tela inteira (quiosque e entregador): mais claro no alto, escuro embaixo. */
+export const FUNDO_TELA =
+  'radial-gradient(90% 70% at 30% 0%, color-mix(in srgb, hsl(var(--primary)) 70%, #0b1020), #0b1020 78%)';
 
 /**
  * Teclado do balcão e do celular do entregador. Teclas grandes porque se usa
  * em pé, de passagem. Entra sozinho no último número (sem botão de confirmar)
  * e aceita o teclado numérico do PC.
  */
-const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom = 'ponto', erro }: Props) => {
+const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom = 'ponto', erro, plano }: Props) => {
   const teclas = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const completo = valor.length >= tamanho;
   const [chacoalhando, setChacoalhando] = useState(false);
@@ -86,14 +96,18 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
   }, [valor, completo, confirmando, onChange, onConfirmar]);
 
   const tecla =
-    'h-[4.25rem] w-full rounded-full border border-white/20 bg-white/10 text-3xl font-medium text-white ' +
+    (plano ? 'h-[4.75rem] ' : 'h-[4.25rem] ') +
+    'w-full rounded-full border border-white/20 bg-white/10 text-3xl font-medium text-white ' +
     'backdrop-blur-sm transition active:scale-[0.93] active:bg-white/25 hover:bg-white/15 ' +
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-white';
 
   return (
     <div
-      className="mx-auto w-full max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl"
-      style={{ background: FUNDO[tom] }}
+      className={cn(
+        'mx-auto w-full',
+        plano ? 'max-w-[21rem]' : 'max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl'
+      )}
+      style={plano ? undefined : { background: FUNDO[tom] }}
     >
       <div
         className={cn('mb-7 flex justify-center gap-4', chacoalhando && 'animate-[teclado-chacoalha_0.4s]')}
@@ -130,9 +144,11 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
         </button>
       </div>
 
-      <p className="mt-5 text-center text-xs text-white/60">
-        Entra sozinho no último número · dá para usar o teclado do computador
-      </p>
+      {!plano && (
+        <p className="mt-5 text-center text-xs text-white/60">
+          Entra sozinho no último número · dá para usar o teclado do computador
+        </p>
+      )}
     </div>
   );
 };

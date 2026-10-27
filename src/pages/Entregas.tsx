@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2, Truck } from 'lucide-react';
-import Teclado from '@/components/ponto/Teclado';
+import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import MinhaRota from '@/components/entregas/MinhaRota';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
@@ -111,20 +111,23 @@ const Entregas = () => {
 
   if (!empresaId) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F5F6F3] px-6 text-center">
-        <Truck className="h-10 w-10 text-[#8A9290]" />
-        <h1 className="mt-4 text-xl font-semibold text-[#141B1E]">Entre com a sua conta</h1>
-        <p className="mt-2 max-w-xs text-sm text-[#55605F]">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white"
+        style={{ background: FUNDO_TELA }}
+      >
+        <Truck className="h-12 w-12 text-white/80" />
+        <h1 className="mt-4 text-2xl font-semibold">Entre com a sua conta</h1>
+        <p className="mt-2 max-w-xs text-sm text-white/75">
           Este aparelho ainda não sabe de qual loja é. Entrando com a sua conta da equipe ele
           descobre sozinho, e não pergunta de novo.
         </p>
         <Link
           to="/auth?next=/entregas"
-          className="mt-6 flex h-14 w-full max-w-xs items-center justify-center rounded-xl bg-[#141B1E] text-base font-semibold text-white"
+          className="mt-6 flex h-14 w-full max-w-xs items-center justify-center rounded-2xl bg-white text-base font-semibold text-[#0b1020]"
         >
           Entrar
         </Link>
-        <p className="mt-6 max-w-xs text-xs text-[#8A9290]">
+        <p className="mt-6 max-w-xs text-xs text-white/60">
           Sem conta no celular? Peça o link de entregas para o gestor — está no painel, em
           Entregas.
         </p>
@@ -157,13 +160,16 @@ const Entregas = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F5F6F3] px-6 py-10">
+    <div
+      className="flex min-h-screen flex-col items-center justify-center px-6 py-10 text-white"
+      style={{ background: FUNDO_TELA }}
+    >
       <div className="mb-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Truck className="h-7 w-7" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm">
+          <Truck className="h-8 w-8 text-white" />
         </div>
-        <h1 className="mt-4 text-2xl font-semibold text-[#141B1E]">Minhas entregas</h1>
-        <p className="mt-1 text-sm text-[#55605F]">Digite seu PIN para ver a rota de hoje.</p>
+        <h1 className="mt-5 text-3xl font-semibold tracking-tight">Minhas entregas</h1>
+        <p className="mt-1.5 text-base text-white/75">Digite seu PIN para ver a rota de hoje.</p>
       </div>
 
       <Teclado
@@ -173,9 +179,10 @@ const Entregas = () => {
         confirmando={carregando}
         tamanho={4}
         erro={erro}
+        plano
       />
 
-      {erro && <p className="mt-6 text-center text-sm font-medium text-[#B5362A]">{erro}</p>}
+      <p className="mt-6 min-h-5 text-center text-sm font-medium text-[#FFB4AA]">{erro}</p>
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import Teclado from '@/components/ponto/Teclado';
+import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
@@ -21,37 +21,11 @@ import {
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
 const SEGUNDOS_ATE_LIMPAR = 30;
 
-const Relogio = () => {
-  const [agora, setAgora] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setAgora(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  return (
-    <div className="text-center">
-      <p className="font-mono text-[4.5rem] sm:text-[6rem] leading-none font-bold tabular-nums tracking-tight text-[#141B1E]">
-        {agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-      </p>
-      {/* first-letter e não capitalize: capitalize vira "03 De Outubro De 2026" */}
-      <p className="text-sm sm:text-base text-[#55605F] mt-3 first-letter:uppercase">
-        {agora.toLocaleDateString('pt-BR', {
-          weekday: 'long',
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-        })}
-      </p>
-    </div>
-  );
-};
-
 /**
- * Relógio do balcão em tela larga (tablet na horizontal): o horário é o herói,
- * grande e SEMPRE branco sobre o degradê, em qualquer tema, porque o fundo é
- * escuro por desenho.
+ * O horário é o herói do quiosque: enorme, em branco sobre o degradê da tela
+ * (que é escuro por desenho, então o branco vale em qualquer tema).
  */
-const RelogioPainel = ({ local }: { local?: string | null }) => {
+const RelogioQuiosque = ({ local }: { local?: string | null }) => {
   const [agora, setAgora] = useState(new Date());
   useEffect(() => {
     const t = setInterval(() => setAgora(new Date()), 1000);
@@ -60,25 +34,18 @@ const RelogioPainel = ({ local }: { local?: string | null }) => {
   const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <div
-      className="hidden h-full flex-col justify-between rounded-[2rem] p-10 text-white lg:flex"
-      style={{
-        background:
-          'linear-gradient(160deg, hsl(var(--primary)), color-mix(in srgb, hsl(var(--primary)) 50%, #050912))',
-      }}
-    >
-      <p className="text-sm font-bold uppercase tracking-[0.12em] text-white/85">
-        Ubadesklimp · Ponto{local ? ` · ${local}` : ''}
+    <div className="text-center text-white lg:text-left">
+      {local && (
+        <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-white/70 lg:mb-6 lg:text-base">
+          Ponto · {local}
+        </p>
+      )}
+      <p className="font-mono text-[clamp(3.6rem,17vw,6.5rem)] font-medium leading-none tracking-tight tabular-nums text-white lg:text-[clamp(5.5rem,12.5vw,13rem)]">
+        {hora}
       </p>
-      <div>
-        <p className="font-mono text-[clamp(4rem,9vw,7.5rem)] font-medium leading-none tracking-tight tabular-nums text-white">
-          {hora}
-        </p>
-        <p className="mt-4 text-xl font-semibold text-white/90 first-letter:uppercase">
-          {agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-        </p>
-      </div>
-      <p className="text-sm font-medium text-white/80">Digite seu PIN para bater o ponto</p>
+      <p className="mt-3 text-base font-semibold text-white/85 first-letter:uppercase lg:mt-6 lg:text-2xl">
+        {agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+      </p>
     </div>
   );
 };
@@ -354,13 +321,21 @@ const Ponto = () => {
   const mostraAbrirLoja = !demo && !painel && atalhos.includes('abrir_loja') && temQuemAbra;
   const mostraFaltante = !demo && !painel && atalhos.includes('reportar_faltante');
   const secundaria = tela !== 'ponto';
+  // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
+  const emPonto = tela === 'ponto';
 
   return (
-    <div className="min-h-screen bg-[#F5F6F3] text-[#141B1E] flex flex-col">
+    <div
+      className={cn(
+        'min-h-screen flex flex-col',
+        emPonto ? 'text-white' : 'bg-[#F5F6F3] text-[#141B1E]'
+      )}
+      style={emPonto ? { background: FUNDO_TELA } : undefined}
+    >
       {aviso && <Aviso {...aviso} onFim={voltarAoInicio} />}
 
       <header className="flex items-center justify-between px-5 py-3.5">
-        <span className="text-xs text-[#8A9290] tracking-wide">
+        <span className={cn('text-xs tracking-wide', emPonto ? 'text-white/60' : 'text-[#8A9290]')}>
           {demo
             ? 'Demonstração · como a equipe vê'
             : painel
@@ -376,7 +351,7 @@ const Ponto = () => {
             <span
               className={cn(
                 'flex items-center gap-1.5 text-xs',
-                doPainel.contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#8A9290]'
+                doPainel.contexto?.rede_ok ? (emPonto ? 'text-emerald-300' : 'text-[#2F9E44]') : (emPonto ? 'text-white/60' : 'text-[#8A9290]')
               )}
             >
               {doPainel.contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
@@ -386,7 +361,7 @@ const Ponto = () => {
             <span
               className={cn(
                 'flex items-center gap-1.5 text-xs',
-                contexto?.rede_ok ? 'text-[#2F9E44]' : 'text-[#C0392B]'
+                contexto?.rede_ok ? (emPonto ? 'text-emerald-300' : 'text-[#2F9E44]') : (emPonto ? 'text-red-300' : 'text-[#C0392B]')
               )}
             >
               {contexto?.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
@@ -400,7 +375,7 @@ const Ponto = () => {
                 setPin('');
                 setTela('manutencao');
               }}
-              className="text-[#8A9290]/50 hover:text-[#55605F] p-1"
+              className={cn('p-1', emPonto ? 'text-white/30 hover:text-white/70' : 'text-[#8A9290]/50 hover:text-[#55605F]')}
               aria-label="Sair do modo quiosque"
             >
               <Unlock className="h-3.5 w-3.5" />
@@ -411,26 +386,19 @@ const Ponto = () => {
 
       {/* ---------------------------------------------- bater ponto: o centro */}
       {tela === 'ponto' && (
-        <main className="flex flex-1 flex-col items-center justify-center gap-9 px-6 pb-4 lg:grid lg:grid-cols-[1.15fr_1fr] lg:items-stretch lg:gap-8 lg:px-6 lg:pb-6">
-          <RelogioPainel local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
-          <div className="lg:hidden">
-            <Relogio />
-          </div>
+        <main className="flex flex-1 flex-col items-center justify-center gap-10 px-6 pb-6 lg:grid lg:grid-cols-[1.35fr_1fr] lg:gap-6 lg:px-14 lg:pb-10">
+          <RelogioQuiosque local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
 
           <div className="w-full lg:flex lg:flex-col lg:items-center lg:justify-center">
-            <p className="mb-5 text-center text-sm text-[#55605F] lg:hidden">
+            <p className="mb-6 text-center text-base font-medium text-white/85 lg:text-lg">
               {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
             </p>
-            {painel && (
-              <p className="mb-5 hidden text-center text-sm text-[#55605F] lg:block">
-                Digite o PIN de quem está batendo
-              </p>
-            )}
             <Teclado
               valor={pin}
               onChange={setPin}
               onConfirmar={baterPonto}
               confirmando={enviando}
+              plano
             />
           </div>
         </main>
@@ -509,15 +477,15 @@ const Ponto = () => {
             Voltar ao ponto
           </button>
         ) : (
-          <div className="flex items-center justify-center gap-2 border-t border-[#DCDFD8] pt-4">
+          <div className={cn('flex items-center justify-center gap-2 border-t pt-4', emPonto ? 'border-white/15' : 'border-[#DCDFD8]')}>
             {demo && (
-              <p className="text-xs text-[#8A9290] text-center max-w-md">
+              <p className={cn('text-xs text-center max-w-md', emPonto ? 'text-white/60' : 'text-[#8A9290]')}>
                 Demonstração: digite quatro números para ver a tela de confirmação. No computador
                 da loja ainda aparecem aqui os botões de abrir a loja e reportar faltante.
               </p>
             )}
             {painel && (
-              <p className="text-xs text-[#8A9290] text-center max-w-md">
+              <p className={cn('text-xs text-center max-w-md', emPonto ? 'text-white/60' : 'text-[#8A9290]')}>
                 Isto grava de verdade, com o PIN de qualquer pessoa. Se o PIN não for o seu, a
                 batida sai no seu nome e fica pendente de confirmação dela.
               </p>
@@ -529,7 +497,7 @@ const Ponto = () => {
                   setPin('');
                   setTela('abrir-loja');
                 }}
-                className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
+                className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
               >
                 <DoorOpen className="h-4 w-4" />
                 Abrir loja
@@ -542,7 +510,7 @@ const Ponto = () => {
                   setPin('');
                   setTela('faltante');
                 }}
-                className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] hover:bg-white rounded-xl px-4 py-3 transition"
+                className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
               >
                 <PackagePlus className="h-4 w-4" />
                 Reportar faltante
