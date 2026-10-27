@@ -55,7 +55,18 @@ const Entregas = () => {
     return lojaGuardada();
   }, [daUrl, minhaEmpresaId]);
 
-  const { rota, carregando, buscarRota, registrar, sair } = useMinhaRota(empresaId);
+  const { rota, carregando, buscarRota, registrar, sair, mudouEm } = useMinhaRota(empresaId);
+  const [avisoDeMudanca, setAvisoDeMudanca] = useState(false);
+
+  // A loja mexeu na rota: avisa por uns segundos, para ele não achar que a tela
+  // "bugou" quando a ordem trocar sozinha.
+  useEffect(() => {
+    if (!mudouEm) return;
+    setAvisoDeMudanca(true);
+    if ('vibrate' in navigator) navigator.vibrate?.(80);
+    const t = setTimeout(() => setAvisoDeMudanca(false), 6000);
+    return () => clearTimeout(t);
+  }, [mudouEm]);
   const [pin, setPin] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<AvisoAtual | null>(null);
@@ -138,6 +149,15 @@ const Entregas = () => {
   if (rota?.ok) {
     return (
       <>
+        {avisoDeMudanca && (
+          <button
+            type="button"
+            onClick={() => setAvisoDeMudanca(false)}
+            className="fixed inset-x-4 top-3 z-40 rounded-2xl border border-white/30 bg-[#0b1020]/95 px-4 py-3 text-center text-sm font-semibold text-white shadow-2xl backdrop-blur"
+          >
+            A loja atualizou a sua rota
+          </button>
+        )}
         <MinhaRota
           rota={rota}
           onRegistrar={marcar}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -443,10 +443,26 @@ const pegarLocalizacao = (): Promise<GeolocationCoordinates | null> =>
  * de painel e não deve ter. O PIN fica em memória depois da primeira vez — ele
  * não vai digitar quatro dígitos doze vezes na rua.
  */
+/** Como a rota "se parece": quem está, em que ordem, em que situação. */
+const assinaturaDaRota = (r: MinhaRota) =>
+  (r.paradas ?? []).map((p) => `${p.entrega_id}:${p.ordem}:${p.situacao}`).join('|');
+
+/**
+ * A loja mexe na rota (tira, põe, reordena, inverte) e o celular da rua
+ * acompanha sozinho: a tela confere a rota a cada poucos segundos e quando o
+ * aplicativo volta ao primeiro plano. Não usa websocket (o client desliga o
+ * realtime para economizar tráfego); é uma consulta pequena, só com a tela
+ * aberta.
+ */
+const SEGUNDOS_ENTRE_CONFERENCIAS = 8;
+
 export const useMinhaRota = (empresaId: string | null) => {
   const [pin, setPin] = useState<string | null>(null);
   const [rota, setRota] = useState<MinhaRota | null>(null);
   const [carregando, setCarregando] = useState(false);
+  // Hora em que a LOJA mudou algo; mudança feita pelo próprio entregador não conta.
+  const [mudouEm, setMudouEm] = useState<number | null>(null);
+  const ultimaAssinatura = useRef('');
 
   const buscarRota = useCallback(
     async (pinDigitado: string): Promise<MinhaRota> => {
@@ -463,11 +479,47 @@ export const useMinhaRota = (empresaId: string | null) => {
       if (r?.ok) {
         setPin(pinDigitado);
         setRota({ ...r, paradas: r.paradas ?? [] });
+        ultimaAssinatura.current = assinaturaDaRota({ ...r, paradas: r.paradas ?? [] });
       }
       return r;
     },
     [empresaId]
   );
+
+  // Confere em silêncio: sem "carregando", sem piscar a tela. Erro de rede ou
+  // resposta ruim só ignora e tenta de novo na próxima.
+  const conferir = useCallback(async () => {
+    if (!pin || !empresaId) return;
+    const { data, error } = await supabase.rpc('entrega_minha_rota', {
+      p_pin: pin,
+      p_empresa_id: empresaId,
+    });
+    if (error) return;
+    const r = data as unknown as MinhaRota;
+    if (!r?.ok) return;
+    const nova = assinaturaDaRota({ ...r, paradas: r.paradas ?? [] });
+    if (nova === ultimaAssinatura.current) return;
+    ultimaAssinatura.current = nova;
+    setRota({ ...r, paradas: r.paradas ?? [] });
+    setMudouEm(Date.now());
+  }, [pin, empresaId]);
+
+  useEffect(() => {
+    if (!pin) return;
+    const aCadaTempo = setInterval(() => {
+      if (document.visibilityState === 'visible') conferir();
+    }, SEGUNDOS_ENTRE_CONFERENCIAS * 1000);
+    const aoVoltar = () => {
+      if (document.visibilityState === 'visible') conferir();
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
+    window.addEventListener('focus', aoVoltar);
+    return () => {
+      clearInterval(aCadaTempo);
+      document.removeEventListener('visibilitychange', aoVoltar);
+      window.removeEventListener('focus', aoVoltar);
+    };
+  }, [pin, conferir]);
 
   const recarregar = useCallback(async () => {
     if (pin) await buscarRota(pin);
@@ -502,7 +554,9 @@ export const useMinhaRota = (empresaId: string | null) => {
   const sair = () => {
     setPin(null);
     setRota(null);
+    setMudouEm(null);
+    ultimaAssinatura.current = '';
   };
 
-  return { pin, rota, carregando, buscarRota, recarregar, registrar, sair };
+  return { pin, rota, carregando, buscarRota, recarregar, registrar, sair, mudouEm };
 };
