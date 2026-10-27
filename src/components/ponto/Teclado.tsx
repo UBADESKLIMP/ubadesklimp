@@ -108,8 +108,9 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
   }, [valor, completo, confirmando, onChange, onConfirmar]);
 
   const tecla =
-    (plano ? 'h-[4.75rem] ' : 'h-[4.25rem] ') +
-    'w-full rounded-full border border-white/20 bg-white/10 text-3xl font-medium text-white ' +
+    // Quadrada de propósito: com altura fixa e largura livre a tecla virava uma
+    // pílula esticada; assim é sempre um círculo, em celular ou monitor grande.
+    'aspect-square w-full rounded-full border border-white/20 bg-white/10 text-3xl md:text-4xl font-medium text-white ' +
     'backdrop-blur-sm transition active:scale-[0.93] active:bg-white/25 hover:bg-white/15 ' +
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-white';
 
@@ -117,7 +118,7 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
     <div
       className={cn(
         'mx-auto w-full',
-        plano ? 'max-w-[21rem]' : 'max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl'
+        plano ? 'max-w-[19rem] md:max-w-[25rem]' : 'max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl'
       )}
       style={plano ? undefined : { background: FUNDO[tom] }}
     >
