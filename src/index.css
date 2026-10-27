@@ -469,3 +469,34 @@ body.admin-themed {
 @media (prefers-reduced-motion: reduce) {
   [class*="teclado-chacoalha"] { animation: none !important; }
 }
+
+/* Tela de confirmação do ponto (components/ponto/Aviso.tsx) */
+@keyframes aviso-revelar {
+  from { clip-path: circle(0% at 50% 45%); }
+  to { clip-path: circle(150% at 50% 45%); }
+}
+@keyframes aviso-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes aviso-anel {
+  0% { transform: scale(0.8); opacity: 0.7; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes aviso-sobe {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes aviso-nao {
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
+.aviso-revelar { animation: aviso-revelar 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.aviso-pop { animation: aviso-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.15s both; }
+.aviso-anel { animation: aviso-anel 0.9s ease-out 0.25s both; }
+.aviso-sobe { animation: aviso-sobe 0.45s ease-out both; }
+.aviso-pop.aviso-nao { animation: aviso-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.15s both, aviso-nao 0.45s ease-in-out 0.7s; }
+@media (prefers-reduced-motion: reduce) {
+  .aviso-revelar, .aviso-pop, .aviso-anel, .aviso-sobe, .aviso-pop.aviso-nao { animation: none !important; }
+}

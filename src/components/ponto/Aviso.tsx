@@ -33,6 +33,21 @@ const Aviso = ({ ok, nome, destaque, detalhe, mensagem, codigo, onFim }: Props) 
     return () => clearTimeout(t);
   }, [restante, onFim]);
 
+  // Qualquer tecla também volta (quem usa o teclado do PC não precisa pegar o
+  // mouse). Pausa curta no começo e sem repetição, para a própria tecla que
+  // acabou de confirmar não fechar a tela na mesma hora.
+  useEffect(() => {
+    const abriuEm = Date.now();
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.repeat || Date.now() - abriuEm < 500) return;
+      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
+      e.preventDefault();
+      onFim();
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [onFim]);
+
   useEffect(() => {
     // vibração curta confirma sem a pessoa precisar ler (PRD seção 6)
     if (ok && 'vibrate' in navigator) navigator.vibrate?.(120);
@@ -41,27 +56,37 @@ const Aviso = ({ ok, nome, destaque, detalhe, mensagem, codigo, onFim }: Props) 
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col items-center justify-center p-8 text-center',
+        'aviso-revelar fixed inset-0 z-50 flex flex-col items-center justify-center p-8 text-center',
         ok ? 'bg-[#1F7A4C] text-white' : 'bg-[#B5362A] text-white'
       )}
       onClick={onFim}
     >
-      <div
-        className={cn(
-          'h-20 w-20 rounded-full flex items-center justify-center mb-7',
-          ok ? 'bg-white/15' : 'bg-white/15'
-        )}
-      >
-        {ok ? <Check className="h-11 w-11" strokeWidth={2.5} /> : <X className="h-11 w-11" strokeWidth={2.5} />}
+      {/* O círculo cresce do centro, o ícone salta e um anel se espalha: a
+          resposta aparece no centro do olhar, não "troca de tela" de repente. */}
+      <div className="relative mb-7 flex h-24 w-24 items-center justify-center">
+        <span className="aviso-anel absolute inset-0 rounded-full border-4 border-white/60" />
+        <div
+          className={cn(
+            'aviso-pop flex h-24 w-24 items-center justify-center rounded-full bg-white/15',
+            !ok && 'aviso-nao'
+          )}
+        >
+          {ok ? <Check className="h-12 w-12" strokeWidth={2.75} /> : <X className="h-12 w-12" strokeWidth={2.75} />}
+        </div>
       </div>
 
       {nome && (
-        <p className="text-2xl sm:text-3xl font-heading font-medium mb-2 opacity-95">{nome}</p>
+        <p className="aviso-sobe text-2xl sm:text-3xl font-heading font-medium mb-2 opacity-95" style={{ animationDelay: '0.25s' }}>
+          {nome}
+        </p>
       )}
 
       {destaque ? (
         <>
-          <p className="font-mono text-[5.5rem] sm:text-[7rem] leading-none font-bold tabular-nums tracking-tight">
+          <p
+            className="aviso-sobe font-mono text-[5.5rem] sm:text-[7rem] leading-none font-bold tabular-nums tracking-tight"
+            style={{ animationDelay: '0.35s' }}
+          >
             {destaque}
           </p>
           {detalhe && <p className="text-2xl mt-4 opacity-90">{detalhe}</p>}
@@ -76,7 +101,9 @@ const Aviso = ({ ok, nome, destaque, detalhe, mensagem, codigo, onFim }: Props) 
         <p className="text-2xl sm:text-3xl max-w-md leading-snug">{mensagem}</p>
       )}
 
-      <p className="text-sm opacity-50 mt-10">Toque para voltar · {restante}s</p>
+      <p className="aviso-sobe text-sm opacity-60 mt-10" style={{ animationDelay: '0.6s' }}>
+        Toque ou aperte qualquer tecla para voltar · {restante}s
+      </p>
     </div>
   );
 };

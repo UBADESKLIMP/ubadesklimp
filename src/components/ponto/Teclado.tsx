@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Delete } from 'lucide-react';
+import { Check, Delete } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -40,6 +40,18 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
   const teclas = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const completo = valor.length >= tamanho;
   const [chacoalhando, setChacoalhando] = useState(false);
+  // Com mouse a pessoa quer clicar no ✓ (ou Enter); no toque o último número
+  // já confirma sozinho. Os dois jeitos existem: o ✓ está sempre na tela.
+  const [comMouse, setComMouse] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches
+  );
+  useEffect(() => {
+    const consulta = window.matchMedia?.('(pointer: fine)');
+    if (!consulta) return;
+    const mudou = () => setComMouse(consulta.matches);
+    consulta.addEventListener('change', mudou);
+    return () => consulta.removeEventListener('change', mudou);
+  }, []);
 
   // A função de confirmar muda a cada render da tela; a ref evita reiniciar o
   // temporizador toda vez.
@@ -53,10 +65,10 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
   // Último número digitado confirma sozinho, com uma pausa curta pra o último
   // ponto encher antes da tela mudar.
   useEffect(() => {
-    if (!completo || confirmando) return;
+    if (!completo || confirmando || comMouse) return;
     const t = setTimeout(() => confirmarRef.current(), 180);
     return () => clearTimeout(t);
-  }, [completo, confirmando, valor]);
+  }, [completo, confirmando, comMouse, valor]);
 
   useEffect(() => {
     if (!erro) return;
@@ -130,7 +142,21 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
             {t}
           </button>
         ))}
-        <span aria-hidden />
+        <button
+          type="button"
+          onClick={onConfirmar}
+          disabled={!completo || confirmando}
+          aria-label="Confirmar"
+          className={cn(
+            tecla,
+            'flex items-center justify-center transition-colors',
+            completo && !confirmando
+              ? 'border-white bg-white text-[#0b1020] hover:bg-white active:bg-white/80'
+              : 'border-transparent bg-white/10 text-white/35 hover:bg-white/10'
+          )}
+        >
+          <Check className="h-8 w-8" strokeWidth={2.5} />
+        </button>
         <button type="button" onClick={() => digitar('0')} className={cn(tecla, 'font-mono')}>
           0
         </button>
@@ -146,7 +172,9 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
 
       {!plano && (
         <p className="mt-5 text-center text-xs text-white/60">
-          Entra sozinho no último número · dá para usar o teclado do computador
+          {comMouse
+            ? 'Clique no ✓ ou aperte Enter para confirmar'
+            : 'Entra sozinho no último número'}
         </p>
       )}
     </div>
