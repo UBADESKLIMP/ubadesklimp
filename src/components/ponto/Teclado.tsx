@@ -144,6 +144,17 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
         ))}
         <button
           type="button"
+          onClick={() => onChange(valor.slice(0, -1))}
+          className={cn(tecla, 'flex items-center justify-center border-transparent bg-transparent text-white/75')}
+          aria-label="Apagar"
+        >
+          <Delete className="h-7 w-7" />
+        </button>
+        <button type="button" onClick={() => digitar('0')} className={cn(tecla, 'font-mono')}>
+          0
+        </button>
+        <button
+          type="button"
           onClick={onConfirmar}
           disabled={!completo || confirmando}
           aria-label="Confirmar"
@@ -151,22 +162,11 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
             tecla,
             'flex items-center justify-center transition-colors',
             completo && !confirmando
-              ? 'border-white bg-white text-[#0b1020] hover:bg-white active:bg-white/80'
+              ? 'border-white bg-white text-[hsl(var(--primary))] hover:bg-white active:bg-white/80'
               : 'border-transparent bg-white/10 text-white/35 hover:bg-white/10'
           )}
         >
-          <Check className="h-8 w-8" strokeWidth={2.5} />
-        </button>
-        <button type="button" onClick={() => digitar('0')} className={cn(tecla, 'font-mono')}>
-          0
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(valor.slice(0, -1))}
-          className={cn(tecla, 'flex items-center justify-center border-transparent bg-transparent text-white/75')}
-          aria-label="Apagar"
-        >
-          <Delete className="h-7 w-7" />
+          <Check className="h-8 w-8" strokeWidth={3} />
         </button>
       </div>
 

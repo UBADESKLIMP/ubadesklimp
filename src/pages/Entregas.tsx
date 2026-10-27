@@ -103,8 +103,8 @@ const Entregas = () => {
   // link que ele não precisa.
   if (!empresaId && carregandoConta) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F6F3]">
-        <Loader2 className="h-6 w-6 animate-spin text-[#8A9290]" />
+      <div className="flex min-h-screen items-center justify-center" style={{ background: FUNDO_TELA }}>
+        <Loader2 className="h-7 w-7 animate-spin text-white/80" />
       </div>
     );
   }

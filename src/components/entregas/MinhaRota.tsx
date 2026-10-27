@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Check, ChevronDown, LogOut, MapPin, MessageCircle, Navigation, Phone } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import DeslizarParaEntregar from './DeslizarParaEntregar';
+import { FUNDO_TELA } from '@/components/ponto/Teclado';
 import {
   MOTIVO_LABEL,
   type EntregaMotivo,
@@ -292,15 +293,18 @@ const MinhaRota = ({
   // ------------------------------------------------------------ a tela
   return (
     <div className="min-h-screen bg-[#F5F6F3] pb-10">
-      <header className="sticky top-0 z-10 border-b border-[#DCDFD8] bg-[#F5F6F3]/95 px-4 pb-3 pt-3 backdrop-blur">
+      <header
+        className="sticky top-0 z-10 rounded-b-3xl px-4 pb-4 pt-4 text-white shadow-lg"
+        style={{ background: FUNDO_TELA }}
+      >
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-[#55605F]">Rota de {rota.nome ?? 'hoje'}</p>
-            <p className="text-xl font-semibold text-[#141B1E]">
+            <p className="text-sm text-white/75">Rota de {rota.nome ?? 'hoje'}</p>
+            <p className="text-xl font-semibold text-white">
               <span className="font-mono tabular-nums">{entregues}</span> de{' '}
               <span className="font-mono tabular-nums">{paradas.length}</span> entregues
               {voltaram > 0 && (
-                <span className="ml-2 text-sm font-normal text-[#B5362A]">
+                <span className="ml-2 text-sm font-normal text-[#FFB4AA]">
                   <span className="font-mono tabular-nums">{voltaram}</span> voltaram
                 </span>
               )}
@@ -309,18 +313,18 @@ const MinhaRota = ({
           <button
             onClick={onSair}
             aria-label="Sair"
-            className="rounded-xl border border-[#DCDFD8] bg-white p-3 text-[#55605F] active:scale-[0.97]"
+            className="rounded-xl border border-white/25 bg-white/10 p-3 text-white active:scale-[0.97]"
           >
             <LogOut className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-[#DCDFD8]" aria-hidden>
-          <span className="h-full bg-[#2F9E44] transition-all" style={{ width: percentual(entregues) }} />
-          <span className="h-full bg-[#C0392B] transition-all" style={{ width: percentual(voltaram) }} />
+        <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-white/20" aria-hidden>
+          <span className="h-full bg-[#4ADE80] transition-all" style={{ width: percentual(entregues) }} />
+          <span className="h-full bg-[#FF6B5B] transition-all" style={{ width: percentual(voltaram) }} />
         </div>
 
-        <div className="mt-3 grid grid-cols-2 rounded-xl border border-[#DCDFD8] bg-white p-1">
+        <div className="mt-3 grid grid-cols-2 rounded-xl border border-white/20 bg-white/10 p-1">
           {(['rota', 'carga'] as const).map((a) => (
             <button
               key={a}
@@ -328,7 +332,7 @@ const MinhaRota = ({
               onClick={() => setAba(a)}
               aria-pressed={aba === a}
               className={`rounded-lg py-2 text-sm font-semibold transition ${
-                aba === a ? 'bg-primary text-primary-foreground' : 'text-[#55605F]'
+                aba === a ? 'bg-white text-[hsl(var(--primary))]' : 'text-white/80'
               }`}
             >
               {a === 'rota' ? 'Rota' : 'Carga do dia'}
