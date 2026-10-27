@@ -172,6 +172,7 @@ const Entregas = () => {
         onConfirmar={entrar}
         confirmando={carregando}
         tamanho={4}
+        erro={erro}
       />
 
       {erro && <p className="mt-6 text-center text-sm font-medium text-[#B5362A]">{erro}</p>}

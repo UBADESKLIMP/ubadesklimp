@@ -1,15 +1,7 @@
-import { useState } from 'react';
-import {
-  ArrowLeft,
-  MapPin,
-  Phone,
-  MessageCircle,
-  Check,
-  X,
-  Navigation,
-  LogOut,
-} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Check, ChevronDown, LogOut, MapPin, MessageCircle, Navigation, Phone } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
+import DeslizarParaEntregar from './DeslizarParaEntregar';
 import {
   MOTIVO_LABEL,
   type EntregaMotivo,
@@ -28,23 +20,60 @@ const MOTIVOS: EntregaMotivo[] = [
   'outro',
 ];
 
-const resumoDosItens = (itens: ItemEntrega[]) => {
-  if (!Array.isArray(itens) || itens.length === 0) return [];
-  return itens
-    .map((item) =>
-      [item.quantidade, item.unidade, item.descricao].filter(Boolean).join(' ').trim()
-    )
-    .filter(Boolean);
+const textoDoItem = (item: ItemEntrega) =>
+  [item.quantidade, item.unidade, item.descricao].filter(Boolean).join(' ').trim();
+
+const quantidadeDoItem = (item: ItemEntrega): number | null => {
+  const n = parseFloat(String(item.quantidade ?? '').replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
 };
 
-const BOTAO_GRANDE =
-  'h-16 rounded-2xl text-lg font-semibold transition active:scale-[0.98] ' +
-  'flex items-center justify-center gap-2 disabled:opacity-50';
+const BOTAO_LINK =
+  'inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCDFD8] bg-white ' +
+  'px-3 text-sm font-medium text-[#141B1E] active:scale-[0.98]';
+
+type Aba = 'rota' | 'carga';
+
+interface ProdutoDaCarga {
+  chave: string;
+  nome: string;
+  unidade: string;
+  total: number | null;
+  porCliente: { cliente: string; quantidade: number | null }[];
+}
+
+/** Soma o que vai no carro: um produto por linha, com a divisão por cliente. */
+const juntarCarga = (paradas: ParadaDoEntregador[]): ProdutoDaCarga[] => {
+  const mapa = new Map<string, ProdutoDaCarga>();
+  paradas.forEach((p) => {
+    (Array.isArray(p.itens) ? p.itens : []).forEach((item) => {
+      const nome = (item.descricao ?? '').trim() || 'Item sem nome';
+      const unidade = (item.unidade ?? '').trim();
+      const chave = `${nome.toLowerCase()}|${unidade.toLowerCase()}`;
+      const q = quantidadeDoItem(item);
+      const atual = mapa.get(chave) ?? { chave, nome, unidade, total: 0, porCliente: [] };
+      atual.total = atual.total === null || q === null ? null : atual.total + q;
+      atual.porCliente.push({ cliente: p.cliente_nome, quantidade: q });
+      mapa.set(chave, atual);
+    });
+  });
+  return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+};
+
+const lerCarregados = (chave: string): Set<string> => {
+  try {
+    const bruto = window.localStorage.getItem(chave);
+    return new Set(bruto ? (JSON.parse(bruto) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+};
 
 /**
- * A tela da rua. Dois toques pra marcar, e nada mais: se marcar cada parada
- * for chato, ele deixa pra marcar tudo na volta na loja — e aí o registro
- * perde o sentido, que era justamente nascer onde o fato aconteceu.
+ * A tela da rua. As paradas ficam todas à mão: a primeira da fila já vem
+ * aberta, mas qualquer outra abre com um toque (o cliente do almoço fechou e o
+ * entregador segue pro próximo). Quem foi resolvido desce pro fim da lista pra
+ * a cabeça ficar sempre no que ainda falta.
  */
 const MinhaRota = ({
   rota,
@@ -59,260 +88,399 @@ const MinhaRota = ({
   ) => Promise<ResultadoRegistro>;
   onSair: () => void;
 }) => {
-  const [aberta, setAberta] = useState<ParadaDoEntregador | null>(null);
-  const [passo, setPasso] = useState<'parada' | 'entreguei' | 'nao-entreguei'>('parada');
-  const [quemRecebeu, setQuemRecebeu] = useState('');
+  const [aba, setAba] = useState<Aba>('rota');
+  const [abertas, setAbertas] = useState<Record<string, boolean>>({});
+  const [quemRecebeu, setQuemRecebeu] = useState<Record<string, string>>({});
+  const [enviando, setEnviando] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [voltouDe, setVoltouDe] = useState<ParadaDoEntregador | null>(null);
   const [motivo, setMotivo] = useState<EntregaMotivo | null>(null);
   const [motivoTexto, setMotivoTexto] = useState('');
-  const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+
+  const chaveCarga = `carga-do-dia:${new Date().toISOString().slice(0, 10)}`;
+  const [carregados, setCarregados] = useState<Set<string>>(() => lerCarregados(chaveCarga));
+  const [abertosDaCarga, setAbertosDaCarga] = useState<Set<string>>(new Set());
 
   const paradas = rota.paradas ?? [];
+  const posicao = useMemo(() => new Map(paradas.map((p, i) => [p.entrega_id, i + 1])), [paradas]);
   const pendentes = paradas.filter((p) => p.situacao === 'em_rota');
-  const feitas = paradas.length - pendentes.length;
+  const resolvidas = paradas.filter((p) => p.situacao !== 'em_rota');
+  const entregues = paradas.filter((p) => p.situacao === 'entregue').length;
+  const voltaram = resolvidas.length - entregues;
+  const primeira = pendentes[0]?.entrega_id;
+  const carga = useMemo(() => juntarCarga(paradas), [paradas]);
 
-  const fechar = () => {
-    setAberta(null);
-    setPasso('parada');
-    setQuemRecebeu('');
-    setMotivo(null);
-    setMotivoTexto('');
+  const estaAberta = (id: string) => abertas[id] ?? id === primeira;
+  const alternar = (id: string) => setAbertas((a) => ({ ...a, [id]: !estaAberta(id) }));
+
+  const entregar = async (parada: ParadaDoEntregador) => {
+    setEnviando(parada.entrega_id);
     setErro(null);
+    const r = await onRegistrar(parada.entrega_id, 'entregue', {
+      quemRecebeu: quemRecebeu[parada.entrega_id]?.trim() || undefined,
+    });
+    setEnviando(null);
+    if (!r.ok) setErro(r.mensagem ?? 'Não deu para registrar.');
   };
 
-  const registrar = async (tipo: 'entregue' | 'nao_entregue') => {
-    if (!aberta) return;
-    setEnviando(true);
+  const fecharMotivo = () => {
+    setVoltouDe(null);
+    setMotivo(null);
+    setMotivoTexto('');
+  };
+
+  const naoEntregar = async () => {
+    if (!voltouDe || !motivo) return;
+    setEnviando(voltouDe.entrega_id);
     setErro(null);
-    const r = await onRegistrar(aberta.entrega_id, tipo, {
-      motivo: tipo === 'nao_entregue' ? (motivo ?? undefined) : undefined,
+    const r = await onRegistrar(voltouDe.entrega_id, 'nao_entregue', {
+      motivo,
       motivoTexto: motivoTexto.trim() || undefined,
-      quemRecebeu: quemRecebeu.trim() || undefined,
     });
-    setEnviando(false);
+    setEnviando(null);
     if (!r.ok) {
       setErro(r.mensagem ?? 'Não deu para registrar.');
       return;
     }
-    fechar();
+    fecharMotivo();
   };
 
-  // ------------------------------------------------------------------ lista
-  if (!aberta) {
+  const marcarCarregado = (chave: string) => {
+    setCarregados((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(chave)) novo.delete(chave);
+      else novo.add(chave);
+      try {
+        window.localStorage.setItem(chaveCarga, JSON.stringify([...novo]));
+      } catch {
+        // sem armazenamento: o marcado vale só nesta abertura
+      }
+      return novo;
+    });
+  };
+
+  const alternarProduto = (chave: string) =>
+    setAbertosDaCarga((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(chave)) novo.delete(chave);
+      else novo.add(chave);
+      return novo;
+    });
+
+  const percentual = (n: number) => (paradas.length === 0 ? '0%' : `${(n / paradas.length) * 100}%`);
+
+  // -------------------------------------------------------------- cartão
+  // Função (e não componente) de propósito: um componente declarado aqui dentro
+  // seria recriado a cada toque e o campo "quem recebeu" perderia o foco.
+  const cartao = (parada: ParadaDoEntregador) => {
+    const aberta = estaAberta(parada.entrega_id);
+    const endereco = parada.entregar_em || parada.endereco || 'Sem endereço no cadastro';
+    const itens = Array.isArray(parada.itens) ? parada.itens : [];
+    const ocupada = enviando === parada.entrega_id;
+    const principal = parada.entrega_id === primeira;
+
     return (
-      <div className="min-h-screen bg-[#F5F6F3] pb-10">
-        <header className="sticky top-0 z-10 border-b border-[#DCDFD8] bg-[#F5F6F3]/95 px-4 py-3 backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-[#55605F]">Rota de {rota.nome ?? 'hoje'}</p>
-              <p className="text-xl font-semibold text-[#141B1E]">
-                <span className="font-mono tabular-nums">{pendentes.length}</span>{' '}
-                {pendentes.length === 1 ? 'parada' : 'paradas'} pra fazer
-                {feitas > 0 && (
-                  <span className="ml-2 text-sm font-normal text-[#8A9290]">
-                    <span className="font-mono tabular-nums">{feitas}</span> já resolvidas
-                  </span>
-                )}
-              </p>
+      <div
+        className={`overflow-hidden rounded-2xl border bg-white transition ${
+          aberta ? 'border-primary/40 shadow-md' : 'border-[#DCDFD8]'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => alternar(parada.entrega_id)}
+          className="flex min-h-[4.5rem] w-full items-center gap-3 px-4 py-3 text-left"
+          aria-expanded={aberta}
+        >
+          <span className="shrink-0 font-mono text-lg font-semibold tabular-nums text-primary">
+            {String(posicao.get(parada.entrega_id) ?? 0).padStart(2, '0')}
+          </span>
+          <div className="min-w-0 flex-1">
+            {principal && (
+              <p className="text-[11px] font-bold uppercase tracking-wider text-primary">Próxima entrega</p>
+            )}
+            <p className="truncate text-base font-semibold text-[#141B1E]">{parada.cliente_nome}</p>
+            <p className="truncate text-sm text-[#55605F]">{parada.bairro ?? 'Sem bairro'}</p>
+          </div>
+          {!aberta && (
+            <span className="shrink-0 -rotate-1 rounded-[3px] border-2 border-[#6B7280]/70 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+              na fila
+            </span>
+          )}
+          <ChevronDown className={`h-5 w-5 shrink-0 text-[#8A9290] transition ${aberta ? 'rotate-180' : ''}`} />
+        </button>
+
+        {aberta && (
+          <div className="space-y-4 border-t border-[#DCDFD8] px-4 pb-4 pt-3">
+            <p className="font-mono text-xs tabular-nums text-[#8A9290]">{parada.documento}</p>
+
+            <p className="flex items-start gap-2 text-[#141B1E]">
+              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#55605F]" />
+              <span>{endereco}</span>
+            </p>
+
+            <div className="flex gap-2">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                  `${endereco}, ${parada.bairro ?? ''}, Ubatuba SP`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className={BOTAO_LINK}
+              >
+                <Navigation className="h-4 w-4" /> Mapa
+              </a>
+              {parada.cliente_telefone && (
+                <>
+                  <a href={`tel:${parada.cliente_telefone}`} className={BOTAO_LINK}>
+                    <Phone className="h-4 w-4" /> Ligar
+                  </a>
+                  <a
+                    href={buildWhatsAppLink(parada.cliente_telefone)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={BOTAO_LINK}
+                  >
+                    <MessageCircle className="h-4 w-4" /> Zap
+                  </a>
+                </>
+              )}
             </div>
+
+            {itens.length > 0 && (
+              <ul className="space-y-1 rounded-xl bg-[#F5F6F3] px-3 py-2.5">
+                {itens.map((item, i) => (
+                  <li key={i} className="text-sm text-[#141B1E]">
+                    {textoDoItem(item)}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div>
+              <label className="text-xs font-medium text-[#55605F]" htmlFor={`recebeu-${parada.entrega_id}`}>
+                Quem recebeu (opcional)
+              </label>
+              <input
+                id={`recebeu-${parada.entrega_id}`}
+                value={quemRecebeu[parada.entrega_id] ?? ''}
+                onChange={(e) => setQuemRecebeu((q) => ({ ...q, [parada.entrega_id]: e.target.value }))}
+                placeholder="Nome de quem pegou"
+                className="mt-1 h-12 w-full rounded-xl border border-[#DCDFD8] bg-white px-3 text-base text-[#141B1E] placeholder:text-[#8A9290]"
+              />
+            </div>
+
+            <DeslizarParaEntregar
+              texto="Arraste para entregar"
+              carregando={ocupada}
+              onConcluir={() => entregar(parada)}
+            />
+
             <button
-              onClick={onSair}
-              aria-label="Sair"
-              className="rounded-xl border border-[#DCDFD8] bg-white p-3 text-[#55605F] active:scale-[0.97]"
+              type="button"
+              onClick={() => setVoltouDe(parada)}
+              disabled={ocupada}
+              className="w-full py-1 text-sm font-semibold text-[#B5362A] disabled:opacity-50"
             >
-              <LogOut className="h-5 w-5" />
+              Não consegui entregar
             </button>
           </div>
-        </header>
+        )}
+      </div>
+    );
+  };
 
-        <div className="space-y-2.5 px-4 pt-4">
-          {paradas.length === 0 && (
-            <div className="rounded-2xl border border-[#DCDFD8] bg-white p-6 text-center">
-              <p className="font-medium text-[#141B1E]">
-                {rota.mensagem ?? 'Nenhuma rota montada para hoje.'}
-              </p>
-              <p className="mt-1 text-sm text-[#8A9290]">
-                Quando a loja montar a rota, ela aparece aqui.
-              </p>
-            </div>
-          )}
-
-          {paradas.map((parada, i) => {
-            const resolvida = parada.situacao !== 'em_rota';
-            return (
-              <button
-                key={parada.entrega_id}
-                onClick={() => !resolvida && setAberta(parada)}
-                disabled={resolvida}
-                className={`flex min-h-[4.75rem] w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${
-                  resolvida
-                    ? 'border-[#DCDFD8] bg-[#ECEEE9] text-[#8A9290]'
-                    : 'border-[#DCDFD8] bg-white active:scale-[0.99]'
-                }`}
-              >
-                <span
-                  className={`shrink-0 font-mono text-lg font-semibold tabular-nums ${
-                    resolvida ? 'text-[#8A9290]' : 'text-primary'
-                  }`}
-                >
-                  {String(i + 1).padStart(2, '0')}
+  // ------------------------------------------------------------ a tela
+  return (
+    <div className="min-h-screen bg-[#F5F6F3] pb-10">
+      <header className="sticky top-0 z-10 border-b border-[#DCDFD8] bg-[#F5F6F3]/95 px-4 pb-3 pt-3 backdrop-blur">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-[#55605F]">Rota de {rota.nome ?? 'hoje'}</p>
+            <p className="text-xl font-semibold text-[#141B1E]">
+              <span className="font-mono tabular-nums">{entregues}</span> de{' '}
+              <span className="font-mono tabular-nums">{paradas.length}</span> entregues
+              {voltaram > 0 && (
+                <span className="ml-2 text-sm font-normal text-[#B5362A]">
+                  <span className="font-mono tabular-nums">{voltaram}</span> voltaram
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`truncate font-semibold ${
-                      resolvida ? 'line-through' : 'text-[#141B1E]'
-                    }`}
-                  >
-                    {parada.cliente_nome}
-                  </p>
-                  <p className="truncate text-sm text-[#55605F]">
-                    {parada.bairro ?? 'Sem bairro'} ·{' '}
-                    {parada.entregar_em || parada.endereco || 'Sem endereço'}
-                  </p>
-                </div>
-                {resolvida ? (
-                  <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[#2F9E44]">
-                    {parada.situacao === 'entregue' ? 'entregue' : 'voltou'}
-                  </span>
-                ) : (
-                  <ArrowLeft className="h-5 w-5 shrink-0 rotate-180 text-[#8A9290]" />
-                )}
-              </button>
-            );
-          })}
+              )}
+            </p>
+          </div>
+          <button
+            onClick={onSair}
+            aria-label="Sair"
+            className="rounded-xl border border-[#DCDFD8] bg-white p-3 text-[#55605F] active:scale-[0.97]"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
         </div>
+
+        <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-[#DCDFD8]" aria-hidden>
+          <span className="h-full bg-[#2F9E44] transition-all" style={{ width: percentual(entregues) }} />
+          <span className="h-full bg-[#C0392B] transition-all" style={{ width: percentual(voltaram) }} />
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 rounded-xl border border-[#DCDFD8] bg-white p-1">
+          {(['rota', 'carga'] as const).map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => setAba(a)}
+              aria-pressed={aba === a}
+              className={`rounded-lg py-2 text-sm font-semibold transition ${
+                aba === a ? 'bg-primary text-primary-foreground' : 'text-[#55605F]'
+              }`}
+            >
+              {a === 'rota' ? 'Rota' : 'Carga do dia'}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className="space-y-2.5 px-4 pt-4">
+        {erro && <p className="text-sm font-medium text-[#B5362A]">{erro}</p>}
+
+        {paradas.length === 0 && (
+          <div className="rounded-2xl border border-[#DCDFD8] bg-white p-6 text-center">
+            <p className="font-medium text-[#141B1E]">{rota.mensagem ?? 'Nenhuma rota montada para hoje.'}</p>
+            <p className="mt-1 text-sm text-[#8A9290]">Quando a loja montar a rota, ela aparece aqui.</p>
+          </div>
+        )}
+
+        {aba === 'rota' && paradas.length > 0 && (
+          <>
+            {pendentes.length === 0 && (
+              <div className="rounded-2xl border border-[#DCDFD8] bg-white p-6 text-center">
+                <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#2F9E44] text-white">
+                  <Check className="h-6 w-6" />
+                </span>
+                <p className="mt-3 text-lg font-semibold text-[#141B1E]">Rota concluída</p>
+                <p className="text-sm text-[#55605F]">Todas as paradas foram resolvidas. Bom trabalho!</p>
+              </div>
+            )}
+
+            {pendentes.map((p) => (
+              <div key={p.entrega_id}>{cartao(p)}</div>
+            ))}
+
+            {resolvidas.length > 0 && (
+              <>
+                <p className="px-1 pt-3 text-xs font-bold uppercase tracking-wider text-[#8A9290]">Já resolvidas</p>
+                {resolvidas.map((p) => (
+                  <div
+                    key={p.entrega_id}
+                    className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#DCDFD8] bg-[#ECEEE9] px-4 py-2.5"
+                  >
+                    <span className="font-mono text-base font-semibold tabular-nums text-[#8A9290]">
+                      {String(posicao.get(p.entrega_id) ?? 0).padStart(2, '0')}
+                    </span>
+                    <p className="min-w-0 flex-1 truncate text-[#8A9290] line-through">{p.cliente_nome}</p>
+                    <span
+                      className={`shrink-0 text-xs font-bold uppercase tracking-wider ${
+                        p.situacao === 'entregue' ? 'text-[#2F9E44]' : 'text-[#B5362A]'
+                      }`}
+                    >
+                      {p.situacao === 'entregue' ? 'entregue' : 'voltou'}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
+        )}
+
+        {aba === 'carga' && paradas.length > 0 && (
+          <>
+            <p className="px-1 text-sm text-[#55605F]">
+              Tudo o que vai no carro, somado.{' '}
+              <span className="font-mono tabular-nums">{carregados.size}</span> de{' '}
+              <span className="font-mono tabular-nums">{carga.length}</span> carregados. Toque no quadrado para
+              marcar; toque no nome para ver a divisão por cliente.
+            </p>
+            {carga.length === 0 && (
+              <p className="rounded-2xl border border-[#DCDFD8] bg-white p-5 text-center text-sm text-[#55605F]">
+                As entregas desta rota não trazem itens cadastrados.
+              </p>
+            )}
+            {carga.map((produto) => {
+              const marcado = carregados.has(produto.chave);
+              const aberto = abertosDaCarga.has(produto.chave);
+              return (
+                <div key={produto.chave} className="overflow-hidden rounded-2xl border border-[#DCDFD8] bg-white">
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => marcarCarregado(produto.chave)}
+                      aria-label={marcado ? 'Desmarcar como carregado' : 'Marcar como carregado'}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 ${
+                        marcado ? 'border-[#2F9E44] bg-[#2F9E44] text-white' : 'border-[#8A9290] text-transparent'
+                      }`}
+                    >
+                      <Check className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => alternarProduto(produto.chave)}
+                      aria-expanded={aberto}
+                      className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <span
+                        className={`min-w-0 flex-1 truncate font-medium ${
+                          marcado ? 'text-[#8A9290] line-through' : 'text-[#141B1E]'
+                        }`}
+                      >
+                        {produto.nome}
+                      </span>
+                      <span className="shrink-0 font-mono text-lg font-semibold tabular-nums text-[#141B1E]">
+                        {produto.total === null ? '—' : produto.total}
+                        {produto.unidade && (
+                          <span className="ml-1 text-xs font-normal text-[#8A9290]">{produto.unidade}</span>
+                        )}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-[#8A9290] transition ${aberto ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                  {aberto && (
+                    <ul className="space-y-1 border-t border-[#DCDFD8] px-4 py-2.5 text-sm text-[#55605F]">
+                      {produto.porCliente.map((c, i) => (
+                        <li key={i} className="flex justify-between gap-3">
+                          <span className="truncate">{c.cliente}</span>
+                          <span className="font-mono font-semibold tabular-nums text-[#141B1E]">
+                            {c.quantidade ?? '—'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
 
         {/* Dizer o que o sistema grava, em texto, na tela dele. Controle que a
             pessoa não conhece não muda comportamento — só serve pra pegá-la
             depois, e isso não é o que este módulo existe pra fazer. */}
-        <p className="mx-4 mt-6 rounded-xl bg-[#ECEEE9] px-4 py-3 text-xs leading-relaxed text-[#55605F]">
-          A localização é gravada só no momento que você toca no botão. O sistema não acompanha seu
+        <p className="mt-6 rounded-xl bg-[#ECEEE9] px-4 py-3 text-xs leading-relaxed text-[#55605F]">
+          A localização é gravada só no momento que você marca a entrega. O sistema não acompanha seu
           trajeto, nem sabe por onde você passou ou onde almoçou.
         </p>
       </div>
-    );
-  }
 
-  const itens = resumoDosItens(aberta.itens);
-  const endereco = aberta.entregar_em || aberta.endereco || 'Sem endereço no cadastro';
-
-  // --------------------------------------------------------------- a parada
-  return (
-    <div className="min-h-screen bg-[#F5F6F3] pb-10">
-      <header className="sticky top-0 z-10 border-b border-[#DCDFD8] bg-[#F5F6F3]/95 px-4 py-3 backdrop-blur">
-        <button
-          onClick={passo === 'parada' ? fechar : () => setPasso('parada')}
-          className="inline-flex items-center gap-2 text-sm text-[#55605F] active:scale-[0.98]"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          {passo === 'parada' ? 'Todas as paradas' : 'Voltar'}
-        </button>
-      </header>
-
-      <div className="px-4 pt-4">
-        <p className="font-mono text-sm tabular-nums text-[#8A9290]">{aberta.documento}</p>
-        <h1 className="mt-0.5 text-2xl font-semibold leading-tight text-[#141B1E]">
-          {aberta.cliente_nome}
-        </h1>
-
-        <p className="mt-2 flex items-start gap-2 text-[#55605F]">
-          <MapPin className="mt-0.5 h-5 w-5 shrink-0" />
-          <span>
-            {endereco}
-            {aberta.bairro && <span className="block text-sm text-[#8A9290]">{aberta.bairro}</span>}
-          </span>
-        </p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-              `${endereco}, ${aberta.bairro ?? ''}, Ubatuba SP`
-            )}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#DCDFD8] bg-white px-4 text-sm font-medium text-[#141B1E] active:scale-[0.98]"
+      {/* --------------------------------------- por que não deu (folha de baixo) */}
+      {voltouDe && (
+        <div className="fixed inset-0 z-30 flex items-end bg-black/50" onClick={fecharMotivo}>
+          <div
+            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-8"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Navigation className="h-4 w-4" /> Abrir no mapa
-          </a>
-          {aberta.cliente_telefone && (
-            <>
-              <a
-                href={`tel:${aberta.cliente_telefone}`}
-                className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#DCDFD8] bg-white px-4 text-sm font-medium text-[#141B1E] active:scale-[0.98]"
-              >
-                <Phone className="h-4 w-4" /> Ligar
-              </a>
-              <a
-                href={buildWhatsAppLink(aberta.cliente_telefone)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#DCDFD8] bg-white px-4 text-sm font-medium text-[#141B1E] active:scale-[0.98]"
-              >
-                <MessageCircle className="h-4 w-4" /> WhatsApp
-              </a>
-            </>
-          )}
-        </div>
-
-        {itens.length > 0 && (
-          <ul className="mt-4 space-y-1 rounded-2xl border border-[#DCDFD8] bg-white px-4 py-3">
-            {itens.map((item, i) => (
-              <li key={i} className="text-sm text-[#55605F]">
-                {item}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {erro && <p className="mt-4 text-sm font-medium text-[#B5362A]">{erro}</p>}
-
-        {passo === 'parada' && (
-          <div className="mt-6 grid gap-3">
-            <button
-              onClick={() => setPasso('entreguei')}
-              className={`${BOTAO_GRANDE} bg-[#1F7A4C] text-white shadow-lg`}
-            >
-              <Check className="h-6 w-6" /> Entreguei
-            </button>
-            <button
-              onClick={() => setPasso('nao-entreguei')}
-              className={`${BOTAO_GRANDE} border border-[#DCDFD8] bg-white text-[#141B1E]`}
-            >
-              <X className="h-6 w-6" /> Não deu para entregar
-            </button>
-          </div>
-        )}
-
-        {passo === 'entreguei' && (
-          <div className="mt-6">
-            <label className="text-sm font-medium text-[#141B1E]">Quem recebeu (opcional)</label>
-            <input
-              value={quemRecebeu}
-              onChange={(e) => setQuemRecebeu(e.target.value)}
-              placeholder="Nome de quem pegou"
-              className="mt-2 h-14 w-full rounded-2xl border border-[#DCDFD8] bg-white px-4 text-lg text-[#141B1E] placeholder:text-[#8A9290]"
-            />
-            <p className="mt-2 text-xs text-[#8A9290]">
-              Pode deixar em branco. É só pra loja saber com quem falar se o cliente reclamar
-              depois.
-            </p>
-            <button
-              onClick={() => registrar('entregue')}
-              disabled={enviando}
-              className={`${BOTAO_GRANDE} mt-4 w-full bg-[#1F7A4C] text-white shadow-lg`}
-            >
-              {enviando ? 'Registrando...' : 'Confirmar entrega'}
-            </button>
-          </div>
-        )}
-
-        {passo === 'nao-entreguei' && (
-          <div className="mt-6">
-            <p className="text-sm font-medium text-[#141B1E]">Por que não deu?</p>
-            <div className="mt-2 grid gap-2">
+            <p className="text-lg font-semibold text-[#141B1E]">Por que não deu para entregar?</p>
+            <p className="text-sm text-[#55605F]">{voltouDe.cliente_nome}</p>
+            <div className="mt-3 grid gap-2">
               {MOTIVOS.map((m) => (
                 <button
                   key={m}
+                  type="button"
                   onClick={() => setMotivo(m)}
                   className={`min-h-14 rounded-2xl border px-4 text-left text-base transition active:scale-[0.99] ${
                     motivo === m
@@ -335,22 +503,24 @@ const MinhaRota = ({
             )}
 
             <button
-              onClick={() => registrar('nao_entregue')}
-              disabled={enviando || !motivo || (motivo === 'outro' && motivoTexto.trim() === '')}
-              className={`${BOTAO_GRANDE} mt-4 w-full bg-[#B5362A] text-white shadow-lg`}
+              type="button"
+              onClick={naoEntregar}
+              disabled={
+                enviando !== null || !motivo || (motivo === 'outro' && motivoTexto.trim() === '')
+              }
+              className="mt-4 flex h-16 w-full items-center justify-center rounded-2xl bg-[#B5362A] text-lg font-semibold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
             >
-              {enviando
-                ? 'Registrando...'
-                : !motivo
-                  ? 'Escolha o motivo'
-                  : 'Confirmar que não deu'}
+              {enviando !== null ? 'Registrando...' : !motivo ? 'Escolha o motivo' : 'Confirmar que não deu'}
             </button>
-            <p className="mt-2 text-xs text-[#8A9290]">
+            <button type="button" onClick={fecharMotivo} className="mt-2 w-full py-3 text-sm font-semibold text-[#55605F]">
+              Cancelar
+            </button>
+            <p className="mt-1 text-center text-xs text-[#8A9290]">
               Esta entrega volta pra fila e aparece no topo da rota de amanhã, com o motivo.
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

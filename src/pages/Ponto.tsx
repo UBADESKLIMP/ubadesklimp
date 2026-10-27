@@ -46,6 +46,43 @@ const Relogio = () => {
   );
 };
 
+/**
+ * Relógio do balcão em tela larga (tablet na horizontal): o horário é o herói,
+ * grande e SEMPRE branco sobre o degradê, em qualquer tema, porque o fundo é
+ * escuro por desenho.
+ */
+const RelogioPainel = ({ local }: { local?: string | null }) => {
+  const [agora, setAgora] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setAgora(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return (
+    <div
+      className="hidden h-full flex-col justify-between rounded-[2rem] p-10 text-white lg:flex"
+      style={{
+        background:
+          'linear-gradient(160deg, hsl(var(--primary)), color-mix(in srgb, hsl(var(--primary)) 50%, #050912))',
+      }}
+    >
+      <p className="text-sm font-bold uppercase tracking-[0.12em] text-white/85">
+        Ubadesklimp · Ponto{local ? ` · ${local}` : ''}
+      </p>
+      <div>
+        <p className="font-mono text-[clamp(4rem,9vw,7.5rem)] font-medium leading-none tracking-tight tabular-nums text-white">
+          {hora}
+        </p>
+        <p className="mt-4 text-xl font-semibold text-white/90 first-letter:uppercase">
+          {agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
+      <p className="text-sm font-medium text-white/80">Digite seu PIN para bater o ponto</p>
+    </div>
+  );
+};
+
 interface AvisoAtual {
   ok: boolean;
   nome?: string;
@@ -374,13 +411,21 @@ const Ponto = () => {
 
       {/* ---------------------------------------------- bater ponto: o centro */}
       {tela === 'ponto' && (
-        <main className="flex-1 flex flex-col items-center justify-center gap-9 px-6 pb-4">
-          <Relogio />
+        <main className="flex flex-1 flex-col items-center justify-center gap-9 px-6 pb-4 lg:grid lg:grid-cols-[1.15fr_1fr] lg:items-stretch lg:gap-8 lg:px-6 lg:pb-6">
+          <RelogioPainel local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
+          <div className="lg:hidden">
+            <Relogio />
+          </div>
 
-          <div className="w-full">
-            <p className="text-center text-sm text-[#55605F] mb-5">
+          <div className="w-full lg:flex lg:flex-col lg:items-center lg:justify-center">
+            <p className="mb-5 text-center text-sm text-[#55605F] lg:hidden">
               {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
             </p>
+            {painel && (
+              <p className="mb-5 hidden text-center text-sm text-[#55605F] lg:block">
+                Digite o PIN de quem está batendo
+              </p>
+            )}
             <Teclado
               valor={pin}
               onChange={setPin}

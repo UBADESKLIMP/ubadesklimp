@@ -460,3 +460,12 @@ body.admin-themed {
 .admin-themed .text-\[\#8A9290\],
 .admin-themed .placeholder\:text-\[\#8A9290\]::placeholder { color: var(--adm-faint); }
 .admin-themed .border-\[\#DCDFD8\] { border-color: var(--adm-line); }
+
+/* PIN errado: o teclado chacoalha (ver components/ponto/Teclado.tsx) */
+@keyframes teclado-chacoalha {
+  20%, 60% { transform: translateX(-9px); }
+  40%, 80% { transform: translateX(9px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="teclado-chacoalha"] { animation: none !important; }
+}
