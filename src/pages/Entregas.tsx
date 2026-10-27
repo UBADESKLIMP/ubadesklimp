@@ -103,7 +103,7 @@ const Entregas = () => {
   // link que ele não precisa.
   if (!empresaId && carregandoConta) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: FUNDO_TELA }}>
+      <div className="flex min-h-[100dvh] items-center justify-center" style={{ background: FUNDO_TELA }}>
         <Loader2 className="h-7 w-7 animate-spin text-white/80" />
       </div>
     );
@@ -112,7 +112,7 @@ const Entregas = () => {
   if (!empresaId) {
     return (
       <div
-        className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white"
+        className="flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center text-white"
         style={{ background: FUNDO_TELA }}
       >
         <Truck className="h-12 w-12 text-white/80" />
@@ -161,15 +161,15 @@ const Entregas = () => {
 
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center px-6 py-10 text-white"
+      className="flex min-h-[100dvh] flex-col items-center justify-center px-6 py-5 text-white"
       style={{ background: FUNDO_TELA }}
     >
-      <div className="mb-8 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm">
-          <Truck className="h-8 w-8 text-white" />
+      <div className="mb-5 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm">
+          <Truck className="h-7 w-7 text-white" />
         </div>
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight">Minhas entregas</h1>
-        <p className="mt-1.5 text-base text-white/75">Digite seu PIN para ver a rota de hoje.</p>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Minhas entregas</h1>
+        <p className="mt-1 text-sm text-white/75">Digite seu PIN para ver a rota de hoje.</p>
       </div>
 
       <Teclado
@@ -182,7 +182,7 @@ const Entregas = () => {
         plano
       />
 
-      <p className="mt-6 min-h-5 text-center text-sm font-medium text-[#FFB4AA]">{erro}</p>
+      <p className="mt-4 min-h-5 text-center text-sm font-medium text-[#FFB4AA]">{erro}</p>
     </div>
   );
 };

@@ -327,7 +327,7 @@ const Ponto = () => {
   return (
     <div
       className={cn(
-        'min-h-screen flex flex-col',
+        'min-h-[100dvh] flex flex-col',
         emPonto ? 'text-white' : 'bg-[#F5F6F3] text-[#141B1E]'
       )}
       style={emPonto ? { background: FUNDO_TELA } : undefined}
@@ -386,11 +386,11 @@ const Ponto = () => {
 
       {/* ---------------------------------------------- bater ponto: o centro */}
       {tela === 'ponto' && (
-        <main className="flex flex-1 flex-col items-center justify-center gap-10 px-6 pb-6 lg:grid lg:grid-cols-[1.35fr_1fr] lg:gap-6 lg:px-14 lg:pb-10">
+        <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-4 lg:gap-6 lg:grid lg:grid-cols-[1.35fr_1fr] lg:gap-6 lg:px-14 lg:pb-10">
           <RelogioQuiosque local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
 
           <div className="w-full lg:flex lg:flex-col lg:items-center lg:justify-center">
-            <p className="mb-6 text-center text-base font-medium text-white/85 lg:text-lg">
+            <p className="mb-4 text-center text-base font-medium text-white/85 lg:mb-6 lg:text-lg">
               {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
             </p>
             <Teclado

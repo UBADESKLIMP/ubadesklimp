@@ -118,7 +118,9 @@ const Teclado = ({ valor, onChange, onConfirmar, confirmando, tamanho = 4, tom =
     <div
       className={cn(
         'mx-auto w-full',
-        plano ? 'max-w-[19rem] md:max-w-[25rem]' : 'max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl'
+        plano
+          ? 'max-w-[min(19rem,calc(72dvh-9rem))] md:max-w-[min(25rem,calc(72dvh-9rem))]'
+          : 'max-w-[19rem] rounded-[2rem] px-6 pb-6 pt-8 shadow-xl'
       )}
       style={plano ? undefined : { background: FUNDO[tom] }}
     >
