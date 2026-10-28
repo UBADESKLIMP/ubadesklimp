@@ -148,7 +148,7 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-white">Importar pedidos do ERP</CardTitle>
           <p className="text-xs text-blue-300/50">
-            Solte aqui o pedido (ou orçamento) que o ERP imprime, em <strong>PDF ou planilha</strong>.
+            Solte aqui o pedido (ou orçamento) que o ERP imprime, em <strong>PDF, planilha ou cupom (.txt)</strong>.
             Pode soltar vários de uma vez, um arquivo por pedido. O sistema lê o cliente, o endereço, o
             valor e os <strong>itens</strong>. Subir o mesmo pedido de novo só atualiza, e pedido já
             entregue não volta para a fila.
@@ -159,7 +159,7 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
             ref={inputRef}
             type="file"
             multiple
-            accept=".pdf,.xlsx,.xls,.csv"
+            accept=".pdf,.xlsx,.xls,.csv,.txt"
             className="hidden"
             onChange={(e) => {
               ler(Array.from(e.target.files ?? []));

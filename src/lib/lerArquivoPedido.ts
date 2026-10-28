@@ -42,11 +42,21 @@ const linhasDaPlanilha = async (buffer: ArrayBuffer): Promise<LinhaDeTextos[]> =
   return todas;
 };
 
+/** Cupom de texto do ERP: uma linha por linha, sem os códigos de controle da impressora. */
+const linhasDoTexto = (buffer: ArrayBuffer): LinhaDeTextos[] =>
+  new TextDecoder('windows-1252')
+    .decode(buffer)
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0b-\x1f]/g, (c) => (c === '\x0c' ? '\n' : ''))
+    .split(/\r?\n/)
+    .map((l) => [l]);
+
 /** Pedido do ERP em PDF ou planilha, como linhas de textos prontas para `lerPedidosDeLinhas`. */
 export const linhasDoArquivo = async (arquivo: File): Promise<LinhaDeTextos[]> => {
   const nome = arquivo.name.toLowerCase();
   const buffer = await arquivo.arrayBuffer();
   if (nome.endsWith('.pdf')) return linhasDoPdf(buffer);
+  if (nome.endsWith('.txt')) return linhasDoTexto(buffer);
   if (/\.(xlsx|xls|csv)$/.test(nome)) return linhasDaPlanilha(buffer);
-  throw new Error('Tipo de arquivo não aceito. Use PDF ou planilha (.xlsx, .xls, .csv).');
+  throw new Error('Tipo de arquivo não aceito. Use PDF, planilha (.xlsx, .xls, .csv) ou cupom (.txt).');
 };

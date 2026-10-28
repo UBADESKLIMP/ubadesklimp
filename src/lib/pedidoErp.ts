@@ -205,6 +205,100 @@ const lerUm = (linhas: LinhaDeTextos[], bairrosConhecidos: string[]): PedidoLido
 };
 
 /**
+ * "Controle de Entrega" do ERP: um cupom de texto por pedido, impresso pelo
+ * intervalo de documentos (OR 55205 a 55213). Cada cupom começa na linha
+ * "TELEFONE: ... HORA: ... OR 55210 || USUARIO:..." e traz CLIENTE, ENDERECO,
+ * TELEFONE, ENTREGA e a tabela de itens. Não tem data nem bairro separado: o
+ * bairro é o que sobra do endereço depois do número e antes da cidade.
+ */
+const ehCabecalhoDeCupom = (linha: string) => /\bHORA:.*\b[A-Z]{2}\s+\d+\s*\|\|/.test(linha);
+
+const TIPOS_DO_CUPOM: Record<string, string> = { OR: 'ORÇAMENTO', PD: 'PEDIDO' };
+
+const lerCupom = (linhas: string[], bairrosConhecidos: string[]): PedidoLido | null => {
+  const avisos: string[] = [];
+  const cab = linhas[0].match(/\b([A-Z]{2})\s+(\d+)\s*\|\|/);
+  if (!cab) return null;
+
+  const campo = (rotulo: RegExp) => {
+    const l = linhas.find((x) => rotulo.test(x));
+    return l ? limpar(l.replace(/^[^:]*:/, '')) : null;
+  };
+
+  const clienteTexto = campo(/^CLIENTE:/);
+  const clienteM = clienteTexto?.match(/^(\d+)\s*-\s*(.+)$/);
+  const nome = limpar(clienteM?.[2] ?? clienteTexto);
+  if (!nome) return null;
+
+  const enderecoTexto = campo(/^ENDERECO:/);
+  const entregaTexto = campo(/^ENTREGA:/);
+  // O telefone do cliente é a linha sem "HORA:" (a da loja vem no cabeçalho).
+  const foneLinha = linhas.slice(1).find((x) => /^TELEFONE:/.test(x) && !/HORA:/.test(x));
+  const foneBruto = foneLinha ? limpar(foneLinha.replace(/^[^:]*:/, '')) : '';
+  const telefone = foneBruto.replace(/\D/g, '').length >= 8 ? foneBruto : null;
+  if (!telefone) avisos.push('Sem telefone no pedido.');
+
+  const cep = entregaTexto?.match(/\d{5}-?\d{3}/)?.[0] ?? null;
+  // "RUA X, 46 CENTRO UBATUBA": rua, número e o resto (bairro + cidade).
+  const partes = (enderecoTexto ?? '').match(/^(.*?),\s*(\S+)\s*(.*)$/);
+  const logradouro = partes ? limpar(partes[1]) : limpar(enderecoTexto) || null;
+  const numCasa = partes ? limpar(partes[2]) : null;
+  const resto = partes ? limpar(partes[3]) : '';
+  const cidade = /UBATUBA\s*$/i.test(resto) ? 'UBATUBA' : null;
+  const sobra = limpar(resto.replace(/UBATUBA\s*$/i, '')) || null;
+
+  const bairro =
+    bairroConhecidoNoTexto(`${entregaTexto ?? ''} ${enderecoTexto ?? ''}`, bairrosConhecidos) ?? sobra;
+  if (!bairro) avisos.push('Sem bairro: esta entrega vai para o fim da rota.');
+
+  const entregarEm = entregaTexto ? limpar(entregaTexto.replace(/\/\s*$/, '')) : null;
+
+  const itens: ItemDoPedido[] = [];
+  const ini = linhas.findIndex((x) => /^PRODUTO\s+.*QTDADE/.test(x));
+  for (let i = ini + 1; ini >= 0 && i < linhas.length; i++) {
+    if (/^-{5,}/.test(linhas[i])) break;
+    const m = linhas[i].match(/^(\S+)\s+(.*?)\s+(-?[\d.]+,\d+)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})$/);
+    if (!m) continue;
+    itens.push({
+      descricao: limpar(m[2]),
+      quantidade: numeroBR(m[3]) ?? 1,
+      valor_unitario: numeroBR(m[4]) ?? undefined,
+      valor_total: numeroBR(m[5]) ?? undefined,
+    });
+  }
+  if (itens.length === 0) avisos.push('Não achei a lista de itens.');
+
+  const totalLinha = linhas.find((x) => /TOTAL A PAGAR:/.test(x));
+  const valor = numeroBR(totalLinha?.match(/TOTAL A PAGAR:\s*([\d.]+,\d{2})/)?.[1]);
+
+  return {
+    documento_tipo: TIPOS_DO_CUPOM[cab[1]] ?? cab[1],
+    documento_numero: cab[2],
+    documento_data: null,
+    cliente_codigo: clienteM?.[1] ?? null,
+    cliente_nome: nome,
+    cliente_telefone: telefone,
+    endereco_logradouro: logradouro,
+    endereco_numero: numCasa,
+    bairro,
+    cidade,
+    cep,
+    entregar_em: entregarEm,
+    valor,
+    itens,
+    avisos,
+  };
+};
+
+const lerCupons = (linhasBrutas: LinhaDeTextos[], bairrosConhecidos: string[]): PedidoLido[] => {
+  const linhas = linhasBrutas.map((l) => limpar(l.join(' ')));
+  const inicios = linhas.map((l, i) => (ehCabecalhoDeCupom(l) ? i : -1)).filter((i) => i >= 0);
+  return inicios
+    .map((ini, k) => lerCupom(linhas.slice(ini, inicios[k + 1] ?? linhas.length), bairrosConhecidos))
+    .filter((p): p is PedidoLido => p !== null);
+};
+
+/**
  * Lê o documento. Se o arquivo trouxer mais de um pedido (várias vias na
  * mesma folha, ou um PDF com vários), cada cabeçalho "ORÇAMENTO *n*" abre um.
  */
@@ -212,6 +306,8 @@ export const lerPedidosDeLinhas = (
   linhasBrutas: LinhaDeTextos[],
   bairrosConhecidos: string[] = []
 ): PedidoLido[] => {
+  if (linhasBrutas.some((l) => ehCabecalhoDeCupom(limpar(l.join(' '))))) return lerCupons(linhasBrutas, bairrosConhecidos);
+
   const linhas = linhasBrutas.map((l) => l.map(limpar).filter(Boolean)).filter((l) => l.length > 0);
   const inicios = linhas.map((l, i) => (ehInicioDeDocumento(l) ? i : -1)).filter((i) => i >= 0);
   if (inicios.length === 0) return [];
