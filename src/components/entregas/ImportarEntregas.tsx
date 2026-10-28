@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { normalizeText } from '@/lib/utils';
 import ImportarPedidosErp from './ImportarPedidosErp';
+import NovaEntregaAvulsa from './NovaEntregaAvulsa';
 import {
   emReais,
   type BairroDeEntrega,
@@ -434,6 +435,11 @@ const ImportarPlanilha = ({
 const ImportarEntregas = (props: Props) => (
   <div className="space-y-6">
     <ImportarPedidosErp {...props} />
+    <NovaEntregaAvulsa
+      onImportar={props.onImportar}
+      onDepoisDeImportar={props.onDepoisDeImportar}
+      bairrosConhecidos={props.bairrosConhecidos}
+    />
     <details className="group">
       <summary className="cursor-pointer text-sm text-blue-300/70 hover:text-white">
         Importar um relatório do ERP com várias linhas (planilha, sem itens)

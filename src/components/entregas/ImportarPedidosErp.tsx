@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { AlertTriangle, Check, FileText, MapPinPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { normalizeText } from '@/lib/utils';
 import { linhasDoArquivo } from '@/lib/lerArquivoPedido';
@@ -39,6 +40,8 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
   const [bairrosPendentes, setBairrosPendentes] = useState<string[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
+  // Nem todo orçamento vira entrega: o que for desmarcado não entra.
+  const [desmarcados, setDesmarcados] = useState<Set<string>>(new Set());
 
   const nomesDeBairros = bairrosConhecidos.map((b) => b.nome);
 
@@ -81,10 +84,21 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
     return unicos;
   })();
 
+  const chaveDe = (p: PedidoLido) => `${p.documento_tipo}|${p.documento_numero}`;
+  const marcados = todos.filter((p) => !desmarcados.has(chaveDe(p)));
+
+  const alternar = (p: PedidoLido) =>
+    setDesmarcados((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(chaveDe(p))) novo.delete(chaveDe(p));
+      else novo.add(chaveDe(p));
+      return novo;
+    });
+
   const bairrosNovos = (() => {
     const conhecidos = new Set(nomesDeBairros.map(normalizeText));
     const novos = new Set<string>();
-    todos.forEach((p) => {
+    marcados.forEach((p) => {
       if (p.bairro && !conhecidos.has(normalizeText(p.bairro))) novos.add(p.bairro);
     });
     return [...novos];
@@ -93,7 +107,7 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
   const importar = async () => {
     setEnviando(true);
     setErro(null);
-    const linhas = todos.map((p) => ({
+    const linhas = marcados.map((p) => ({
       documento_tipo: p.documento_tipo,
       documento_numero: p.documento_numero,
       documento_data: p.documento_data,
@@ -115,6 +129,7 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
     if (r.ok) {
       setBairrosPendentes(r.bairros_novos ?? []);
       setArquivos([]);
+      setDesmarcados(new Set());
       onDepoisDeImportar();
     }
   };
@@ -189,7 +204,10 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
             </div>
             <button
               type="button"
-              onClick={() => setArquivos([])}
+              onClick={() => {
+                setArquivos([]);
+                setDesmarcados(new Set());
+              }}
               className="inline-flex items-center gap-1 text-xs text-blue-300/70 hover:text-white"
             >
               <Trash2 className="h-3.5 w-3.5" /> limpar
@@ -207,7 +225,19 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
                   </p>
                 )}
                 {a.pedidos.map((p) => (
-                  <div key={`${p.documento_tipo}-${p.documento_numero}`} className="rounded-lg border border-blue-500/15 px-3 py-2.5 text-sm">
+                  <div
+                    key={`${p.documento_tipo}-${p.documento_numero}`}
+                    className={`flex gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                      desmarcados.has(chaveDe(p)) ? 'border-blue-500/10 opacity-45' : 'border-blue-500/25'
+                    }`}
+                  >
+                    <Checkbox
+                      checked={!desmarcados.has(chaveDe(p))}
+                      onCheckedChange={() => alternar(p)}
+                      aria-label={`Importar ${p.cliente_nome}`}
+                      className="mt-1 h-5 w-5 shrink-0 border-blue-500/50 data-[state=checked]:bg-blue-600"
+                    />
+                    <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="font-semibold text-white">{p.cliente_nome}</p>
                       <p className="font-mono tabular-nums text-blue-300">{emReais(p.valor)}</p>
@@ -244,6 +274,7 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
                         {av}
                       </p>
                     ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -259,14 +290,18 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
 
             <Button
               onClick={importar}
-              disabled={enviando || todos.length === 0}
+              disabled={enviando || marcados.length === 0}
               className="h-12 w-full bg-blue-600 text-white hover:bg-blue-500"
             >
               {enviando
                 ? 'Importando...'
                 : todos.length === 0
                   ? 'Nenhum pedido reconhecido'
-                  : `Importar ${todos.length} ${todos.length === 1 ? 'pedido' : 'pedidos'}`}
+                  : marcados.length === 0
+                    ? 'Marque ao menos um pedido'
+                    : `Importar ${marcados.length} ${marcados.length === 1 ? 'pedido' : 'pedidos'}${
+                        marcados.length < todos.length ? ` (de ${todos.length})` : ''
+                      }`}
             </Button>
           </CardContent>
         </Card>
