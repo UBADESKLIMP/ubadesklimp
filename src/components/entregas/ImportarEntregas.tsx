@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { normalizeText } from '@/lib/utils';
+import ImportarPedidosErp from './ImportarPedidosErp';
 import {
   emReais,
   type BairroDeEntrega,
@@ -102,7 +103,7 @@ interface Props {
   onAdicionarBairro: (nome: string) => Promise<ResultadoRpc>;
 }
 
-const ImportarEntregas = ({
+const ImportarPlanilha = ({
   onImportar,
   onDepoisDeImportar,
   bairrosConhecidos,
@@ -424,5 +425,24 @@ const ImportarEntregas = ({
     </div>
   );
 };
+
+/**
+ * A tela da aba Importar: em cima o pedido que o ERP imprime (PDF ou planilha,
+ * um por cliente, com itens); embaixo, recolhido, o relatório em planilha com
+ * várias linhas, que não traz itens.
+ */
+const ImportarEntregas = (props: Props) => (
+  <div className="space-y-6">
+    <ImportarPedidosErp {...props} />
+    <details className="group">
+      <summary className="cursor-pointer text-sm text-blue-300/70 hover:text-white">
+        Importar um relatório do ERP com várias linhas (planilha, sem itens)
+      </summary>
+      <div className="mt-4">
+        <ImportarPlanilha {...props} />
+      </div>
+    </details>
+  </div>
+);
 
 export default ImportarEntregas;
