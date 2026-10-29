@@ -73,10 +73,16 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'suppliers', label: 'Fornecedores', icon: Truck, permission: 'fornecedores', group: 'operacao' },
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, permission: 'faltantes', group: 'operacao' },
   { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
-  // Entregas fica no eixo de equipe, não no de staff_permission: as RPCs do
-  // módulo guardam por is_equipe_gestor_ou_admin(), então quem monta a rota é
-  // quem manda na equipe — não quem tem permissão de catálogo.
-  { key: 'entregas', label: 'Entregas', icon: Route, equipeAcesso: 'gestor_ou_admin', group: 'operacao' },
+  // Entregas abre para quem manda na equipe OU para o funcionário que o admin
+  // marcou com a permissão 'entregas' (as RPCs guardam por is_entregas_gestor()).
+  {
+    key: 'entregas',
+    label: 'Entregas',
+    icon: Route,
+    equipeAcesso: 'gestor_ou_admin',
+    permission: 'entregas',
+    group: 'operacao',
+  },
   { key: 'staff', label: 'Funcionários', icon: Shield, adminOnly: true, group: 'equipe' },
   { key: 'equipe', label: 'Atrasos', icon: Users, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
   { key: 'ponto', label: 'Ponto', icon: Clock, equipeAcesso: 'gestor_ou_admin', group: 'equipe' },
@@ -99,10 +105,11 @@ export const canSeeNavItem = (
 ): boolean => {
   if (item.comingSoon) return true;
   if (item.equipeAcesso) {
-    if (!equipeAccess) return false;
-    return item.equipeAcesso === 'gestor_ou_admin'
-      ? equipeAccess.isGestorOuAdmin
-      : equipeAccess.isEquipe;
+    const porEquipe =
+      !!equipeAccess &&
+      (item.equipeAcesso === 'gestor_ou_admin' ? equipeAccess.isGestorOuAdmin : equipeAccess.isEquipe);
+    // Com equipeAcesso e permission juntos, vale um OU outro.
+    if (porEquipe || !item.permission) return porEquipe;
   }
   if (item.adminOnly) return staffAccess.isAdmin;
   if (!item.permission) return true;

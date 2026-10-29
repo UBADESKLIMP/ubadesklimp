@@ -35,6 +35,7 @@ const PERMISSION_LABELS: Record<StaffPermission, string> = {
   produtos: 'Produtos',
   fornecedores: 'Fornecedores',
   financeiro: 'Financeiro',
+  entregas: 'Entregas',
 };
 
 const ALL_PERMISSIONS = Object.keys(PERMISSION_LABELS) as StaffPermission[];

@@ -3721,7 +3721,12 @@ export type Database = {
         | "painel"
         | "correcao"
       ponto_rede_origem: "heartbeat" | "manual"
-      staff_permission: "faltantes" | "produtos" | "fornecedores" | "financeiro"
+      staff_permission:
+        | "faltantes"
+        | "produtos"
+        | "fornecedores"
+        | "financeiro"
+        | "entregas"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3969,7 +3974,13 @@ export const Constants = {
         "correcao",
       ],
       ponto_rede_origem: ["heartbeat", "manual"],
-      staff_permission: ["faltantes", "produtos", "fornecedores", "financeiro"],
+      staff_permission: [
+        "faltantes",
+        "produtos",
+        "fornecedores",
+        "financeiro",
+        "entregas",
+      ],
     },
   },
 } as const

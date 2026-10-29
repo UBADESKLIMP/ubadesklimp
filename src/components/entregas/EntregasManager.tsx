@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import { useStaffAccess } from '@/hooks/useStaffAccess';
 import {
   hojeEmSaoPaulo,
   useBairrosDeEntrega,
@@ -60,6 +61,9 @@ const LinkDoEntregador = ({ empresaId }: { empresaId: string }) => {
 
 const EntregasManager = () => {
   const equipeAccess = useEquipeAccess();
+  const staffAccess = useStaffAccess();
+  const podeEntregas =
+    equipeAccess.isGestorOuAdmin || staffAccess.isAdmin || staffAccess.permissions.has('entregas');
   const empresaAtiva = equipeAccess.empresaIds[0] ?? null;
   const [hoje] = useState(hojeEmSaoPaulo);
   // A aba escolhida sobrevive ao F5 (só neste navegador).
@@ -92,7 +96,7 @@ const EntregasManager = () => {
   const divida = fila.fila.filter((e) => e.situacao === 'nao_entregue');
   const insistindo = divida.filter((e) => e.tentativas >= 3);
 
-  if (equipeAccess.loading) {
+  if (equipeAccess.loading || staffAccess.loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-6 w-6 animate-spin text-adm-accent" />
@@ -100,12 +104,12 @@ const EntregasManager = () => {
     );
   }
 
-  if (!equipeAccess.isGestorOuAdmin) {
+  if (!podeEntregas) {
     return (
       <AdminEmptyState
         icon={Route}
         title="Sem acesso às entregas"
-        description="Só gestor ou admin monta a rota do dia. Quem entrega marca pelo celular, em /entregas, com o PIN do ponto."
+        description="Só gestor, admin ou quem tem a permissão Entregas monta a rota do dia. Quem entrega marca pelo celular, em /entregas, com o PIN do ponto."
       />
     );
   }

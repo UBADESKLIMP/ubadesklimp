@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type StaffPermission = 'faltantes' | 'produtos' | 'fornecedores' | 'financeiro';
+export type StaffPermission = 'faltantes' | 'produtos' | 'fornecedores' | 'financeiro' | 'entregas';
 
 export interface StaffAccess {
   loading: boolean;
