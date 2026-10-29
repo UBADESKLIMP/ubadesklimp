@@ -62,7 +62,23 @@ const EntregasManager = () => {
   const equipeAccess = useEquipeAccess();
   const empresaAtiva = equipeAccess.empresaIds[0] ?? null;
   const [hoje] = useState(hojeEmSaoPaulo);
-  const [aba, setAba] = useState<Aba>('rota');
+  // A aba escolhida sobrevive ao F5 (só neste navegador).
+  const [aba, setAbaEstado] = useState<Aba>(() => {
+    try {
+      const salva = sessionStorage.getItem('entregas-aba') as Aba | null;
+      return salva && ['rota', 'fila', 'importar', 'bairros'].includes(salva) ? salva : 'rota';
+    } catch {
+      return 'rota';
+    }
+  });
+  const setAba = (nova: Aba) => {
+    setAbaEstado(nova);
+    try {
+      sessionStorage.setItem('entregas-aba', nova);
+    } catch {
+      /* sem armazenamento: a aba só não é lembrada */
+    }
+  };
 
   const fila = useFilaDeEntregas(empresaAtiva);
   const rota = useRotaDoDia(empresaAtiva, hoje);

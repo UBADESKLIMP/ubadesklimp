@@ -36,17 +36,38 @@ import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { AdminSection, getVisibleNavItems } from '@/components/admin/adminNav';
 import { syncProductFragrances } from '@/lib/productFragrances';
 
+const SECOES: AdminSection[] = [
+  'home', 'financeiro', 'orders', 'products', 'automotive', 'highlights', 'categories',
+  'suppliers', 'missing', 'quotes', 'entregas', 'staff', 'equipe', 'ponto', 'meus-registros',
+];
+
 const Admin = () => {
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();
   const equipeAccess = useEquipeAccess();
 
-  const [activeSection, setActiveSection] = useState<AdminSection>('home');
+  // A seção fica na URL (#entregas): F5 volta para a mesma tela, e não para o início.
+  const [activeSection, setActiveSection] = useState<AdminSection>(() => {
+    const salva = window.location.hash.slice(1) as AdminSection;
+    return SECOES.includes(salva) ? salva : 'home';
+  });
   const visibleNavItems = useMemo(
     () => getVisibleNavItems(staffAccess, equipeAccess),
     [staffAccess, equipeAccess]
   );
+
+  useEffect(() => {
+    window.history.replaceState(null, '', activeSection === 'home' ? window.location.pathname + window.location.search : `#${activeSection}`);
+  }, [activeSection]);
+
+  // Seção da URL que esta pessoa não pode ver (ou que não existe mais) cai no início.
+  useEffect(() => {
+    if (staffAccess.loading || equipeAccess.loading) return;
+    if (activeSection !== 'home' && !visibleNavItems.some((i) => i.key === activeSection)) {
+      setActiveSection('home');
+    }
+  }, [staffAccess.loading, equipeAccess.loading, visibleNavItems, activeSection]);
 
   const [editingProduct, setEditingProduct] = useState<ProductWithVariations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
