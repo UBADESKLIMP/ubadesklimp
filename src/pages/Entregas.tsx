@@ -5,6 +5,7 @@ import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import MinhaRota from '@/components/entregas/MinhaRota';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import { useEntregasInstalavel } from '@/hooks/useEntregasInstalavel';
 import { useMinhaRota, type EntregaMotivo } from '@/hooks/useEntregas';
 
 /**
@@ -73,13 +74,7 @@ const Entregas = () => {
 
   // O app do entregador é só esta rota — o resto do site é a loja e não deve
   // virar app de entrega. Mesma decisão do /ponto.
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = '/entregas.webmanifest';
-    document.head.appendChild(link);
-    return () => link.remove();
-  }, []);
+  const { podeInstalar, precisaDeInstrucaoIphone, instalar } = useEntregasInstalavel();
 
   const entrar = async () => {
     setErro(null);
@@ -203,6 +198,21 @@ const Entregas = () => {
       />
 
       <p className="mt-4 min-h-5 text-center text-sm font-medium text-[#FFB4AA]">{erro}</p>
+
+      {podeInstalar && (
+        <button
+          type="button"
+          onClick={instalar}
+          className="mt-2 flex h-12 w-full max-w-xs items-center justify-center rounded-2xl border border-white/30 bg-white/10 text-sm font-semibold text-white"
+        >
+          Instalar o app no celular
+        </button>
+      )}
+      {!podeInstalar && precisaDeInstrucaoIphone && (
+        <p className="mt-2 max-w-xs text-center text-xs text-white/70">
+          Para instalar: toque em Compartilhar e depois em "Adicionar à Tela de Início".
+        </p>
+      )}
     </div>
   );
 };

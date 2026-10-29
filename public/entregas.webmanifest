@@ -6,14 +6,11 @@
   "scope": "/entregas",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F5F6F3",
-  "theme_color": "#0F6B5C",
+  "background_color": "#0b1020",
+  "theme_color": "#1573D6",
   "icons": [
-    {
-      "src": "/ponto-icone.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "/entregas-icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/entregas-icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/entregas-icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
