@@ -31,6 +31,10 @@ interface ArquivoLido {
  * quiser de uma vez (a pasta do Nextcloud). Mostra o que entendeu antes de
  * gravar, e traz os itens, que alimentam a "Carga do dia" do entregador.
  */
+/** PDF impresso por impressora PostScript: as letras chegam como códigos de controle. */
+// eslint-disable-next-line no-control-regex
+const textoIlegivel = (linhas: string[][]) => linhas.flat().some((t) => /[--]/.test(t));
+
 const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos, onAdicionarBairro }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [arquivos, setArquivos] = useState<ArquivoLido[]>([]);
@@ -58,7 +62,12 @@ const ImportarPedidosErp = ({ onImportar, onDepoisDeImportar, bairrosConhecidos,
         lidos.push({
           nome: arquivo.name,
           pedidos,
-          erro: pedidos.length === 0 ? 'Não reconheci como pedido do ERP (não achei o número do pedido).' : null,
+          erro:
+            pedidos.length > 0
+              ? null
+              : textoIlegivel(linhas)
+                ? 'O texto deste PDF não pode ser lido (foi impresso por uma impressora PDF). Gere o PDF pelo botão de exportar do ERP, ou use o cupom .txt do Controle de Entrega.'
+                : 'Não reconheci como pedido do ERP (não achei o número do pedido).',
         });
       } catch (e) {
         lidos.push({ nome: arquivo.name, pedidos: [], erro: e instanceof Error ? e.message : 'Não consegui ler este arquivo.' });
