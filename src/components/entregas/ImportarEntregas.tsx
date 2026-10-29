@@ -435,11 +435,18 @@ const ImportarPlanilha = ({
 const ImportarEntregas = (props: Props) => (
   <div className="space-y-6">
     <ImportarPedidosErp {...props} />
-    <NovaEntregaAvulsa
-      onImportar={props.onImportar}
-      onDepoisDeImportar={props.onDepoisDeImportar}
-      bairrosConhecidos={props.bairrosConhecidos}
-    />
+    <details className="group">
+      <summary className="cursor-pointer text-sm text-blue-300/70 hover:text-white">
+        Entrega avulsa, que não passou pelo ERP
+      </summary>
+      <div className="mt-4">
+        <NovaEntregaAvulsa
+          onImportar={props.onImportar}
+          onDepoisDeImportar={props.onDepoisDeImportar}
+          bairrosConhecidos={props.bairrosConhecidos}
+        />
+      </div>
+    </details>
     <details className="group">
       <summary className="cursor-pointer text-sm text-blue-300/70 hover:text-white">
         Importar um relatório do ERP com várias linhas (planilha, sem itens)
