@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { LinhaDeTextos } from './pedidoErp';
+import { linhasPorOcr, textoIlegivel } from './ocrPdf';
 
 /** Agrupa os textos de uma página de PDF em linhas (mesma altura) e ordena da esquerda para a direita. */
 const linhasDoPdf = async (buffer: ArrayBuffer): Promise<LinhaDeTextos[]> => {
@@ -11,9 +12,24 @@ const linhasDoPdf = async (buffer: ArrayBuffer): Promise<LinhaDeTextos[]> => {
 
   const pdf = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise;
   const todas: LinhaDeTextos[] = [];
+  const paginasSemTexto: { render: (escala: number) => Promise<HTMLCanvasElement> }[] = [];
 
   for (let n = 1; n <= pdf.numPages; n++) {
-    const conteudo = await (await pdf.getPage(n)).getTextContent();
+    const pagina = await pdf.getPage(n);
+    const conteudo = await pagina.getTextContent();
+    if (textoIlegivel(conteudo.items.map((i) => ('str' in i ? i.str : '')))) {
+      paginasSemTexto.push({
+        render: async (escala) => {
+          const viewport = pagina.getViewport({ scale: escala });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.ceil(viewport.width);
+          canvas.height = Math.ceil(viewport.height);
+          await pagina.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
+          return canvas;
+        },
+      });
+      continue;
+    }
     const textos = conteudo.items
       .filter((i): i is typeof i & { str: string; transform: number[] } => 'str' in i && i.str.trim() !== '')
       .map((i) => ({ s: i.str, x: i.transform[4], y: i.transform[5] }))
@@ -26,6 +42,15 @@ const linhasDoPdf = async (buffer: ArrayBuffer): Promise<LinhaDeTextos[]> => {
       else linhas.push({ y: t.y, cel: [t] });
     }
     linhas.forEach((l) => todas.push(l.cel.sort((a, b) => a.x - b.x).map((c) => c.s)));
+  }
+  if (paginasSemTexto.length > 0) {
+    try {
+      todas.push(...(await linhasPorOcr(paginasSemTexto)));
+    } catch {
+      throw new Error(
+        'Este PDF só pode ser lido pela imagem, e a leitura não carregou. Confira a internet e tente de novo, ou use o PDF exportado pelo ERP.'
+      );
+    }
   }
   return todas;
 };
