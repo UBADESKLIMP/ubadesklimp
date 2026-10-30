@@ -3072,6 +3072,10 @@ export type Database = {
         Returns: Json
       }
       entrega_fila: { Args: { p_empresa_id: string }; Returns: Json }
+      entrega_historico: {
+        Args: { p_ate: string; p_de: string; p_empresa_id: string }
+        Returns: Json
+      }
       entrega_importar_lote: {
         Args: { p_empresa_id: string; p_linhas: Json }
         Returns: Json

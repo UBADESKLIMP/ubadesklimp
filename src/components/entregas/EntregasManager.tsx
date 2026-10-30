@@ -17,8 +17,9 @@ import FilaDeEntregas from './FilaDeEntregas';
 import RotaDoDiaPainel from './RotaDoDiaPainel';
 import ImportarEntregas from './ImportarEntregas';
 import BairrosEntrega from './BairrosEntrega';
+import HistoricoEntregas from './HistoricoEntregas';
 
-type Aba = 'rota' | 'fila' | 'importar' | 'bairros';
+type Aba = 'rota' | 'fila' | 'historico' | 'importar' | 'bairros';
 
 /**
  * Quem entrega tem conta da equipe, e logado a tela descobre a loja sozinha.
@@ -70,7 +71,7 @@ const EntregasManager = () => {
   const [aba, setAbaEstado] = useState<Aba>(() => {
     try {
       const salva = sessionStorage.getItem('entregas-aba') as Aba | null;
-      return salva && ['rota', 'fila', 'importar', 'bairros'].includes(salva) ? salva : 'rota';
+      return salva && ['rota', 'fila', 'historico', 'importar', 'bairros'].includes(salva) ? salva : 'rota';
     } catch {
       return 'rota';
     }
@@ -157,6 +158,7 @@ const EntregasManager = () => {
           <TabsTrigger value="fila">
             Fila{fila.fila.length > 0 && ` (${fila.fila.length})`}
           </TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="bairros">Bairros</TabsTrigger>
         </TabsList>
@@ -187,6 +189,10 @@ const EntregasManager = () => {
             onMontarRota={montarRota}
             onExcluir={fila.excluir}
           />
+        </TabsContent>
+
+        <TabsContent value="historico" className="mt-4 space-y-4">
+          <HistoricoEntregas empresaId={empresaAtiva} />
         </TabsContent>
 
         <TabsContent value="importar" className="mt-4 space-y-4">

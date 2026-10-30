@@ -119,6 +119,57 @@ export const emReais = (valor: number | null | undefined) =>
 export const diaCurto = (iso: string | null) =>
   iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '';
 
+/** Um registro do entregador, como o histórico mostra. */
+export interface RegistroDoHistorico {
+  evento_id: string;
+  entrega_id: string;
+  dia: string;
+  hora: string;
+  tipo: EntregaEventoTipo;
+  motivo: EntregaMotivo | null;
+  motivo_texto: string | null;
+  quem_recebeu: string | null;
+  entregador: string;
+  documento: string;
+  cliente_nome: string;
+  cliente_telefone: string | null;
+  bairro: string | null;
+  endereco: string | null;
+  valor: number | null;
+  itens: ItemEntrega[];
+}
+
+/** Tudo que o entregador registrou num período, do mais recente para o mais antigo. */
+export const useHistoricoDeEntregas = (empresaId: string | null, de: string, ate: string) => {
+  const [registros, setRegistros] = useState<RegistroDoHistorico[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    if (!empresaId) return;
+    setCarregando(true);
+    const { data, error } = await supabase.rpc('entrega_historico', {
+      p_empresa_id: empresaId,
+      p_de: de,
+      p_ate: ate,
+    });
+    if (error) {
+      setErro(error.message.includes('1 ano') ? 'Escolha um período de até 1 ano.' : MENSAGEM_DE_REDE);
+      setRegistros([]);
+    } else {
+      setErro(null);
+      setRegistros((data as unknown as RegistroDoHistorico[]) ?? []);
+    }
+    setCarregando(false);
+  }, [empresaId, de, ate]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  return { registros, carregando, erro, recarregar: carregar };
+};
+
 const MENSAGEM_DE_REDE = 'Não conseguimos falar com o sistema agora. Tente de novo.';
 
 /**
