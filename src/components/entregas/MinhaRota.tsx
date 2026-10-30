@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, LogOut, MapPin, MessageCircle, Navigation, Phone } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import DeslizarParaEntregar from './DeslizarParaEntregar';
@@ -40,7 +40,7 @@ interface ProdutoDaCarga {
   nome: string;
   unidade: string;
   total: number | null;
-  porCliente: { cliente: string; bairro: string | null; quantidade: number | null }[];
+  porCliente: { entregaId: string; cliente: string; bairro: string | null; quantidade: number | null }[];
 }
 
 /** Soma o que vai no carro: um produto por linha, com a divisão por cliente. */
@@ -54,20 +54,48 @@ const juntarCarga = (paradas: ParadaDoEntregador[]): ProdutoDaCarga[] => {
       const q = quantidadeDoItem(item);
       const atual = mapa.get(chave) ?? { chave, nome, unidade, total: 0, porCliente: [] };
       atual.total = atual.total === null || q === null ? null : atual.total + q;
-      atual.porCliente.push({ cliente: p.cliente_nome, bairro: p.bairro, quantidade: q });
+      atual.porCliente.push({ entregaId: p.entrega_id, cliente: p.cliente_nome, bairro: p.bairro, quantidade: q });
       mapa.set(chave, atual);
     });
   });
   return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 };
 
-const lerCarregados = (chave: string): Set<string> => {
+/**
+ * O que o entregador já pôs no carro, por produto, guardando para QUAIS entregas
+ * ele marcou. Entrega nova que traga o mesmo produto não está nessa lista, então
+ * a marca cai sozinha e ele sabe que falta pegar mais. Entrega que saiu da carga
+ * (já entregue) não reabre nada.
+ */
+type Carregados = Record<string, string[]>;
+const TODAS = '*';
+
+const lerCarregados = (chave: string, chaveAntiga: string): Carregados => {
   try {
     const bruto = window.localStorage.getItem(chave);
-    return new Set(bruto ? (JSON.parse(bruto) as string[]) : []);
+    if (bruto) return JSON.parse(bruto) as Carregados;
+    // Marcas de antes desta regra: valem para o que já está na carga agora.
+    const antigo = window.localStorage.getItem(chaveAntiga);
+    if (antigo) return Object.fromEntries((JSON.parse(antigo) as string[]).map((c) => [c, [TODAS]]));
   } catch {
-    return new Set();
+    // sem armazenamento: começa tudo desmarcado
   }
+  return {};
+};
+
+const gravarCarregados = (chave: string, valor: Carregados) => {
+  try {
+    window.localStorage.setItem(chave, JSON.stringify(valor));
+  } catch {
+    // sem armazenamento: o marcado vale só nesta abertura
+  }
+};
+
+/** Marcado e sem nenhuma entrega nova desde que foi marcado. */
+const estaCarregado = (produto: ProdutoDaCarga, salvo: Carregados): boolean => {
+  const ids = salvo[produto.chave];
+  if (!ids) return false;
+  return ids.includes(TODAS) || produto.porCliente.every((c) => ids.includes(c.entregaId));
 };
 
 /**
@@ -98,8 +126,11 @@ const MinhaRota = ({
   const [motivo, setMotivo] = useState<EntregaMotivo | null>(null);
   const [motivoTexto, setMotivoTexto] = useState('');
 
-  const chaveCarga = `carga-do-dia:${new Date().toISOString().slice(0, 10)}`;
-  const [carregados, setCarregados] = useState<Set<string>>(() => lerCarregados(chaveCarga));
+  const hojeChave = new Date().toISOString().slice(0, 10);
+  const chaveCarga = `carga-do-dia-v2:${hojeChave}`;
+  const [carregados, setCarregados] = useState<Carregados>(() =>
+    lerCarregados(chaveCarga, `carga-do-dia:${hojeChave}`)
+  );
   const [abertosDaCarga, setAbertosDaCarga] = useState<Set<string>>(new Set());
 
   const paradas = rota.paradas ?? [];
@@ -111,7 +142,22 @@ const MinhaRota = ({
   const primeira = pendentes[0]?.entrega_id;
   // O que já foi entregue deixou o carro: só entra na carga quem ainda está por entregar.
   const carga = useMemo(() => juntarCarga(pendentes), [paradas]);
-  const carregadosNaCarga = carga.filter((produto) => carregados.has(produto.chave)).length;
+  const carregadosNaCarga = carga.filter((produto) => estaCarregado(produto, carregados)).length;
+
+  // Marca vinda do formato antigo ("todas as entregas de agora"): passa a valer
+  // para as entregas que existem neste momento, e só as novas a derrubam.
+  useEffect(() => {
+    if (!Object.values(carregados).some((ids) => ids.includes(TODAS))) return;
+    if (carga.length === 0) return;
+    const convertido: Carregados = {};
+    Object.entries(carregados).forEach(([chave, ids]) => {
+      const produto = carga.find((p) => p.chave === chave);
+      convertido[chave] = ids.includes(TODAS) ? (produto ? produto.porCliente.map((c) => c.entregaId) : []) : ids;
+    });
+    setCarregados(convertido);
+    gravarCarregados(chaveCarga, convertido);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carga]);
 
   const estaAberta = (id: string) => abertas[id] ?? id === primeira;
   const alternar = (id: string) => setAbertas((a) => ({ ...a, [id]: !estaAberta(id) }));
@@ -148,16 +194,12 @@ const MinhaRota = ({
     fecharMotivo();
   };
 
-  const marcarCarregado = (chave: string) => {
+  const marcarCarregado = (produto: ProdutoDaCarga) => {
     setCarregados((atual) => {
-      const novo = new Set(atual);
-      if (novo.has(chave)) novo.delete(chave);
-      else novo.add(chave);
-      try {
-        window.localStorage.setItem(chaveCarga, JSON.stringify([...novo]));
-      } catch {
-        // sem armazenamento: o marcado vale só nesta abertura
-      }
+      const novo = { ...atual };
+      if (estaCarregado(produto, atual)) delete novo[produto.chave];
+      else novo[produto.chave] = produto.porCliente.map((c) => c.entregaId);
+      gravarCarregados(chaveCarga, novo);
       return novo;
     });
   };
@@ -411,14 +453,16 @@ const MinhaRota = ({
               </p>
             )}
             {carga.map((produto) => {
-              const marcado = carregados.has(produto.chave);
+              const marcado = estaCarregado(produto, carregados);
+              // Já tinha marcado e chegou entrega nova com esse produto.
+              const chegouMais = !marcado && Boolean(carregados[produto.chave]);
               const aberto = abertosDaCarga.has(produto.chave);
               return (
                 <div key={produto.chave} className="overflow-hidden rounded-2xl border border-[#DCDFD8] bg-white">
                   <div className="flex items-center gap-3 px-3 py-2">
                     <button
                       type="button"
-                      onClick={() => marcarCarregado(produto.chave)}
+                      onClick={() => marcarCarregado(produto)}
                       aria-label={marcado ? 'Desmarcar como carregado' : 'Marcar como carregado'}
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 ${
                         marcado ? 'border-[#2F9E44] bg-[#2F9E44] text-white' : 'border-[#8A9290] text-transparent'
@@ -439,6 +483,11 @@ const MinhaRota = ({
                         } ${marcado ? 'text-[#8A9290] line-through' : 'text-[#141B1E]'}`}
                       >
                         {produto.nome}
+                        {chegouMais && (
+                          <span className="ml-2 inline-block rounded bg-[#B8860B] px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-white">
+                            chegou mais
+                          </span>
+                        )}
                       </span>
                       <span className="shrink-0 font-mono text-lg font-semibold tabular-nums text-[#141B1E]">
                         {produto.total === null ? '—' : produto.total}
