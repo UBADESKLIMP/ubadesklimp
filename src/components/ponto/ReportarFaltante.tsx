@@ -96,7 +96,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
             <PackagePlus className="h-6 w-6 text-primary" />
           </div>
           <p className="text-xl font-heading">O que está faltando?</p>
-          <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
+          <p className="text-sm text-white/75 mt-1.5 max-w-xs">
             Digite seu PIN e depois vá anotando os produtos. Manda tudo de uma vez no fim.
           </p>
         </div>
@@ -106,6 +106,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
           onChange={setPin}
           onConfirmar={() => setAutorizado(true)}
           confirmando={false}
+          plano
         />
       </main>
     );
@@ -118,7 +119,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
         value={termo}
         onChange={(e) => setTermo(e.target.value)}
         placeholder="Buscar produto para anotar"
-        className="h-14 text-base bg-white border-[#DCDFD8] rounded-2xl px-5"
+        className="h-14 text-base bg-white/10 border-white/25 text-white placeholder:text-white/50 rounded-2xl px-5"
       />
 
       {/* A lista do que já foi anotado fica sempre à vista: é o que vai ser
@@ -128,7 +129,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
           {lista.map((p) => (
             <span
               key={p.id}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 pl-4 pr-2 py-2 text-sm text-[#141B1E]"
+              className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 pl-4 pr-2 py-2 text-sm text-white"
             >
               {p.nome}
               <button
@@ -146,13 +147,13 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
 
       <div className="flex-1 overflow-y-auto grid gap-2.5 sm:grid-cols-2 content-start">
         {procurando && (
-          <p className="text-[#55605F] p-4 flex items-center gap-2">
+          <p className="text-white/75 p-4 flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Procurando…
           </p>
         )}
         {!procurando && termo.trim().length < 2 && (
-          <p className="text-[#8A9290] p-4 flex items-center gap-2">
+          <p className="text-white/55 p-4 flex items-center gap-2">
             <Search className="h-4 w-4" />
             {lista.length === 0
               ? 'Digite o nome ou a marca do produto.'
@@ -160,7 +161,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
           </p>
         )}
         {!procurando && termo.trim().length >= 2 && produtos.length === 0 && (
-          <p className="text-[#55605F] p-4">
+          <p className="text-white/75 p-4">
             Nenhum produto com esse nome. Avise o comprador direto.
           </p>
         )}
@@ -175,18 +176,18 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
               className={cn(
                 'min-h-[4.25rem] rounded-2xl border px-5 py-3.5 text-left transition flex items-center gap-3',
                 jaEsta
-                  ? 'border-primary/30 bg-primary/5 text-[#8A9290]'
-                  : 'border-[#DCDFD8] bg-white hover:border-primary/40 active:scale-[0.99]'
+                  ? 'border-primary/30 bg-primary/30 text-white/55'
+                  : 'border-white/25 bg-white/10 hover:border-primary/40 active:scale-[0.99]'
               )}
             >
               {jaEsta ? (
                 <Check className="h-4 w-4 text-primary shrink-0" />
               ) : (
-                <Plus className="h-4 w-4 text-[#8A9290] shrink-0" />
+                <Plus className="h-4 w-4 text-white/55 shrink-0" />
               )}
               <span className="min-w-0">
-                <span className="block text-base leading-tight text-[#141B1E]">{p.nome}</span>
-                {p.marca && <span className="block text-sm text-[#8A9290] mt-0.5">{p.marca}</span>}
+                <span className="block text-base leading-tight text-white">{p.nome}</span>
+                {p.marca && <span className="block text-sm text-white/55 mt-0.5">{p.marca}</span>}
               </span>
             </button>
           );
@@ -197,7 +198,7 @@ const ReportarFaltante = ({ buscarProduto, reportarFaltantes, onFim }: Props) =>
         type="button"
         disabled={lista.length === 0 || enviando}
         onClick={enviar}
-        className="h-16 rounded-2xl bg-primary text-primary-foreground text-lg font-medium flex items-center justify-center gap-3 disabled:bg-[#141B1E]/10 disabled:text-[#141B1E]/30 active:scale-[0.99] transition"
+        className="h-16 rounded-2xl bg-white text-[#0b1020] text-lg font-medium flex items-center justify-center gap-3 disabled:bg-white/10 disabled:text-white/35 active:scale-[0.99] transition"
       >
         {enviando && <Loader2 className="h-5 w-5 animate-spin" />}
         {lista.length === 0

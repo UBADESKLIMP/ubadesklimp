@@ -84,7 +84,7 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
       mensagem:
         qtd === 0
           ? 'Ninguém novo foi marcado. Quem já tinha batido continua como estava.'
-          : `Às ${(r.hora ?? hora).slice(0, 5)}. Cada um confirma depois, em Meu ponto.`,
+          : `Às ${(r.hora ?? hora).slice(0, 5)}. As entradas ficam abertas por 2 dias para cada um contestar; depois valem sozinhas.`,
     });
   };
 
@@ -92,11 +92,11 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
     return (
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
         <div className="text-center">
-          <div className="h-12 w-12 rounded-full bg-[#B8860B]/10 flex items-center justify-center mx-auto mb-4">
-            <DoorOpen className="h-6 w-6 text-[#B8860B]" />
+          <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+            <DoorOpen className="h-6 w-6 text-amber-300" />
           </div>
           <p className="text-xl font-heading">Abrir a loja</p>
-          <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
+          <p className="text-sm text-white/75 mt-1.5 max-w-xs">
             Digite o PIN de quem está abrindo. A entrada de quem estava na porta sai no nome dessa
             pessoa.
           </p>
@@ -107,7 +107,7 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
           onChange={setPin}
           onConfirmar={confirmarPin}
           confirmando={enviando}
-          tom="loja"
+          plano
         />
       </main>
     );
@@ -116,17 +116,17 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
   return (
     <main className="flex-1 flex flex-col px-5 pb-4 gap-4 min-h-0">
       <div className="text-center">
-        <p className="text-sm text-[#55605F]">
-          Loja aberta às <span className="font-mono text-[#141B1E] font-semibold">{hora}</span> por{' '}
+        <p className="text-sm text-white/75">
+          Loja aberta às <span className="font-mono text-white font-semibold">{hora}</span> por{' '}
           {responsavel}
         </p>
-        <p className="text-base text-[#141B1E] mt-1">Quem já estava na porta?</p>
-        <p className="text-xs text-[#8A9290] mt-0.5">A lista fecha em 10 minutos.</p>
+        <p className="text-base text-white mt-1">Quem já estava na porta?</p>
+        <p className="text-xs text-white/55 mt-0.5">A lista fecha em 10 minutos.</p>
       </div>
 
       <div className="flex-1 overflow-y-auto grid gap-2.5 sm:grid-cols-2 content-start">
         {pendentes.length === 0 && (
-          <p className="text-[#55605F] p-4 text-center sm:col-span-2">
+          <p className="text-white/75 p-4 text-center sm:col-span-2">
             Todo mundo já bateu entrada hoje. Nada a marcar.
           </p>
         )}
@@ -140,14 +140,14 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
               className={cn(
                 'h-[4.25rem] rounded-2xl border px-5 flex items-center gap-4 text-left text-lg transition active:scale-[0.99]',
                 marcado
-                  ? 'border-primary bg-primary/5 text-[#141B1E]'
-                  : 'border-[#DCDFD8] bg-white text-[#55605F] hover:border-primary/40'
+                  ? 'border-primary bg-primary/30 text-white'
+                  : 'border-white/25 bg-white/10 text-white/75 hover:border-primary/40'
               )}
             >
               <span
                 className={cn(
                   'h-7 w-7 rounded-lg border-2 shrink-0 flex items-center justify-center text-sm font-bold',
-                  marcado ? 'border-primary bg-primary text-white' : 'border-[#DCDFD8]'
+                  marcado ? 'border-primary bg-primary text-white' : 'border-white/25'
                 )}
               >
                 {marcado ? '✓' : ''}
@@ -162,7 +162,7 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
         type="button"
         disabled={marcados.size === 0 || enviando}
         onClick={confirmarPresentes}
-        className="h-16 rounded-2xl bg-primary text-primary-foreground text-lg font-medium flex items-center justify-center gap-3 disabled:bg-[#141B1E]/10 disabled:text-[#141B1E]/30 active:scale-[0.99] transition"
+        className="h-16 rounded-2xl bg-white text-[#0b1020] text-lg font-medium flex items-center justify-center gap-3 disabled:bg-white/10 disabled:text-white/35 active:scale-[0.99] transition"
       >
         {enviando && <Loader2 className="h-5 w-5 animate-spin" />}
         Registrar entrada de {marcados.size}

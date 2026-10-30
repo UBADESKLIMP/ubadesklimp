@@ -322,7 +322,7 @@ const Ponto = () => {
   const mostraFaltante = !demo && !painel && atalhos.includes('reportar_faltante');
   const secundaria = tela !== 'ponto';
   // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
-  const emPonto = tela === 'ponto';
+  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante';
 
   return (
     <div

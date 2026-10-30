@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { AdminNavGroup, AdminNavItem, AdminSection, ADMIN_NAV_GROUP_LABELS } from './adminNav';
 
@@ -12,6 +14,7 @@ const GROUP_ORDER: (AdminNavGroup | undefined)[] = [undefined, 'catalogo', 'oper
 
 const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => {
   const [expanded, setExpanded] = useState(false);
+  const { signOut } = useAuth();
 
   const groups = GROUP_ORDER
     .map((group) => ({ group, items: items.filter((item) => item.group === group) }))
@@ -97,6 +100,20 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
           </div>
         ))}
       </nav>
+
+      <div className="px-2 pt-2 border-t border-adm-line">
+        <button
+          type="button"
+          onClick={signOut}
+          title="Sair da conta"
+          className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-adm-muted hover:bg-adm-bg hover:text-adm-ink transition-colors"
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0" />
+          <span className={cn('whitespace-nowrap transition-opacity duration-150', expanded ? 'opacity-100' : 'opacity-0')}>
+            Sair da conta
+          </span>
+        </button>
+      </div>
     </aside>
   );
 };
