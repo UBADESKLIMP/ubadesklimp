@@ -62,6 +62,7 @@ export interface EventoDaParada {
   quem_recebeu: string | null;
   /** Já vem "HH:MM" no fuso de São Paulo, pronto pra tela. */
   hora: string | null;
+  entregador?: string | null;
   lat: number | null;
   lng: number | null;
   precisao_m: number | null;
@@ -126,6 +127,8 @@ export interface RegistroDoHistorico {
   dia: string;
   hora: string;
   tipo: EntregaEventoTipo;
+  /** A marcação foi desfeita depois (entrega revertida pelo escritório). */
+  desfeita: boolean;
   motivo: EntregaMotivo | null;
   motivo_texto: string | null;
   quem_recebeu: string | null;
@@ -334,6 +337,16 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
     return r;
   };
 
+  // Desfaz uma marcação errada do entregador: a entrega volta para a rota e o
+  // registro original fica, com a reversão anotada ao lado.
+  const reverterParada = async (paradaId: string): Promise<ResultadoRpc> => {
+    const { data: res, error } = await supabase.rpc('entrega_reverter', { p_parada_id: paradaId });
+    if (error) return { ok: false, mensagem: MENSAGEM_DE_REDE };
+    const r = res as unknown as ResultadoRpc;
+    if (r?.ok) await carregar();
+    return r;
+  };
+
   const inverterRota = async (): Promise<ResultadoRpc> => {
     if (!rota?.rota_id) return { ok: false, mensagem: 'Monte a rota antes de invertê-la.' };
     const { data: res, error } = await supabase.rpc('entrega_inverter_rota', {
@@ -397,6 +410,7 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
     inverterRota,
     tirarDaRota,
     moverParadas,
+    reverterParada,
     importarLote,
   };
 };

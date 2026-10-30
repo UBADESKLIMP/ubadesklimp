@@ -170,6 +170,7 @@ const EntregasManager = () => {
             data={hoje}
             onInverter={rota.inverterRota}
             onMover={rota.moverParadas}
+            onReverter={rota.reverterParada}
             onTirar={async (paradaId) => {
               const r = await rota.tirarDaRota(paradaId);
               if (r.ok) await fila.recarregar();

@@ -3093,6 +3093,7 @@ export type Database = {
         Args: { p_nova_ordem: number; p_parada_id: string }
         Returns: Json
       }
+      entrega_reverter: { Args: { p_parada_id: string }; Returns: Json }
       entrega_tirar_da_rota: {
         Args: { p_parada_id: string }
         Returns: Json
@@ -3623,7 +3624,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      entrega_evento_tipo: "entregue" | "nao_entregue"
+      entrega_evento_tipo: "entregue" | "nao_entregue" | "revertida"
       entrega_motivo:
         | "fechado"
         | "ninguem_atendeu"
@@ -3863,7 +3864,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      entrega_evento_tipo: ["entregue", "nao_entregue"],
+      entrega_evento_tipo: ["entregue", "nao_entregue", "revertida"],
       entrega_motivo: [
         "fechado",
         "ninguem_atendeu",

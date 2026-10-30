@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, History, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, History, Undo2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -78,8 +78,10 @@ const HistoricoEntregas = ({ empresaId }: { empresaId: string | null }) => {
     return [...porDia.entries()];
   }, [filtrados]);
 
-  const entregues = filtrados.filter((r) => r.tipo === 'entregue');
-  const voltaram = filtrados.length - entregues.length;
+  // Marcação desfeita pelo escritório e a própria reversão não contam como entrega.
+  const vale = (r: RegistroDoHistorico) => r.tipo !== 'revertida' && !r.desfeita;
+  const entregues = filtrados.filter((r) => r.tipo === 'entregue' && vale(r));
+  const voltaram = filtrados.filter((r) => r.tipo === 'nao_entregue' && vale(r)).length;
   const totalEntregue = entregues.reduce((soma, r) => soma + (r.valor ?? 0), 0);
 
   const escolher = (dias: number) => {
@@ -173,7 +175,8 @@ const HistoricoEntregas = ({ empresaId }: { empresaId: string | null }) => {
           </p>
 
           {dias.map(([dia, doDia]) => {
-            const feitas = doDia.filter((r) => r.tipo === 'entregue').length;
+            const feitas = doDia.filter((r) => r.tipo === 'entregue' && vale(r)).length;
+            const voltouNoDia = doDia.filter((r) => r.tipo === 'nao_entregue' && vale(r)).length;
             return (
               <Card key={dia} className={CARD}>
                 <CardContent className="pt-5">
@@ -181,10 +184,10 @@ const HistoricoEntregas = ({ empresaId }: { empresaId: string | null }) => {
                     <h3 className="text-base font-semibold text-adm-ink">{tituloDoDia(dia)}</h3>
                     <span className="text-xs text-adm-muted">
                       <span className="font-mono tabular-nums">{feitas}</span> entregue{feitas === 1 ? '' : 's'}
-                      {doDia.length > feitas && (
+                      {voltouNoDia > 0 && (
                         <>
                           {' · '}
-                          <span className="font-mono tabular-nums">{doDia.length - feitas}</span> voltou
+                          <span className="font-mono tabular-nums">{voltouNoDia}</span> voltou
                         </>
                       )}
                     </span>
@@ -192,22 +195,34 @@ const HistoricoEntregas = ({ empresaId }: { empresaId: string | null }) => {
                   <ul className="divide-y divide-adm-line">
                     {doDia.map((r) => {
                       const entregue = r.tipo === 'entregue';
-                      const Icone = entregue ? CheckCircle2 : XCircle;
+                      const revertida = r.tipo === 'revertida';
+                      const Icone = revertida ? Undo2 : entregue ? CheckCircle2 : XCircle;
                       return (
-                        <li key={r.evento_id} className="flex items-start gap-3 py-3">
+                        <li key={r.evento_id} className={`flex items-start gap-3 py-3 ${r.desfeita ? 'opacity-55' : ''}`}>
                           <span className="w-12 shrink-0 pt-0.5 font-mono text-sm tabular-nums text-adm-muted">{r.hora}</span>
-                          <Icone className={`mt-0.5 h-5 w-5 shrink-0 ${entregue ? 'text-[#2F9E44]' : 'text-[#C0392B]'}`} />
+                          <Icone
+                            className={`mt-0.5 h-5 w-5 shrink-0 ${
+                              revertida ? 'text-[#B8860B]' : entregue ? 'text-[#2F9E44]' : 'text-[#C0392B]'
+                            }`}
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium text-adm-ink">{r.cliente_nome}</p>
                             <p className="truncate text-sm text-adm-muted">
                               {[r.documento, r.bairro, r.endereco].filter(Boolean).join(' · ')}
                             </p>
-                            <p className="text-sm text-adm-muted">
-                              {entregue ? 'Entregue' : 'Voltou'} por <span className="text-adm-ink">{r.entregador}</span>
-                              {entregue && r.quem_recebeu && <> · recebeu {r.quem_recebeu}</>}
-                              {!entregue && r.motivo && <> · {MOTIVO_LABEL[r.motivo]}</>}
-                              {!entregue && r.motivo_texto && <> ({r.motivo_texto})</>}
-                            </p>
+                            {revertida ? (
+                              <p className="text-sm text-adm-muted">
+                                Voltou para a rota, desfeito por <span className="text-adm-ink">{r.entregador}</span>
+                              </p>
+                            ) : (
+                              <p className="text-sm text-adm-muted">
+                                {entregue ? 'Entregue' : 'Voltou'} por <span className="text-adm-ink">{r.entregador}</span>
+                                {entregue && r.quem_recebeu && <> · recebeu {r.quem_recebeu}</>}
+                                {!entregue && r.motivo && <> · {MOTIVO_LABEL[r.motivo]}</>}
+                                {!entregue && r.motivo_texto && <> ({r.motivo_texto})</>}
+                                {r.desfeita && <span className="ml-2 rounded bg-adm-line px-1.5 py-0.5 text-xs">desfeita</span>}
+                              </p>
+                            )}
                             {r.itens.length > 0 && (
                               <details className="mt-1 text-sm text-adm-muted">
                                 <summary className="cursor-pointer select-none">
@@ -224,7 +239,9 @@ const HistoricoEntregas = ({ empresaId }: { empresaId: string | null }) => {
                               </details>
                             )}
                           </div>
-                          <span className="shrink-0 font-mono text-sm tabular-nums text-adm-ink">{emReais(r.valor)}</span>
+                          <span className="shrink-0 font-mono text-sm tabular-nums text-adm-ink">
+                            {revertida ? '' : emReais(r.valor)}
+                          </span>
                         </li>
                       );
                     })}

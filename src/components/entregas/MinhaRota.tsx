@@ -40,7 +40,7 @@ interface ProdutoDaCarga {
   nome: string;
   unidade: string;
   total: number | null;
-  porCliente: { cliente: string; quantidade: number | null }[];
+  porCliente: { cliente: string; bairro: string | null; quantidade: number | null }[];
 }
 
 /** Soma o que vai no carro: um produto por linha, com a divisão por cliente. */
@@ -54,7 +54,7 @@ const juntarCarga = (paradas: ParadaDoEntregador[]): ProdutoDaCarga[] => {
       const q = quantidadeDoItem(item);
       const atual = mapa.get(chave) ?? { chave, nome, unidade, total: 0, porCliente: [] };
       atual.total = atual.total === null || q === null ? null : atual.total + q;
-      atual.porCliente.push({ cliente: p.cliente_nome, quantidade: q });
+      atual.porCliente.push({ cliente: p.cliente_nome, bairro: p.bairro, quantidade: q });
       mapa.set(chave, atual);
     });
   });
@@ -109,7 +109,9 @@ const MinhaRota = ({
   const entregues = paradas.filter((p) => p.situacao === 'entregue').length;
   const voltaram = resolvidas.length - entregues;
   const primeira = pendentes[0]?.entrega_id;
-  const carga = useMemo(() => juntarCarga(paradas), [paradas]);
+  // O que já foi entregue deixou o carro: só entra na carga quem ainda está por entregar.
+  const carga = useMemo(() => juntarCarga(pendentes), [paradas]);
+  const carregadosNaCarga = carga.filter((produto) => carregados.has(produto.chave)).length;
 
   const estaAberta = (id: string) => abertas[id] ?? id === primeira;
   const alternar = (id: string) => setAbertas((a) => ({ ...a, [id]: !estaAberta(id) }));
@@ -397,13 +399,15 @@ const MinhaRota = ({
           <>
             <p className="px-1 text-sm text-[#55605F]">
               Tudo o que vai no carro, somado.{' '}
-              <span className="font-mono tabular-nums">{carregados.size}</span> de{' '}
+              <span className="font-mono tabular-nums">{carregadosNaCarga}</span> de{' '}
               <span className="font-mono tabular-nums">{carga.length}</span> carregados. Toque no quadrado para
               marcar; toque no nome para ver a divisão por cliente.
             </p>
             {carga.length === 0 && (
               <p className="rounded-2xl border border-[#DCDFD8] bg-white p-5 text-center text-sm text-[#55605F]">
-                As entregas desta rota não trazem itens cadastrados.
+                {pendentes.length === 0
+                  ? 'Nada mais no carro: tudo desta rota já foi resolvido.'
+                  : 'As entregas desta rota não trazem itens cadastrados.'}
               </p>
             )}
             {carga.map((produto) => {
@@ -429,9 +433,10 @@ const MinhaRota = ({
                       className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
                     >
                       <span
-                        className={`min-w-0 flex-1 truncate font-medium ${
-                          marcado ? 'text-[#8A9290] line-through' : 'text-[#141B1E]'
-                        }`}
+                        // Fechado: até 2 linhas. Aberto: o nome inteiro, sem corte.
+                        className={`min-w-0 flex-1 break-words font-medium leading-snug ${
+                          aberto ? '' : 'line-clamp-2'
+                        } ${marcado ? 'text-[#8A9290] line-through' : 'text-[#141B1E]'}`}
                       >
                         {produto.nome}
                       </span>
@@ -445,16 +450,25 @@ const MinhaRota = ({
                     </button>
                   </div>
                   {aberto && (
-                    <ul className="space-y-1 border-t border-[#DCDFD8] px-4 py-2.5 text-sm text-[#55605F]">
-                      {produto.porCliente.map((c, i) => (
-                        <li key={i} className="flex justify-between gap-3">
-                          <span className="truncate">{c.cliente}</span>
-                          <span className="font-mono font-semibold tabular-nums text-[#141B1E]">
-                            {c.quantidade ?? '—'}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="border-t border-[#DCDFD8] px-4 py-2.5 text-sm text-[#55605F]">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#8A9290]">Para quem</p>
+                      <ul className="mt-1.5 space-y-2">
+                        {produto.porCliente.map((c, i) => (
+                          <li key={i} className="flex items-start justify-between gap-3">
+                            <span className="min-w-0 break-words">
+                              <span className="font-medium text-[#141B1E]">{c.cliente}</span>
+                              {c.bairro && <span className="block text-xs text-[#8A9290]">{c.bairro}</span>}
+                            </span>
+                            <span className="shrink-0 font-mono font-semibold tabular-nums text-[#141B1E]">
+                              {c.quantidade ?? '—'}
+                              {produto.unidade && (
+                                <span className="ml-1 text-xs font-normal text-[#8A9290]">{produto.unidade}</span>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               );
