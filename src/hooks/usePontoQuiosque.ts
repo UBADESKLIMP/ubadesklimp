@@ -144,6 +144,20 @@ export interface ResultadoPresentes {
   hora?: string;
 }
 
+export interface MarcacaoDeHoje {
+  tipo: MarcacaoTipo;
+  hora: string;
+  origem: string;
+}
+
+export interface ResultadoMinhasMarcacoes {
+  ok: boolean;
+  mensagem?: string;
+  nome?: string;
+  dia?: string;
+  marcacoes?: MarcacaoDeHoje[];
+}
+
 export interface ProdutoDoQuiosque {
   id: string;
   nome: string;
@@ -341,6 +355,17 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoAbertura;
   };
 
+  /** "Checar ponto": as batidas de hoje de quem digitou o PIN. */
+  const minhasMarcacoesPorPin = async (pin: string): Promise<ResultadoMinhasMarcacoes> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_minhas_marcacoes_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos consultar agora. Tente de novo.' };
+    return data as unknown as ResultadoMinhasMarcacoes;
+  };
+
   /** Passo 2: gera as entradas de quem estava na porta. */
   const marcarPresentesPorPin = async (pin: string, funcionarios: string[]) => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -453,6 +478,7 @@ export const usePontoQuiosque = () => {
     baterPontoPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
+    minhasMarcacoesPorPin,
     buscarProduto,
     reportarFaltantesPorPin,
     sairDoQuiosque,

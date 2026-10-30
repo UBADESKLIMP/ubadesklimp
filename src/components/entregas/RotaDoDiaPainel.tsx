@@ -186,7 +186,7 @@ const RotaDoDiaPainel = ({
           </div>
 
           <p className="text-xs text-adm-faint">
-            Atualiza sozinha a cada 30 segundos. Arraste pelo punho à esquerda para mudar a ordem —
+            Atualiza sozinha, em poucos segundos. Arraste pelo punho à esquerda para mudar a ordem —
             inverter depois não desfaz o seu arrasto.
           </p>
         </CardHeader>

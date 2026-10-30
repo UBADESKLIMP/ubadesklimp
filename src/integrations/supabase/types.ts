@@ -3449,6 +3449,10 @@ export type Database = {
         Args: { p_empresa_id: string }
         Returns: Json
       }
+      ponto_minhas_marcacoes_por_pin: {
+        Args: { p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
       ponto_marcacoes_do_dia: {
         Args: { p_data?: string; p_empresa_id: string }
         Returns: Json

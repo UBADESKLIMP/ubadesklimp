@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft } from 'lucide-react';
+import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
+import ChecarPonto from '@/components/ponto/ChecarPonto';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
 import {
@@ -59,7 +60,7 @@ interface AvisoAtual {
   codigo?: string;
 }
 
-type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'manutencao' | 'bastidor';
+type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'checar' | 'manutencao' | 'bastidor';
 
 const Ponto = () => {
   usePontoInstalavel();
@@ -72,6 +73,7 @@ const Ponto = () => {
     baterPontoPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
+    minhasMarcacoesPorPin,
     buscarProduto,
     reportarFaltantesPorPin,
     abrirBastidor,
@@ -320,9 +322,11 @@ const Ponto = () => {
   // Mostrar meio funcionando numa demonstração é pior que não mostrar.
   const mostraAbrirLoja = !demo && !painel && atalhos.includes('abrir_loja') && temQuemAbra;
   const mostraFaltante = !demo && !painel && atalhos.includes('reportar_faltante');
+  // Consulta só de leitura, útil para todo mundo: não depende de atalho configurado.
+  const mostraChecar = !demo && !painel;
   const secundaria = tela !== 'ponto';
   // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
-  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante';
+  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar';
 
   return (
     <div
@@ -422,6 +426,10 @@ const Ponto = () => {
         />
       )}
 
+      {tela === 'checar' && (
+        <ChecarPonto minhasMarcacoes={minhasMarcacoesPorPin} onVoltar={voltarAoInicio} />
+      )}
+
       {tela === 'bastidor' && ficha && (
         <Bastidor
           ficha={ficha}
@@ -501,6 +509,19 @@ const Ponto = () => {
               >
                 <DoorOpen className="h-4 w-4" />
                 Abrir loja
+              </button>
+            )}
+            {mostraChecar && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPin('');
+                  setTela('checar');
+                }}
+                className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                Checar ponto
               </button>
             )}
             {mostraFaltante && (

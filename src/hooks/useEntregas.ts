@@ -167,7 +167,40 @@ export const useHistoricoDeEntregas = (empresaId: string | null, de: string, ate
     carregar();
   }, [carregar]);
 
+  // Entrega nova do dia aparece sem apertar nada, e sem piscar a lista.
+  const conferir = useCallback(async () => {
+    if (!empresaId) return;
+    const { data, error } = await supabase.rpc('entrega_historico', {
+      p_empresa_id: empresaId,
+      p_de: de,
+      p_ate: ate,
+    });
+    if (!error) setRegistros((data as unknown as RegistroDoHistorico[]) ?? []);
+  }, [empresaId, de, ate]);
+  useAtualizacaoAutomatica(conferir, SEGUNDOS_ENTRE_RECARGAS_DA_FILA, Boolean(empresaId));
+
   return { registros, carregando, erro, recarregar: carregar };
+};
+
+/**
+ * Roda `conferir` de tempos em tempos enquanto a aba está à vista, e na hora em
+ * que a pessoa volta para ela. Aba escondida não gasta chamada nenhuma.
+ */
+const useAtualizacaoAutomatica = (conferir: () => void | Promise<void>, segundos: number, ligado = true) => {
+  useEffect(() => {
+    if (!ligado) return;
+    const agora = () => {
+      if (document.visibilityState === 'visible') conferir();
+    };
+    const t = setInterval(agora, segundos * 1000);
+    document.addEventListener('visibilitychange', agora);
+    window.addEventListener('focus', agora);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', agora);
+      window.removeEventListener('focus', agora);
+    };
+  }, [conferir, segundos, ligado]);
 };
 
 const MENSAGEM_DE_REDE = 'Não conseguimos falar com o sistema agora. Tente de novo.';
@@ -202,6 +235,15 @@ export const useFilaDeEntregas = (empresaId: string | null) => {
     carregar();
   }, [carregar]);
 
+  // Entrega nova importada por outra pessoa, ou devolvida ao fim do dia, entra
+  // na fila sem ninguém apertar nada. Sem spinner: a lista só troca.
+  const conferirFila = useCallback(async () => {
+    if (!empresaId) return;
+    const { data, error } = await supabase.rpc('entrega_fila', { p_empresa_id: empresaId });
+    if (!error) setFila((data as unknown as EntregaDaFila[]) ?? []);
+  }, [empresaId]);
+  useAtualizacaoAutomatica(conferirFila, SEGUNDOS_ENTRE_RECARGAS_DA_FILA, Boolean(empresaId));
+
   // Só apaga o que nunca entrou em rota; o banco confere e devolve quantas
   // foram de fato excluídas.
   const excluir = async (entregaIds: string[]): Promise<ResultadoRpc> => {
@@ -220,13 +262,14 @@ export const useFilaDeEntregas = (empresaId: string | null) => {
 };
 
 /**
- * A rota do dia, recarregada a cada 30s.
+ * A rota do dia, recarregada a cada 6s, só com a aba à vista.
  *
  * Não é realtime de propósito: o client.ts desliga o websocket do Supabase pra
- * economizar egress, e a loja quer saber que a entrega saiu — não ver o dedo do
- * entregador tocando o botão.
+ * economizar egress. A cada 6s a loja vê a entrega sair logo depois do toque do
+ * entregador, e aba escondida não faz chamada nenhuma.
  */
-const SEGUNDOS_ENTRE_RECARGAS = 30;
+const SEGUNDOS_ENTRE_RECARGAS = 6;
+const SEGUNDOS_ENTRE_RECARGAS_DA_FILA = 10;
 
 export const useRotaDoDia = (empresaId: string | null, data: string) => {
   const [rota, setRota] = useState<RotaDoDia | null>(null);
@@ -260,12 +303,13 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
       if (vivo) setCarregando(false);
     };
     primeira();
-    const t = setInterval(carregar, SEGUNDOS_ENTRE_RECARGAS * 1000);
     return () => {
       vivo = false;
-      clearInterval(t);
     };
   }, [carregar]);
+
+  // O entregador marca "entregue" no celular e a rota do painel muda sozinha.
+  useAtualizacaoAutomatica(carregar, SEGUNDOS_ENTRE_RECARGAS, Boolean(empresaId));
 
   const montarRota = async (entregaIds: string[]): Promise<ResultadoRpc> => {
     if (!empresaId) return { ok: false, mensagem: 'Nenhuma empresa selecionada.' };
