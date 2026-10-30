@@ -1,5 +1,5 @@
 /**
- * Leitura do pedido (ou orçamento) impresso pelo ERP, em PDF ou em planilha.
+ * Leitura do pedido, orçamento ou CP (cupom de venda) impresso pelo ERP, em PDF ou em planilha.
  *
  * É o documento de UM cliente: no alto os dados da loja, depois "ORÇAMENTO
  * *55210* - 27/10/2026", os dados do cliente (RAZÃO, FANTASIA, ENDEREÇO, CEP,
@@ -103,7 +103,7 @@ const bairroConhecidoNoTexto = (texto: string, conhecidos: string[]): string | n
 };
 
 const ehInicioDeDocumento = (linha: LinhaDeTextos) =>
-  /^(orcamento|pedido|venda|ordem|nota)/.test(semAcento(linha[0] ?? '')) &&
+  /^(orcamento|pedido|venda|ordem|nota|cupom)/.test(semAcento(linha[0] ?? '')) &&
   linha.some((c) => /\*\d+\*/.test(c));
 
 const lerUm = (linhas: LinhaDeTextos[], bairrosConhecidos: string[]): PedidoLido | null => {
@@ -114,8 +114,9 @@ const lerUm = (linhas: LinhaDeTextos[], bairrosConhecidos: string[]): PedidoLido
   const numero = cabTexto.match(/\*(\d+)\*/)?.[1];
   if (!cab || !numero) return null;
 
-  const razao = campoPorRotulo(linhas, /^razao/)?.replace(/\s*-\s*$/, '') ?? null;
-  const fantasia = campoPorRotulo(linhas, /^fantasia/);
+  // O CP (venda já feita no sistema) traz NOME / SOBRENOME no lugar de RAZÃO / FANTASIA.
+  const razao = (campoPorRotulo(linhas, /^razao/) ?? campoPorRotulo(linhas, /^nome$/))?.replace(/\s*-\s*$/, '') ?? null;
+  const fantasia = campoPorRotulo(linhas, /^fantasia/) ?? campoPorRotulo(linhas, /^sobrenome/);
   const nome = limpar(fantasia) || limpar(razao);
   if (!nome) return null;
 
