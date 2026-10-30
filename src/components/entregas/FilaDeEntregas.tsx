@@ -81,7 +81,8 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
     setEscolhidas(new Set());
   };
 
-  // Só exclui o que ainda não foi para a rua: fora da rota e sem ter voltado.
+  // Exclui o que está na fila, mesmo se já passou por uma rota de outro dia. Fica de
+  // fora o que está na rota de hoje e o que o entregador já registrou (voltou).
   // O banco confere de novo; aqui só evita o clique que não teria efeito.
   const idsDaDivida = new Set(divida.map((e) => e.id));
   const podeExcluir =
@@ -90,7 +91,7 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
   const excluir = async () => {
     const quantas = escolhidas.size;
     const frase = quantas === 1 ? 'esta entrega' : `estas ${quantas} entregas`;
-    if (!window.confirm(`Excluir ${frase}? Elas ainda não saíram em rota. Se o ERP mandar de novo, voltam a aparecer.`)) return;
+    if (!window.confirm(`Excluir ${frase}? Se o ERP mandar de novo, voltam a aparecer.`)) return;
     setExcluindo(true);
     setAviso(null);
     const r = await onExcluir([...escolhidas]);
@@ -235,7 +236,7 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
             title={
               podeExcluir
                 ? 'Excluir as entregas marcadas'
-                : 'Só dá para excluir entrega que ainda não entrou em rota e não voltou'
+                : 'Não dá para excluir entrega que está na rota de hoje ou que já voltou'
             }
             className="h-12 shrink-0 border-[#C0392B]/60 bg-[#12121a] text-[#C0392B] hover:bg-[#C0392B]/10"
           >
