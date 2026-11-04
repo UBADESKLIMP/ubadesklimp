@@ -41,7 +41,7 @@ const LinkDoEntregador = ({ empresaId }: { empresaId: string }) => {
   };
 
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-adm-line bg-adm-surface px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-adm-line bg-adm-surface px-4 py-3">
       <Smartphone className="h-4 w-4 shrink-0 text-adm-accent" />
       <p className="min-w-0 flex-1 text-xs text-adm-muted">
         Quem tem conta da equipe só abre <span className="font-mono">/entregas</span> e digita o PIN
@@ -150,8 +150,6 @@ const EntregasManager = () => {
         rotaInvertida={Boolean(rota.rota?.invertida)}
       />
 
-      <LinkDoEntregador empresaId={empresaAtiva} />
-
       <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)}>
         <TabsList className="h-auto flex-wrap bg-adm-surface border border-adm-line">
           <TabsTrigger value="rota">Rota de hoje</TabsTrigger>
@@ -193,6 +191,8 @@ const EntregasManager = () => {
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4 space-y-4">
+          {/* O link do entregador mora aqui: poupa o espaço do alto da tela de Entregas. */}
+          <LinkDoEntregador empresaId={empresaAtiva} />
           <HistoricoEntregas empresaId={empresaAtiva} />
         </TabsContent>
 
