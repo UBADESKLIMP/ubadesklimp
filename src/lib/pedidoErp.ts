@@ -157,10 +157,19 @@ const lerUm = (linhas: LinhaDeTextos[], bairrosConhecidos: string[]): PedidoLido
   if (cabecalhoItens >= 0) {
     for (let i = cabecalhoItens + 1; i < linhas.length; i++) {
       const cel = linhas[i].map(limpar).filter(Boolean);
-      // Sem código, a linha tem uma célula a menos; com código, cinco.
+      // Sem código, a linha tem uma célula a menos; com código, cinco. A
+      // descrição pode vir em mais de uma célula ("UN CLORO VMAX 5%" + "5LT"),
+      // então o fim da linha (valor unitário e total) e a quantidade (o primeiro
+      // número com vírgula, que o código de barras não tem) marcam onde ela está.
       if (cel.length < 4) break;
-      const [qt, desc, unit, total] = cel.slice(-4);
-      const quantidade = numeroBR(qt);
+      const unit = cel[cel.length - 2];
+      const total = cel[cel.length - 1];
+      if (numeroBR(unit) === null || numeroBR(total) === null) break;
+      const meio = cel.slice(0, -2);
+      const iQt = meio.findIndex((c) => /^-?\d+(\.\d{3})*,\d+$/.test(c));
+      if (iQt < 0) break;
+      const quantidade = numeroBR(meio[iQt]);
+      const desc = limpar(meio.slice(iQt + 1).join(' '));
       if (quantidade === null || !desc) break;
       const m = desc.match(UNIDADES);
       itens.push({
