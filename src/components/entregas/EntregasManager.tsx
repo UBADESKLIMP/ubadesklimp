@@ -18,8 +18,9 @@ import RotaDoDiaPainel from './RotaDoDiaPainel';
 import ImportarEntregas from './ImportarEntregas';
 import BairrosEntrega from './BairrosEntrega';
 import HistoricoEntregas from './HistoricoEntregas';
+import QuadroDeEntregas from './QuadroDeEntregas';
 
-type Aba = 'rota' | 'fila' | 'historico' | 'importar' | 'bairros';
+type Aba = 'quadro' | 'rota' | 'fila' | 'historico' | 'importar' | 'bairros';
 
 /**
  * Quem entrega tem conta da equipe, e logado a tela descobre a loja sozinha.
@@ -71,9 +72,9 @@ const EntregasManager = () => {
   const [aba, setAbaEstado] = useState<Aba>(() => {
     try {
       const salva = sessionStorage.getItem('entregas-aba') as Aba | null;
-      return salva && ['rota', 'fila', 'historico', 'importar', 'bairros'].includes(salva) ? salva : 'rota';
+      return salva && ['quadro', 'rota', 'fila', 'historico', 'importar', 'bairros'].includes(salva) ? salva : 'quadro';
     } catch {
-      return 'rota';
+      return 'quadro';
     }
   });
   const setAba = (nova: Aba) => {
@@ -152,6 +153,7 @@ const EntregasManager = () => {
 
       <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)}>
         <TabsList className="h-auto flex-wrap bg-adm-surface border border-adm-line">
+          <TabsTrigger value="quadro">Quadro</TabsTrigger>
           <TabsTrigger value="rota">Rota de hoje</TabsTrigger>
           <TabsTrigger value="fila">
             Fila{fila.fila.length > 0 && ` (${fila.fila.length})`}
@@ -160,6 +162,29 @@ const EntregasManager = () => {
           <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="bairros">Bairros</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="quadro" className="mt-4 space-y-4">
+          <p className="text-sm text-adm-muted">
+            Arraste uma entrega entre as colunas: da fila para a rota de hoje, da rota de volta para a fila, ou de
+            "Resolvidas" para a rota quando o motorista marcou por engano. Vale de verdade, e dá para desfazer
+            arrastando de volta.
+          </p>
+          <QuadroDeEntregas
+            fila={fila.fila}
+            paradas={rota.rota?.paradas ?? []}
+            onParaRota={async (entregaId) => {
+              const r = await rota.montarRota([entregaId]);
+              if (r.ok) await fila.recarregar();
+              return r;
+            }}
+            onParaFila={async (paradaId) => {
+              const r = await rota.tirarDaRota(paradaId);
+              if (r.ok) await fila.recarregar();
+              return r;
+            }}
+            onReverter={rota.reverterParada}
+          />
+        </TabsContent>
 
         <TabsContent value="rota" className="mt-4 space-y-4">
           <RotaDoDiaPainel

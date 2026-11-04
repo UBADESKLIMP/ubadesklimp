@@ -27,6 +27,18 @@ import {
  */
 
 const ACENTO = '#4C9BFF';
+const CORES_DO_VIDRO_ESCURO = {
+  '--adm-bg': 'rgba(0,0,0,0.22)',
+  '--adm-surface': 'rgba(255,255,255,0.08)',
+  '--adm-ink': '#E8ECEA',
+  '--adm-muted': '#A3AEAB',
+  '--adm-faint': '#76817E',
+  '--adm-line': 'rgba(255,255,255,0.14)',
+  '--adm-accent': '#4C9BFF',
+  '--adm-accent-soft': 'rgba(76,155,255,0.15)',
+  '--adm-accent-line': 'rgba(76,155,255,0.45)',
+  '--adm-alert': '#FF6B5B',
+} as React.CSSProperties;
 const VIDRO =
   'rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.10] to-white/[0.03] shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl';
 const SOBE = 'transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09]';
@@ -336,7 +348,10 @@ export const PainelVidroView = ({
                 </p>
               </div>
             </div>
-            <QuadroDeEntregas fila={fila} paradas={paradas} onParaRota={onParaRota} onParaFila={onParaFila} onReverter={onReverter} />
+            {/* O quadro usa as cores do painel; aqui, fora do painel, elas vêm do vidro escuro. */}
+            <div style={CORES_DO_VIDRO_ESCURO}>
+              <QuadroDeEntregas fila={fila} paradas={paradas} onParaRota={onParaRota} onParaFila={onParaFila} onReverter={onReverter} />
+            </div>
           </div>
 
           <div className={`${VIDRO} p-5`}>

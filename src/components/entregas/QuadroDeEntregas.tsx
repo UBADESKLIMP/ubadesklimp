@@ -47,8 +47,9 @@ interface Props {
   onReverter: (paradaId: string) => Promise<ResultadoRpc>;
 }
 
-const VIDRO_CARTAO =
-  'rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.11] to-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.25)] backdrop-blur-md';
+// As cores vêm das variáveis do painel (adm-*), então o quadro acompanha qualquer
+// um dos quatro visuais.
+const VIDRO_CARTAO = 'rounded-xl border border-adm-line bg-adm-surface shadow-sm';
 
 /** Celular e tablet (dedo): o arrasto só começa pela alça, para o dedo que rola a tela não carregar um cartão. */
 const usaToque = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
@@ -58,7 +59,7 @@ const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro
   const [toque] = useState(usaToque);
   const pegada = fantasma ? {} : { ...listeners, ...attributes };
   const listra =
-    cartao.resultado === 'entregue' ? '#3DBE6B' : cartao.resultado === 'voltou' ? '#FF6B5B' : '#4C9BFF';
+    cartao.resultado === 'entregue' ? '#2F9E44' : cartao.resultado === 'voltou' ? '#C0392B' : 'var(--adm-accent)';
 
   return (
     <div
@@ -67,7 +68,11 @@ const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro
       {...(toque ? {} : pegada)}
       className={`relative select-none overflow-hidden py-3 pr-3.5 ${toque ? 'pl-3 touch-pan-y' : 'cursor-grab touch-none pl-3.5 active:cursor-grabbing'} ${VIDRO_CARTAO} ${
         isDragging && !fantasma ? 'opacity-30' : ''
-      } ${fantasma ? 'rotate-[-2deg] scale-[1.04] shadow-[0_18px_40px_rgba(0,0,0,0.5)]' : 'transition hover:-translate-y-0.5'}`}
+      } ${
+        fantasma
+          ? 'rotate-[-2deg] scale-[1.04] bg-popover text-popover-foreground shadow-[0_18px_40px_rgba(0,0,0,0.35)]'
+          : 'transition hover:-translate-y-0.5'
+      }`}
     >
       <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: listra }} />
       {toque && !fantasma && (
@@ -75,20 +80,20 @@ const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro
           type="button"
           aria-label="Segurar e arrastar"
           {...pegada}
-          className="absolute inset-y-0 right-0 flex w-11 touch-none items-center justify-center border-l border-white/10 text-white/50 active:bg-white/10"
+          className="absolute inset-y-0 right-0 flex w-11 touch-none items-center justify-center border-l border-adm-line text-adm-faint active:bg-adm-accent-soft"
         >
           <GripVertical className="h-5 w-5" />
         </button>
       )}
       <div className={`flex items-start justify-between gap-2 ${toque && !fantasma ? 'pr-10' : ''}`}>
-        <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-white">{nomeCurto(cartao.titulo)}</p>
-        {cartao.resultado === 'entregue' && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#3DBE6B]" />}
-        {cartao.resultado === 'voltou' && <XCircle className="h-4 w-4 shrink-0 text-[#FF6B5B]" />}
+        <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-adm-ink">{nomeCurto(cartao.titulo)}</p>
+        {cartao.resultado === 'entregue' && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2F9E44]" />}
+        {cartao.resultado === 'voltou' && <XCircle className="h-4 w-4 shrink-0 text-[#C0392B]" />}
       </div>
-      <p className="mt-0.5 truncate text-xs text-white/55">{cartao.linha2}</p>
+      <p className="mt-0.5 truncate text-xs text-adm-muted">{cartao.linha2}</p>
       <div className={`mt-2 flex items-center justify-between text-xs ${toque && !fantasma ? 'pr-10' : ''}`}>
-        <span className="font-mono tabular-nums text-white/70">{cartao.hora ?? ''}</span>
-        <span className="font-mono tabular-nums text-white/85">{emReais(cartao.valor)}</span>
+        <span className="font-mono tabular-nums text-adm-muted">{cartao.hora ?? ''}</span>
+        <span className="font-mono tabular-nums text-adm-ink">{emReais(cartao.valor)}</span>
       </div>
     </div>
   );
@@ -111,17 +116,21 @@ const ColunaDoQuadro = ({
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[16rem] flex-col rounded-2xl border bg-black/15 p-3 transition-colors ${
-        destacar && isOver ? 'border-[#4C9BFF]/70 bg-[#4C9BFF]/10' : destacar ? 'border-dashed border-white/25' : 'border-white/10'
+      className={`flex min-h-[16rem] flex-col rounded-2xl border bg-adm-bg p-3 transition-colors ${
+        destacar && isOver
+          ? 'border-adm-accent bg-adm-accent-soft'
+          : destacar
+            ? 'border-dashed border-adm-accent-line'
+            : 'border-adm-line'
       }`}
     >
       <div className="mb-2 flex items-baseline justify-between px-1">
-        <p className="text-sm font-semibold text-white">{titulo}</p>
-        <span className="font-mono text-xs tabular-nums text-white/60">{cartoes.length}</span>
+        <p className="text-sm font-semibold text-adm-ink">{titulo}</p>
+        <span className="font-mono text-xs tabular-nums text-adm-muted">{cartoes.length}</span>
       </div>
       <div className="flex max-h-[26rem] flex-1 flex-col gap-2 overflow-y-auto pr-0.5">
         {cartoes.length === 0 ? (
-          <p className="m-auto px-3 py-6 text-center text-xs text-white/40">{dica}</p>
+          <p className="m-auto px-3 py-6 text-center text-xs text-adm-faint">{dica}</p>
         ) : (
           cartoes.map((c) => <CartaoArrastavel key={c.id} cartao={c} />)
         )}
@@ -225,7 +234,7 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
           document.body
         )}
       </DndContext>
-      {aviso && <p className="mt-3 text-sm text-[#FF8A7A]">{aviso}</p>}
+      {aviso && <p className="mt-3 text-sm text-adm-alert">{aviso}</p>}
     </div>
   );
 };
