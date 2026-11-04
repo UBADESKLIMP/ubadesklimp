@@ -30,6 +30,7 @@ import NonPublicProductsSection from '@/components/NonPublicProductsSection';
 import AdminProductFilters, { SortOption } from '@/components/AdminProductFilters';
 import { normalizeText } from '@/lib/utils';
 import AdminShell from '@/components/admin/AdminShell';
+import { useAdminTheme } from '@/hooks/useAdminTheme';
 import AdminHome from '@/components/admin/AdminHome';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
@@ -42,6 +43,8 @@ const SECOES: AdminSection[] = [
 ];
 
 const Admin = () => {
+  // O visual escolhido vale já na tela de carregamento, não só depois do menu montar.
+  useAdminTheme();
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();

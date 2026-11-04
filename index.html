@@ -30,6 +30,19 @@
 </head>
 
   <body>
+    <script>
+      // Painel: aplica o visual escolhido antes do React, para a tela não piscar no claro.
+      (function () {
+        try {
+          if (location.pathname.indexOf('/admin') !== 0) return;
+          var t = localStorage.getItem('ubadesklimp-admin-theme');
+          if (['light', 'dark', 'glass-dark', 'glass-light'].indexOf(t) < 0) t = 'light';
+          var c = document.body.classList;
+          c.add('admin-themed', t === 'dark' || t === 'glass-dark' ? 'admin-dark' : 'admin-light');
+          if (t.indexOf('glass') === 0) c.add('admin-glass', 'admin-' + t);
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
