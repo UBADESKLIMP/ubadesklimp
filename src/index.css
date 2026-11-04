@@ -461,6 +461,83 @@ body.admin-themed {
 .admin-themed .placeholder\:text-\[\#8A9290\]::placeholder { color: var(--adm-faint); }
 .admin-themed .border-\[\#DCDFD8\] { border-color: var(--adm-line); }
 
+/* ==========================================================================
+   Vidro (escuro e claro): usa as cores do escuro/claro como base e troca as
+   superfícies por vidro translúcido sobre um degradê azul com esferas de cor.
+   As classes admin-glass-dark / admin-glass-light vêm do useAdminTheme.
+   O desfoque (backdrop-filter) fica só nas barras fixas: nos cartões ele não
+   mudaria nada sobre um fundo liso e pesaria nas telas com tabelas grandes.
+   ========================================================================== */
+body.admin-glass-dark {
+  --adm-bg: rgba(0, 0, 0, 0.22);
+  --adm-surface: rgba(255, 255, 255, 0.07);
+  --adm-line: rgba(255, 255, 255, 0.14);
+  --popover: 213 45% 12%;
+  --card: 213 40% 13%;
+  background: #06121f;
+}
+body.admin-glass-light {
+  --adm-bg: rgba(255, 255, 255, 0.4);
+  --adm-surface: rgba(255, 255, 255, 0.62);
+  --adm-line: rgba(20, 60, 110, 0.16);
+  --adm-muted: #46607a;
+  --adm-faint: #6b8299;
+  --popover: 0 0% 100%;
+  --card: 0 0% 100%;
+  background: #eef4fb;
+}
+/* O fundo: manchas de cor atrás de tudo (é o que o vidro "reflete"). */
+body.admin-glass::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+body.admin-glass-dark::before {
+  background:
+    radial-gradient(45% 40% at 6% 4%, rgba(47, 134, 224, 0.5) 0%, transparent 70%),
+    radial-gradient(40% 40% at 96% 10%, rgba(21, 115, 214, 0.42) 0%, transparent 70%),
+    radial-gradient(35% 35% at 20% 62%, rgba(41, 182, 246, 0.2) 0%, transparent 70%),
+    radial-gradient(45% 45% at 78% 100%, rgba(27, 95, 176, 0.4) 0%, transparent 70%),
+    radial-gradient(22% 22% at 38% 88%, rgba(245, 165, 36, 0.12) 0%, transparent 70%),
+    linear-gradient(170deg, #0a1d33 0%, #06121f 60%, #040d17 100%);
+}
+body.admin-glass-light::before {
+  background:
+    radial-gradient(45% 40% at 6% 4%, rgba(76, 155, 255, 0.4) 0%, transparent 70%),
+    radial-gradient(40% 40% at 96% 10%, rgba(41, 182, 246, 0.32) 0%, transparent 70%),
+    radial-gradient(35% 35% at 20% 62%, rgba(21, 115, 214, 0.14) 0%, transparent 70%),
+    radial-gradient(45% 45% at 78% 100%, rgba(76, 155, 255, 0.28) 0%, transparent 70%),
+    linear-gradient(170deg, #e4eefb 0%, #f3f8fe 55%, #e3edf9 100%);
+}
+/* Barras de rolagem e controles nativos no escuro. */
+body.admin-glass-dark { color-scheme: dark; }
+/* Campos, botões de contorno e abas usam o fundo base: aqui viram vidro, não preto sólido. */
+body.admin-glass .bg-background { background-color: var(--adm-bg); }
+body.admin-glass-dark [data-state='active'].data-\[state\=active\]\:bg-background { background-color: rgba(255, 255, 255, 0.16); }
+body.admin-glass-light [data-state='active'].data-\[state\=active\]\:bg-background { background-color: rgba(255, 255, 255, 0.9); }
+/* A raiz do painel deixa o fundo aparecer. */
+body.admin-glass .min-h-screen.bg-adm-bg { background-color: transparent; }
+/* Cartões: translúcidos, com um brilho suave no topo (efeito espelho). */
+body.admin-glass .bg-adm-surface,
+body.admin-glass .bg-card { background-color: var(--adm-surface); }
+body.admin-glass-dark .bg-adm-surface:not(.admin-glass-bar),
+body.admin-glass-dark .bg-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0));
+}
+body.admin-glass-light .bg-adm-surface:not(.admin-glass-bar),
+body.admin-glass-light .bg-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+}
+/* Barras fixas (lateral, topo e menu do celular): vidro com desfoque. */
+body.admin-glass .admin-glass-bar {
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+}
+body.admin-glass-dark .admin-glass-bar { background-color: rgba(7, 24, 42, 0.62); }
+body.admin-glass-light .admin-glass-bar { background-color: rgba(255, 255, 255, 0.58); }
+
 /* PIN errado: o teclado chacoalha (ver components/ponto/Teclado.tsx) */
 @keyframes teclado-chacoalha {
   20%, 60% { transform: translateX(-9px); }

@@ -24,7 +24,7 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-adm-surface border-t border-adm-line flex items-stretch pb-[env(safe-area-inset-bottom)]">
+      <nav className="admin-glass-bar md:hidden fixed bottom-0 inset-x-0 z-40 bg-adm-surface border-t border-adm-line flex items-stretch pb-[env(safe-area-inset-bottom)]">
         {bar.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.key;
