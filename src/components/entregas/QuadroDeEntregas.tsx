@@ -12,7 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, GripVertical, XCircle } from 'lucide-react';
 import { emReais, type EntregaDaFila, type ParadaDaRota, type ResultadoRpc } from '@/hooks/useEntregas';
 import { nomeCurto } from '@/lib/nomeCurto';
 
@@ -50,28 +50,43 @@ interface Props {
 const VIDRO_CARTAO =
   'rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.11] to-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.25)] backdrop-blur-md';
 
+/** Celular e tablet (dedo): o arrasto só começa pela alça, para o dedo que rola a tela não carregar um cartão. */
+const usaToque = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro; fantasma?: boolean }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cartao.id, data: cartao });
+  const [toque] = useState(usaToque);
+  const pegada = fantasma ? {} : { ...listeners, ...attributes };
   const listra =
     cartao.resultado === 'entregue' ? '#3DBE6B' : cartao.resultado === 'voltou' ? '#FF6B5B' : '#4C9BFF';
 
   return (
     <div
       ref={fantasma ? undefined : setNodeRef}
-      {...(fantasma ? {} : listeners)}
-      {...(fantasma ? {} : attributes)}
-      className={`relative cursor-grab touch-none select-none overflow-hidden px-3.5 py-3 active:cursor-grabbing ${VIDRO_CARTAO} ${
+      // No computador o cartão inteiro é a pegada; no celular, só a alça.
+      {...(toque ? {} : pegada)}
+      className={`relative select-none overflow-hidden py-3 pr-3.5 ${toque ? 'pl-3 touch-pan-y' : 'cursor-grab touch-none pl-3.5 active:cursor-grabbing'} ${VIDRO_CARTAO} ${
         isDragging && !fantasma ? 'opacity-30' : ''
       } ${fantasma ? 'rotate-[-2deg] scale-[1.04] shadow-[0_18px_40px_rgba(0,0,0,0.5)]' : 'transition hover:-translate-y-0.5'}`}
     >
       <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: listra }} />
-      <div className="flex items-start justify-between gap-2">
+      {toque && !fantasma && (
+        <button
+          type="button"
+          aria-label="Segurar e arrastar"
+          {...pegada}
+          className="absolute inset-y-0 right-0 flex w-11 touch-none items-center justify-center border-l border-white/10 text-white/50 active:bg-white/10"
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
+      )}
+      <div className={`flex items-start justify-between gap-2 ${toque && !fantasma ? 'pr-10' : ''}`}>
         <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-white">{nomeCurto(cartao.titulo)}</p>
         {cartao.resultado === 'entregue' && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#3DBE6B]" />}
         {cartao.resultado === 'voltou' && <XCircle className="h-4 w-4 shrink-0 text-[#FF6B5B]" />}
       </div>
       <p className="mt-0.5 truncate text-xs text-white/55">{cartao.linha2}</p>
-      <div className="mt-2 flex items-center justify-between text-xs">
+      <div className={`mt-2 flex items-center justify-between text-xs ${toque && !fantasma ? 'pr-10' : ''}`}>
         <span className="font-mono tabular-nums text-white/70">{cartao.hora ?? ''}</span>
         <span className="font-mono tabular-nums text-white/85">{emReais(cartao.valor)}</span>
       </div>
@@ -122,8 +137,8 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    // No celular o arrasto só começa depois de um toque firme, para não brigar com a rolagem.
-    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } })
+    // No celular o arrasto só começa na alça do cartão, depois de um toque curto e firme.
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } })
   );
 
   const daFila: CartaoDoQuadro[] = fila.map((e) => ({
