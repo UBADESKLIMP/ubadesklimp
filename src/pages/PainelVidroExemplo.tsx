@@ -7,11 +7,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import { ADMIN_NAV_GROUP_LABELS, getVisibleNavItems, type AdminNavGroup } from '@/components/admin/adminNav';
+import QuadroDeEntregas from '@/components/entregas/QuadroDeEntregas';
+import { nomeCurto } from '@/lib/nomeCurto';
 import {
   hojeEmSaoPaulo,
   useFilaDeEntregas,
   useHistoricoDeEntregas,
   useRotaDoDia,
+  type EntregaDaFila,
+  type ParadaDaRota,
+  type RegistroDoHistorico,
+  type ResultadoRpc,
 } from '@/hooks/useEntregas';
 
 /**
@@ -21,7 +27,8 @@ import {
  */
 
 const ACENTO = '#4C9BFF';
-const VIDRO = 'rounded-2xl border border-white/10 bg-white/[0.06] shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl';
+const VIDRO =
+  'rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.10] to-white/[0.03] shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl';
 const SOBE = 'transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09]';
 
 const somarDias = (iso: string, dias: number) => {
@@ -70,6 +77,12 @@ export interface DadosDoPainel {
   porHora: Barra[];
   porDia: Barra[];
   itensDoMenu: ReturnType<typeof getVisibleNavItems>;
+  fila: EntregaDaFila[];
+  paradas: ParadaDaRota[];
+  recentes: RegistroDoHistorico[];
+  onParaRota: (entregaId: string) => Promise<ResultadoRpc>;
+  onParaFila: (paradaId: string) => Promise<ResultadoRpc>;
+  onReverter: (paradaId: string) => Promise<ResultadoRpc>;
 }
 
 export const PainelVidroView = ({
@@ -82,6 +95,12 @@ export const PainelVidroView = ({
   porHora,
   porDia,
   itensDoMenu,
+  fila,
+  paradas,
+  recentes,
+  onParaRota,
+  onParaFila,
+  onReverter,
 }: DadosDoPainel) => {
   const navigate = useNavigate();
   const [periodo, setPeriodo] = useState<'hoje' | '7dias'>('hoje');
@@ -101,6 +120,12 @@ export const PainelVidroView = ({
   return (
     <div className="relative flex min-h-screen bg-[#06121f] text-white">
       {/* Fundo: degradê azul escuro com manchas suaves, é o que o vidro "reflete". */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
+        <span className="absolute -left-24 top-[38%] h-72 w-72 rounded-full bg-[#1573D6]/40 blur-3xl" />
+        <span className="absolute right-[8%] top-[18%] h-56 w-56 rounded-full bg-[#29b6f6]/30 blur-3xl" />
+        <span className="absolute bottom-[-6rem] right-[22%] h-80 w-80 rounded-full bg-[#4C9BFF]/30 blur-3xl" />
+        <span className="absolute bottom-[12%] left-[30%] h-44 w-44 rounded-full bg-[#f5a524]/15 blur-3xl" />
+      </div>
       <div
         className="pointer-events-none fixed inset-0"
         style={{
@@ -300,6 +325,45 @@ export const PainelVidroView = ({
             <Cartao icone={CheckCircle2} valor={entreguesHoje} rotulo="Entregues hoje" dica="marcadas pelo motorista" />
             <Cartao icone={Undo2} valor={voltaramHoje} rotulo="Voltaram hoje" dica="não deu para entregar" />
           </div>
+
+          {/* Quadro: arrastar muda a entrega de verdade, e dá para desfazer arrastando de volta. */}
+          <div className={`${VIDRO} p-5`}>
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold">Quadro de entregas</p>
+                <p className="text-xs text-white/55">
+                  Arraste para mandar à rota, tirar dela ou voltar uma marcação errada. Vale de verdade.
+                </p>
+              </div>
+            </div>
+            <QuadroDeEntregas fila={fila} paradas={paradas} onParaRota={onParaRota} onParaFila={onParaFila} onReverter={onReverter} />
+          </div>
+
+          <div className={`${VIDRO} p-5`}>
+            <p className="text-sm font-semibold">Últimas marcações</p>
+            <p className="mb-2 text-xs text-white/55">O que o motorista registrou, do mais recente para o mais antigo.</p>
+            {recentes.length === 0 ? (
+              <p className="py-4 text-center text-xs text-white/40">Nada registrado nos últimos dias.</p>
+            ) : (
+              <ul className="divide-y divide-white/10">
+                {recentes.map((r) => (
+                  <li key={r.evento_id} className="flex items-center gap-3 py-2.5 text-sm">
+                    <span className="w-24 shrink-0 font-mono text-xs tabular-nums text-white/55">
+                      {r.dia.slice(8, 10)}/{r.dia.slice(5, 7)} {r.hora}
+                    </span>
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: r.tipo === 'entregue' ? '#3DBE6B' : r.tipo === 'revertida' ? '#f5a524' : '#FF6B5B' }}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{nomeCurto(r.cliente_nome)}</span>
+                    <span className="hidden text-xs text-white/55 sm:inline">
+                      {r.tipo === 'entregue' ? 'entregue' : r.tipo === 'revertida' ? 'desfeita' : 'voltou'} · {r.entregador}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </main>
       </div>
     </div>
@@ -362,6 +426,25 @@ const PainelVidroExemplo = () => {
     });
   }, [feitas, hoje]);
 
+  const recentes = useMemo(() => semana.registros.slice(0, 6), [semana.registros]);
+
+  // Cada arrasto chama a mesma regra do painel de hoje e recarrega o que mudou.
+  const paraRota = async (entregaId: string) => {
+    const r = await rota.montarRota([entregaId]);
+    if (r.ok) await fila.recarregar();
+    return r;
+  };
+  const paraFila = async (paradaId: string) => {
+    const r = await rota.tirarDaRota(paradaId);
+    if (r.ok) await fila.recarregar();
+    return r;
+  };
+  const reverter = async (paradaId: string) => {
+    const r = await rota.reverterParada(paradaId);
+    if (r.ok) await semana.recarregar();
+    return r;
+  };
+
   return (
     <PainelVidroView
       nome={nome}
@@ -373,6 +456,12 @@ const PainelVidroExemplo = () => {
       porHora={porHora}
       porDia={porDia}
       itensDoMenu={getVisibleNavItems(staffAccess, equipeAccess)}
+      fila={fila.fila}
+      paradas={paradas}
+      recentes={recentes}
+      onParaRota={paraRota}
+      onParaFila={paraFila}
+      onReverter={reverter}
     />
   );
 };
