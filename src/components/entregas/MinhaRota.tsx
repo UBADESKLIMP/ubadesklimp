@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { nomeCurto } from '@/lib/nomeCurto';
 import { Check, ChevronDown, LogOut, MapPin, MessageCircle, Navigation, Phone } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import DeslizarParaEntregar from './DeslizarParaEntregar';
@@ -243,7 +244,9 @@ const MinhaRota = ({
             {principal && (
               <p className="text-[11px] font-bold uppercase tracking-wider text-primary">Próxima entrega</p>
             )}
-            <p className="truncate text-base font-semibold text-[#141B1E]">{parada.cliente_nome}</p>
+            <p className="line-clamp-2 break-words text-base font-semibold leading-snug text-[#141B1E]">
+              {nomeCurto(parada.cliente_nome)}
+            </p>
             <p className="truncate text-sm text-[#55605F]">{parada.bairro ?? 'Sem bairro'}</p>
           </div>
           {!aberta && (
@@ -256,7 +259,9 @@ const MinhaRota = ({
 
         {aberta && (
           <div className="space-y-4 border-t border-[#DCDFD8] px-4 pb-4 pt-3">
-            <p className="font-mono text-xs tabular-nums text-[#8A9290]">{parada.documento}</p>
+            {/* O nome inteiro, como veio do pedido: no cartão ele pode estar abreviado. */}
+            <p className="break-words text-base font-semibold text-[#141B1E]">{parada.cliente_nome}</p>
+            <p className="-mt-2 font-mono text-xs tabular-nums text-[#8A9290]">{parada.documento}</p>
 
             <p className="flex items-start gap-2 text-[#141B1E]">
               <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#55605F]" />
@@ -422,7 +427,7 @@ const MinhaRota = ({
                     <span className="font-mono text-base font-semibold tabular-nums text-[#8A9290]">
                       {String(posicao.get(p.entrega_id) ?? 0).padStart(2, '0')}
                     </span>
-                    <p className="min-w-0 flex-1 truncate text-[#8A9290] line-through">{p.cliente_nome}</p>
+                    <p className="min-w-0 flex-1 line-clamp-2 break-words text-[#8A9290] line-through">{nomeCurto(p.cliente_nome)}</p>
                     <span
                       className={`shrink-0 text-xs font-bold uppercase tracking-wider ${
                         p.situacao === 'entregue' ? 'text-[#2F9E44]' : 'text-[#B5362A]'
