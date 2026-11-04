@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PainelVidroExemplo from "./pages/PainelVidroExemplo";
 import Ponto from "./pages/Ponto";
 import PontoQr from "./pages/PontoQr";
 import Entregas from "./pages/Entregas";
@@ -58,6 +59,15 @@ const App = () => (
               {/* Fora do /admin de propósito: o entregador não tem conta de
                   painel, entra pelo PIN como no ponto. */}
               <Route path="/entregas" element={<Entregas />} />
+              {/* Amostra de visual do painel (vidro fosco). Não substitui o /admin. */}
+              <Route
+                path="/exemplo-painel"
+                element={
+                  <ProtectedRoute requireStaff>
+                    <PainelVidroExemplo />
+                  </ProtectedRoute>
+                }
+              />
               <Route 
                 path="/profile" 
                 element={
