@@ -96,7 +96,7 @@ export const PainelVidroView = ({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(60% 50% at 12% 8%, #1aa3b8 0%, transparent 60%), radial-gradient(55% 55% at 90% 15%, #1573D6 0%, transparent 62%), radial-gradient(60% 60% at 70% 100%, #0f6f86 0%, transparent 60%), linear-gradient(160deg, #0a3556 0%, #0a2c47 55%, #082338 100%)',
+            'radial-gradient(60% 50% at 12% 8%, #2f86e0 0%, transparent 60%), radial-gradient(55% 55% at 90% 15%, #1573D6 0%, transparent 62%), radial-gradient(60% 60% at 70% 100%, #1b5fb0 0%, transparent 60%), linear-gradient(160deg, #0a3556 0%, #0a2c47 55%, #082338 100%)',
         }}
       />
 
@@ -211,7 +211,7 @@ export const PainelVidroView = ({
                       />
                       <Bar dataKey="total" radius={[8, 8, 0, 0]}>
                         {porDia.map((d, i) => (
-                          <Cell key={d.dia} fill={i === porDia.length - 1 ? '#1ab6d6' : '#9ccbe4'} />
+                          <Cell key={d.dia} fill={i === porDia.length - 1 ? '#2f94ea' : '#a9c8ea'} />
                         ))}
                       </Bar>
                     </BarChart>
