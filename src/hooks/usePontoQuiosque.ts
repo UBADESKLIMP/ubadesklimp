@@ -144,6 +144,20 @@ export interface ResultadoPresentes {
   hora?: string;
 }
 
+export interface PedidoDeChinelo {
+  nome: string;
+  telefone: string;
+  numero: string;
+  cor: string;
+  observacao?: string;
+}
+
+export interface ResultadoChinelo {
+  ok: boolean;
+  mensagem?: string;
+  ja_existia?: boolean;
+}
+
 export interface MarcacaoDeHoje {
   tipo: MarcacaoTipo;
   hora: string;
@@ -355,6 +369,22 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoAbertura;
   };
 
+  /** "Pedir chinelo": anota o que o cliente quer, no nome de quem digitou o PIN. */
+  const anotarChineloPorPin = async (pin: string, pedido: PedidoDeChinelo): Promise<ResultadoChinelo> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_anotar_chinelo', {
+      p_pin: pin,
+      p_estacao_token: token,
+      p_nome: pedido.nome,
+      p_telefone: pedido.telefone,
+      p_numero: pedido.numero,
+      p_cor: pedido.cor,
+      p_observacao: pedido.observacao || undefined,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos anotar agora. Tente de novo.' };
+    return data as unknown as ResultadoChinelo;
+  };
+
   /** "Checar ponto": as batidas de hoje de quem digitou o PIN. */
   const minhasMarcacoesPorPin = async (pin: string): Promise<ResultadoMinhasMarcacoes> => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -479,6 +509,7 @@ export const usePontoQuiosque = () => {
     abrirLojaPorPin,
     marcarPresentesPorPin,
     minhasMarcacoesPorPin,
+    anotarChineloPorPin,
     buscarProduto,
     reportarFaltantesPorPin,
     sairDoQuiosque,

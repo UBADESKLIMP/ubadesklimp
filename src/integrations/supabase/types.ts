@@ -67,6 +67,56 @@ export type Database = {
         }
         Relationships: []
       }
+      chinelo_pedidos: {
+        Row: {
+          anotado_por: string | null
+          cliente_nome: string
+          cliente_telefone: string
+          cor: string
+          created_at: string
+          empresa_id: string
+          id: string
+          numero: string
+          observacao: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          anotado_por?: string | null
+          cliente_nome: string
+          cliente_telefone: string
+          cor: string
+          created_at?: string
+          empresa_id: string
+          id?: string
+          numero: string
+          observacao?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          anotado_por?: string | null
+          cliente_nome?: string
+          cliente_telefone?: string
+          cor?: string
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          numero?: string
+          observacao?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chinelo_pedidos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entrega_bairros: {
         Row: {
           ativo: boolean
@@ -3345,6 +3395,18 @@ export type Database = {
       }
       ponto_abrir_loja_por_pin: {
         Args: { p_estacao_token: string; p_motivo?: string; p_pin: string }
+        Returns: Json
+      }
+      ponto_anotar_chinelo: {
+        Args: {
+          p_cor: string
+          p_estacao_token: string
+          p_nome: string
+          p_numero: string
+          p_observacao?: string
+          p_pin: string
+          p_telefone: string
+        }
         Returns: Json
       }
       ponto_agora_na_loja: { Args: { p_empresa_id: string }; Returns: Json }

@@ -11,6 +11,7 @@ import {
   Shield,
   Receipt,
   Route,
+  Footprints,
   Users,
   Clock,
   ClipboardCheck as ClipboardCheckIcon,
@@ -30,6 +31,7 @@ export type AdminSection =
   | 'suppliers'
   | 'missing'
   | 'quotes'
+  | 'chinelos'
   | 'entregas'
   | 'staff'
   | 'equipe'
@@ -73,6 +75,8 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: 'suppliers', label: 'Fornecedores', icon: Truck, permission: 'fornecedores', group: 'operacao' },
   { key: 'missing', label: 'Faltantes', icon: ClipboardCheck, permission: 'faltantes', group: 'operacao' },
   { key: 'quotes', label: 'Cotações', icon: Receipt, permission: ['faltantes', 'fornecedores'], group: 'operacao' },
+  // Pedidos de chinelo anotados no quiosque: quem cuida de compras encomenda.
+  { key: 'chinelos', label: 'Chinelos', icon: Footprints, permission: 'faltantes', group: 'operacao' },
   // Entregas abre para quem manda na equipe OU para o funcionário que o admin
   // marcou com a permissão 'entregas' (as RPCs guardam por is_entregas_gestor()).
   {

@@ -19,6 +19,7 @@ import SupplierManager from '@/components/SupplierManager';
 import MissingProductsManager from '@/components/MissingProductsManager';
 import AvisarFaltaSimples from '@/components/AvisarFaltaSimples';
 import CotacoesManager from '@/components/quotes/CotacoesManager';
+import ChinelosManager from '@/components/chinelos/ChinelosManager';
 import EntregasManager from '@/components/entregas/EntregasManager';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
@@ -39,7 +40,7 @@ import { syncProductFragrances } from '@/lib/productFragrances';
 
 const SECOES: AdminSection[] = [
   'home', 'financeiro', 'orders', 'products', 'automotive', 'highlights', 'categories',
-  'suppliers', 'missing', 'quotes', 'entregas', 'staff', 'equipe', 'ponto', 'meus-registros',
+  'suppliers', 'missing', 'quotes', 'chinelos', 'entregas', 'staff', 'equipe', 'ponto', 'meus-registros',
 ];
 
 const Admin = () => {
@@ -392,6 +393,9 @@ const Admin = () => {
 
       case 'quotes':
         return <CotacoesManager products={products} />;
+
+      case 'chinelos':
+        return <ChinelosManager />;
 
       case 'entregas':
         return <EntregasManager />;
