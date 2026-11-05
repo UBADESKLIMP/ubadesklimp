@@ -43,7 +43,14 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
         </span>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto overflow-x-hidden">
+      {/* Fechada: sem barra de rolagem à vista (a lista ainda rola com o mouse).
+          Aberta: uma barra fina e discreta. */}
+      <nav
+        className={cn(
+          'flex-1 flex flex-col gap-1 px-2 overflow-y-auto overflow-x-hidden',
+          expanded ? 'admin-scroll' : 'admin-scroll-oculto'
+        )}
+      >
         {groups.map(({ group, items: groupItems }, index) => (
           <div key={group ?? 'ungrouped'} className={index > 0 ? 'mt-3' : undefined}>
             {group && (

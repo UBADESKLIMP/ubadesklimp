@@ -461,6 +461,37 @@ body.admin-themed {
 .admin-themed .placeholder\:text-\[\#8A9290\]::placeholder { color: var(--adm-faint); }
 .admin-themed .border-\[\#DCDFD8\] { border-color: var(--adm-line); }
 
+/* Barra de rolagem do menu lateral do painel: some quando o menu está fechado e,
+   aberto, vira uma barra fina que acompanha as cores do tema. */
+.admin-scroll-oculto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.admin-scroll-oculto::-webkit-scrollbar {
+  display: none;
+}
+/* Firefox não entende ::-webkit-scrollbar; no Chrome as duas formas juntas trazem as
+   setinhas de volta, então a forma padrão só vale onde a outra não existe. */
+@supports not selector(::-webkit-scrollbar) {
+  .admin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--adm-line) transparent;
+  }
+}
+.admin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: var(--adm-line);
+  border-radius: 999px;
+}
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--adm-faint);
+}
+
 /* ==========================================================================
    Vidro (escuro e claro): usa as cores do escuro/claro como base e troca as
    superfícies por vidro translúcido sobre um degradê azul com esferas de cor.
