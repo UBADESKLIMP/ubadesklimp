@@ -3520,6 +3520,10 @@ export type Database = {
         Args: { p_empresa_id: string }
         Returns: Json
       }
+      ponto_saida_almoco_sem_entrada: {
+        Args: { p_estacao_token: string; p_hora_chegada: string; p_pin: string }
+        Returns: Json
+      }
       ponto_meu_ponto_por_pin: {
         Args: { p_estacao_token: string; p_pin: string }
         Returns: Json

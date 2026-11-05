@@ -255,6 +255,12 @@ export interface ResultadoBatida {
   local?: string;
   codigo?: string;
   proxima_sugerida?: MarcacaoTipo;
+  /** motivo 'confirmar_entrada': primeira batida do dia fora de hora, o quiosque precisa perguntar. */
+  escala_entrada?: string;
+  agora?: string;
+  /** Saída do almoço sem entrada: a hora em que a pessoa disse que chegou. */
+  chegada?: string;
+  pedido_entrada?: boolean;
 }
 
 export const TIPO_LABEL: Record<MarcacaoTipo, string> = {
@@ -413,6 +419,18 @@ export const usePontoQuiosque = () => {
     });
     if (error) return { ok: false, mensagem: 'Não conseguimos abrir a loja agora. Tente de novo.' };
     return data as unknown as ResultadoAbertura;
+  };
+
+  /** "Estou saindo para o almoço, esqueci a entrada": grava a saída e abre o pedido da entrada. */
+  const saidaAlmocoSemEntradaPorPin = async (pin: string, horaChegada: string): Promise<ResultadoBatida> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_saida_almoco_sem_entrada', {
+      p_pin: pin,
+      p_estacao_token: token,
+      p_hora_chegada: horaChegada,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos registrar agora. Tente de novo.' };
+    return data as unknown as ResultadoBatida;
   };
 
   /** "Meu ponto": batidas dos últimos 3 dias e os pedidos de ajuste de quem digitou o PIN. */
@@ -580,6 +598,7 @@ export const usePontoQuiosque = () => {
     salvarAtalhos,
     voltarAoModoFacil,
     baterPontoPorPin,
+    saidaAlmocoSemEntradaPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
     minhasMarcacoesPorPin,

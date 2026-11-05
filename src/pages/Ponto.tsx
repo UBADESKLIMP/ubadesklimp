@@ -9,6 +9,7 @@ import Aviso from '@/components/ponto/Aviso';
 import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
 import MeuPontoQuiosque from '@/components/ponto/MeuPontoQuiosque';
+import EntradaEsquecida from '@/components/ponto/EntradaEsquecida';
 import PedirChinelo from '@/components/ponto/PedirChinelo';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
@@ -18,6 +19,7 @@ import {
   TIPO_LABEL,
   type Atalho,
   type FichaDaEstacao,
+  type ResultadoBatida,
 } from '@/hooks/usePontoQuiosque';
 
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
@@ -61,7 +63,7 @@ interface AvisoAtual {
   codigo?: string;
 }
 
-type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'checar' | 'chinelo' | 'manutencao' | 'bastidor';
+type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'checar' | 'chinelo' | 'entrada-duvida' | 'manutencao' | 'bastidor';
 
 const Ponto = () => {
   usePontoInstalavel();
@@ -72,6 +74,7 @@ const Ponto = () => {
     registrarEstacao,
     ativarComCodigo,
     baterPontoPorPin,
+    saidaAlmocoSemEntradaPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
     meuPontoPorPin,
@@ -95,6 +98,8 @@ const Ponto = () => {
   const doPainel = usePontoPainel(painel);
 
   const [tela, setTela] = useState<Tela>('ponto');
+  // Primeira batida do dia fora de hora: guarda o PIN só até a pessoa responder.
+  const [duvida, setDuvida] = useState<{ pin: string; nome?: string; escalaEntrada?: string; agora?: string } | null>(null);
   const [pin, setPin] = useState('');
   const [aviso, setAviso] = useState<AvisoAtual | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -109,6 +114,7 @@ const Ponto = () => {
     setTela('ponto');
     setPin('');
     setAviso(null);
+    setDuvida(null);
   }, []);
 
   const mostrarAviso = useCallback((a: AvisoAtual) => setAviso(a), []);
@@ -169,27 +175,56 @@ const Ponto = () => {
       return;
     }
     setEnviando(true);
+    const pinUsado = pin;
     const r = await baterPontoPorPin(pin);
     setEnviando(false);
     setPin('');
 
+    // Pode ser a saída do almoço de quem esqueceu a entrada: pergunta antes de gravar.
+    if (!r.ok && r.motivo === 'confirmar_entrada') {
+      setDuvida({ pin: pinUsado, nome: r.nome, escalaEntrada: r.escala_entrada, agora: r.agora });
+      setTela('entrada-duvida');
+      return;
+    }
+
+    mostrarBatida(r);
+  };
+
+  /** O aviso depois de uma batida (igual para a batida normal e para a que veio da pergunta). */
+  const mostrarBatida = (r: ResultadoBatida, complemento?: string) => {
     if (!r.ok) {
       mostrarAviso({ ok: false, mensagem: r.mensagem });
       return;
     }
-
     const hora = r.registrado_em
       ? new Date(r.registrado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       : '';
-
     mostrarAviso({
       ok: true,
       nome: r.nome,
       destaque: hora,
       detalhe: r.tipo ? TIPO_LABEL[r.tipo] : 'Registrado',
-      mensagem: r.ignorada ? r.mensagem : undefined,
+      mensagem: complemento ?? (r.ignorada ? r.mensagem : undefined),
       codigo: r.ignorada ? undefined : r.codigo,
     });
+  };
+
+  // "Estou chegando agora": grava a entrada de verdade, já respondida a pergunta.
+  const confirmarChegando = async () => {
+    if (!duvida) return;
+    const r = await baterPontoPorPin(duvida.pin, 'entrada');
+    setDuvida(null);
+    mostrarBatida(r);
+  };
+
+  // "Estou saindo para o almoço": grava a saída e abre o pedido da entrada com a hora que ele disse.
+  const confirmarAlmoco = async (horaChegada: string): Promise<string | null> => {
+    if (!duvida) return null;
+    const r = await saidaAlmocoSemEntradaPorPin(duvida.pin, horaChegada);
+    if (!r.ok) return r.mensagem ?? 'Não deu para registrar. Tente de novo.';
+    setDuvida(null);
+    mostrarBatida(r, `Pedido da entrada (chegou às ${r.chegada ?? horaChegada}) enviado ao gestor.`);
+    return null;
   };
 
   const confirmarManutencao = async () => {
@@ -331,7 +366,7 @@ const Ponto = () => {
   const mostraChinelo = !demo && !painel;
   const secundaria = tela !== 'ponto';
   // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
-  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo';
+  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo' || tela === 'entrada-duvida';
 
   return (
     <div
@@ -427,6 +462,17 @@ const Ponto = () => {
           buscarProduto={buscarProduto}
           reportarFaltantes={reportarFaltantesPorPin}
           onFim={mostrarAviso}
+          onVoltar={voltarAoInicio}
+        />
+      )}
+
+      {tela === 'entrada-duvida' && duvida && (
+        <EntradaEsquecida
+          nome={duvida.nome}
+          escalaEntrada={duvida.escalaEntrada}
+          agora={duvida.agora}
+          onChegando={confirmarChegando}
+          onAlmoco={confirmarAlmoco}
           onVoltar={voltarAoInicio}
         />
       )}
