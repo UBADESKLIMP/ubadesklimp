@@ -8,7 +8,7 @@ import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
-import ChecarPonto from '@/components/ponto/ChecarPonto';
+import MeuPontoQuiosque from '@/components/ponto/MeuPontoQuiosque';
 import PedirChinelo from '@/components/ponto/PedirChinelo';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
@@ -74,7 +74,8 @@ const Ponto = () => {
     baterPontoPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
-    minhasMarcacoesPorPin,
+    meuPontoPorPin,
+    contestarPorPin,
     anotarChineloPorPin,
     buscarProduto,
     reportarFaltantesPorPin,
@@ -435,7 +436,7 @@ const Ponto = () => {
       )}
 
       {tela === 'checar' && (
-        <ChecarPonto minhasMarcacoes={minhasMarcacoesPorPin} onVoltar={voltarAoInicio} />
+        <MeuPontoQuiosque meuPonto={meuPontoPorPin} contestar={contestarPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
       )}
 
       {tela === 'bastidor' && ficha && (
@@ -529,7 +530,7 @@ const Ponto = () => {
                 className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
               >
                 <ClipboardCheck className="h-4 w-4" />
-                Checar ponto
+                Meu ponto
               </button>
             )}
             {mostraChinelo && (

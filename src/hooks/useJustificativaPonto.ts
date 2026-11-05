@@ -28,6 +28,8 @@ export interface JustificativaPonto {
   atraso_id: string | null;
   /** Batida de ponto que está sendo contestada ou corrigida (Etapa 3). */
   marcacao_id: string | null;
+  /** 'quiosque' quando o funcionário pediu pelo computador da loja. */
+  origem?: string;
   created_at: string;
 }
 

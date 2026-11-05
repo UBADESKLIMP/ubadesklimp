@@ -32,6 +32,7 @@ import AdminProductFilters, { SortOption } from '@/components/AdminProductFilter
 import { normalizeText } from '@/lib/utils';
 import AdminShell from '@/components/admin/AdminShell';
 import { useAdminTheme } from '@/hooks/useAdminTheme';
+import { useAprovacoesPendentes } from '@/hooks/useAprovacoesPendentes';
 import AdminHome from '@/components/admin/AdminHome';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
@@ -50,6 +51,8 @@ const Admin = () => {
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();
   const equipeAccess = useEquipeAccess();
+  // Pedidos de ajuste de ponto esperando decisão (só para quem decide).
+  const pedidosDePonto = useAprovacoesPendentes(equipeAccess.isGestorOuAdmin ? equipeAccess.empresaIds : []);
 
   // A seção fica na URL (#entregas): F5 volta para a mesma tela, e não para o início.
   const [activeSection, setActiveSection] = useState<AdminSection>(() => {
@@ -418,7 +421,12 @@ const Admin = () => {
   };
 
   return (
-    <AdminShell items={visibleNavItems} activeSection={activeSection} onSelectSection={setActiveSection}>
+    <AdminShell
+      items={visibleNavItems}
+      activeSection={activeSection}
+      onSelectSection={setActiveSection}
+      badges={{ equipe: pedidosDePonto }}
+    >
       {renderSection()}
     </AdminShell>
   );

@@ -8,11 +8,12 @@ interface AdminSidebarProps {
   items: AdminNavItem[];
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
+  badges?: Partial<Record<AdminSection, number>>;
 }
 
 const GROUP_ORDER: (AdminNavGroup | undefined)[] = [undefined, 'catalogo', 'operacao', 'equipe'];
 
-const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => {
+const AdminSidebar = ({ items, activeSection, onSelect, badges }: AdminSidebarProps) => {
   const [expanded, setExpanded] = useState(false);
   const { signOut } = useAuth();
 
@@ -87,7 +88,13 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
                   )}
                 >
                   {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r bg-adm-accent" />}
-                  <Icon className="h-[18px] w-[18px] shrink-0" />
+                  <span className="relative shrink-0">
+                    <Icon className="h-[18px] w-[18px]" />
+                    {/* Fechada: um ponto no ícone. Aberta: o número ao lado do nome. */}
+                    {!expanded && (badges?.[item.key] ?? 0) > 0 && (
+                      <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-adm-alert" />
+                    )}
+                  </span>
                   <span
                     className={cn(
                       'whitespace-nowrap transition-opacity duration-150',
@@ -96,6 +103,11 @@ const AdminSidebar = ({ items, activeSection, onSelect }: AdminSidebarProps) => 
                   >
                     {item.label}
                   </span>
+                  {expanded && (badges?.[item.key] ?? 0) > 0 && (
+                    <span className="ml-auto rounded-full bg-adm-alert px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                      {badges?.[item.key]}
+                    </span>
+                  )}
                   {item.comingSoon && expanded && (
                     <span className="ml-auto text-[9px] uppercase tracking-wide text-adm-faint whitespace-nowrap">
                       em breve

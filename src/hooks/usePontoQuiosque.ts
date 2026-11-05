@@ -158,6 +158,52 @@ export interface ResultadoChinelo {
   ja_existia?: boolean;
 }
 
+export interface BatidaDoDia {
+  id: string;
+  tipo: MarcacaoTipo;
+  hora: string;
+  origem: string;
+}
+
+export interface DiaDoPonto {
+  dia: string;
+  marcacoes: BatidaDoDia[];
+}
+
+export interface PedidoDeAjuste {
+  id: string;
+  data: string;
+  tipo: 'esquecimento' | 'marcacao_duplicada' | 'marcacao_incorreta' | 'falha_sistema';
+  motivo: string;
+  status: 'pendente' | 'aprovada' | 'rejeitada' | 'aguardando_ciencia' | 'concluida' | 'substituida';
+  motivo_rejeicao: string | null;
+  origem: string;
+  criado_em: string;
+}
+
+export interface ResultadoMeuPonto {
+  ok: boolean;
+  mensagem?: string;
+  nome?: string;
+  hoje?: string;
+  dias?: DiaDoPonto[];
+  pedidos?: PedidoDeAjuste[];
+}
+
+export interface PedidoDeContestacao {
+  data: string;
+  tipo: PedidoDeAjuste['tipo'];
+  marcacaoId?: string;
+  batida?: string;
+  horario?: string;
+  motivo?: string;
+}
+
+export interface ResultadoContestacao {
+  ok: boolean;
+  mensagem?: string;
+}
+
 export interface MarcacaoDeHoje {
   tipo: MarcacaoTipo;
   hora: string;
@@ -369,6 +415,34 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoAbertura;
   };
 
+  /** "Meu ponto": batidas dos últimos 3 dias e os pedidos de ajuste de quem digitou o PIN. */
+  const meuPontoPorPin = async (pin: string): Promise<ResultadoMeuPonto> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_meu_ponto_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos consultar agora. Tente de novo.' };
+    return data as unknown as ResultadoMeuPonto;
+  };
+
+  /** Pede um ajuste do ponto ao gestor, no nome de quem digitou o PIN. */
+  const contestarPorPin = async (pin: string, pedido: PedidoDeContestacao): Promise<ResultadoContestacao> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_contestar_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+      p_data: pedido.data,
+      p_tipo: pedido.tipo,
+      p_marcacao_id: pedido.marcacaoId,
+      p_batida: pedido.batida,
+      p_horario: pedido.horario,
+      p_motivo: pedido.motivo,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos enviar agora. Tente de novo.' };
+    return data as unknown as ResultadoContestacao;
+  };
+
   /** "Pedir chinelo": anota o que o cliente quer, no nome de quem digitou o PIN. */
   const anotarChineloPorPin = async (pin: string, pedido: PedidoDeChinelo): Promise<ResultadoChinelo> => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -509,6 +583,8 @@ export const usePontoQuiosque = () => {
     abrirLojaPorPin,
     marcarPresentesPorPin,
     minhasMarcacoesPorPin,
+    meuPontoPorPin,
+    contestarPorPin,
     anotarChineloPorPin,
     buscarProduto,
     reportarFaltantesPorPin,

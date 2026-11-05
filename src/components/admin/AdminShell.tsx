@@ -18,16 +18,18 @@ interface AdminShellProps {
   items: AdminNavItem[];
   activeSection: AdminSection;
   onSelectSection: (section: AdminSection) => void;
+  /** Contadores por seção (ex.: pedidos esperando decisão). */
+  badges?: Partial<Record<AdminSection, number>>;
   children: ReactNode;
 }
 
-const AdminShell = ({ items, activeSection, onSelectSection, children }: AdminShellProps) => {
+const AdminShell = ({ items, activeSection, onSelectSection, badges, children }: AdminShellProps) => {
   const { theme, setTheme } = useAdminTheme();
   const atual = ADMIN_THEMES.find((t) => t.valor === theme)?.rotulo ?? 'Tema';
 
   return (
     <div className="min-h-screen bg-adm-bg text-adm-ink flex">
-      <AdminSidebar items={items} activeSection={activeSection} onSelect={onSelectSection} />
+      <AdminSidebar items={items} activeSection={activeSection} onSelect={onSelectSection} badges={badges} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <div className="admin-glass-bar flex items-center justify-end gap-2 px-4 md:px-8 py-3 border-b border-adm-line bg-adm-surface">
@@ -72,7 +74,7 @@ const AdminShell = ({ items, activeSection, onSelectSection, children }: AdminSh
         </main>
       </div>
 
-      <AdminMobileNav items={items} activeSection={activeSection} onSelect={onSelectSection} />
+      <AdminMobileNav items={items} activeSection={activeSection} onSelect={onSelectSection} badges={badges} />
     </div>
   );
 };

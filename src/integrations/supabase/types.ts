@@ -1096,6 +1096,7 @@ export type Database = {
           minutos_suprimidos: number | null
           motivo: string
           motivo_rejeicao: string | null
+          origem: string
           status: Database["public"]["Enums"]["equipe_justificativa_status"]
           substitui_id: string | null
           tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
@@ -1119,6 +1120,7 @@ export type Database = {
           minutos_suprimidos?: number | null
           motivo: string
           motivo_rejeicao?: string | null
+          origem?: string
           status?: Database["public"]["Enums"]["equipe_justificativa_status"]
           substitui_id?: string | null
           tipo: Database["public"]["Enums"]["equipe_justificativa_tipo"]
@@ -1142,6 +1144,7 @@ export type Database = {
           minutos_suprimidos?: number | null
           motivo?: string
           motivo_rejeicao?: string | null
+          origem?: string
           status?: Database["public"]["Enums"]["equipe_justificativa_status"]
           substitui_id?: string | null
           tipo?: Database["public"]["Enums"]["equipe_justificativa_tipo"]
@@ -3515,6 +3518,23 @@ export type Database = {
       }
       ponto_liberar_rede_atual: {
         Args: { p_empresa_id: string }
+        Returns: Json
+      }
+      ponto_meu_ponto_por_pin: {
+        Args: { p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
+      ponto_contestar_por_pin: {
+        Args: {
+          p_batida?: string
+          p_data: string
+          p_estacao_token: string
+          p_horario?: string
+          p_marcacao_id?: string
+          p_motivo?: string
+          p_pin: string
+          p_tipo: string
+        }
         Returns: Json
       }
       ponto_minhas_marcacoes_por_pin: {

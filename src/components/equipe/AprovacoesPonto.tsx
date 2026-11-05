@@ -74,6 +74,11 @@ const AprovacoesPonto = ({ justificativas, loading, nomePorId, onDecidir }: Prop
                   <span className="text-xs text-blue-300/70">{TIPO_LABEL[j.tipo]}</span>
                   {/* Veio de uma batida real: o gestor decide olhando o fato,
                       não só o texto de quem pediu. */}
+                  {j.origem === 'quiosque' && (
+                    <span className="text-[10px] uppercase tracking-wider text-[#f0b429] border border-[#f0b429]/40 bg-[#f0b429]/10 rounded px-1.5 py-0.5">
+                      pelo quiosque
+                    </span>
+                  )}
                   {j.marcacao_id && (
                     <span className="text-[10px] uppercase tracking-wider text-blue-300 border border-blue-500/40 bg-blue-500/10 rounded px-1.5 py-0.5">
                       batida do ponto

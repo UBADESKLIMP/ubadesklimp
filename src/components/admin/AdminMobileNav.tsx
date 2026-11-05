@@ -9,13 +9,15 @@ interface AdminMobileNavProps {
   items: AdminNavItem[];
   activeSection: AdminSection;
   onSelect: (section: AdminSection) => void;
+  badges?: Partial<Record<AdminSection, number>>;
 }
 
-const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps) => {
+const AdminMobileNav = ({ items, activeSection, onSelect, badges }: AdminMobileNavProps) => {
   const [moreOpen, setMoreOpen] = useState(false);
   const { signOut } = useAuth();
   const { bar, overflow } = getMobileNavSplit(items);
   const overflowHasActive = overflow.some((item) => item.key === activeSection);
+  const overflowTemAviso = overflow.some((item) => (badges?.[item.key] ?? 0) > 0);
 
   const handleSelect = (section: AdminSection) => {
     onSelect(section);
@@ -51,7 +53,10 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
             overflowHasActive ? 'text-adm-accent' : 'text-adm-muted'
           )}
         >
-          <MoreHorizontal className="h-6 w-6" />
+          <span className="relative">
+            <MoreHorizontal className="h-6 w-6" />
+            {overflowTemAviso && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-adm-alert" />}
+          </span>
           Mais
         </button>
       </nav>
@@ -77,7 +82,14 @@ const AdminMobileNav = ({ items, activeSection, onSelect }: AdminMobileNavProps)
                   )}
                 >
                   <Icon className="h-6 w-6" />
-                  <span className="text-center leading-tight">{item.label}</span>
+                  <span className="text-center leading-tight">
+                    {item.label}
+                    {(badges?.[item.key] ?? 0) > 0 && (
+                      <span className="ml-1 rounded-full bg-adm-alert px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {badges?.[item.key]}
+                      </span>
+                    )}
+                  </span>
                   {item.comingSoon && (
                     <span className="text-[9px] uppercase tracking-wide text-adm-faint">em breve</span>
                   )}
