@@ -119,7 +119,9 @@ declare
   v_data date := p_data;
   v_nota text := nullif(btrim(coalesce(p_motivo, '')), '');
   v_hora time;
-  v_marc record;
+  -- Tipo da tabela (e não "record"): "record" ainda não preenchido dá erro mesmo
+  -- num trecho que não é usado, e quebrava "esqueci de bater" e "outro motivo".
+  v_marc public.ponto_marcacoes;
   v_batida public.equipe_marcacao_ponto;
   v_prazo int;
   v_dias int;
