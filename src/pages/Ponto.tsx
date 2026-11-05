@@ -488,7 +488,13 @@ const Ponto = () => {
           <button
             type="button"
             onClick={voltarAoInicio}
-            className="flex items-center gap-2 text-sm text-[#55605F] hover:text-[#141B1E] py-2"
+            // Nas telas de fundo escuro o cinza antigo sumia: o botão precisa aparecer.
+            className={cn(
+              'flex items-center gap-2 rounded-xl px-5 py-3 text-base font-medium transition',
+              emPonto
+                ? 'border border-white/25 bg-white/10 text-white hover:bg-white/15'
+                : 'text-sm text-[#55605F] hover:text-[#141B1E]'
+            )}
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar ao ponto
