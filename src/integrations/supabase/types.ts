@@ -3067,6 +3067,11 @@ export type Database = {
       }
     }
     Functions: {
+      entrega_bairro_remover: { Args: { p_bairro_id: string }; Returns: Json }
+      entrega_definir_bairro: {
+        Args: { p_bairro_id?: string; p_bairro_texto?: string; p_entrega_id: string }
+        Returns: Json
+      }
       entrega_excluir: {
         Args: { p_empresa_id: string; p_entrega_ids: string[] }
         Returns: Json

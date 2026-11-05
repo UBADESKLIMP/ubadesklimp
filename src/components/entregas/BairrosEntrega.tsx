@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,10 +29,12 @@ const LinhaBairro = ({
   bairro,
   posicao,
   onAlternarAtivo,
+  onRemover,
 }: {
   bairro: BairroDeEntrega;
   posicao: number;
   onAlternarAtivo: (b: BairroDeEntrega) => void;
+  onRemover: (b: BairroDeEntrega) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bairro.id,
@@ -70,6 +72,15 @@ const LinhaBairro = ({
       >
         {bairro.ativo ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
+
+      <button
+        onClick={() => onRemover(bairro)}
+        aria-label={`Remover ${bairro.nome} da lista`}
+        title="Remover da lista"
+        className="shrink-0 rounded p-2 text-blue-300/40 hover:bg-[#C0392B]/10 hover:text-[#ff8a7a]"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
     </div>
   );
 };
@@ -80,6 +91,7 @@ interface Props {
   onGravarOrdem: (nova: BairroDeEntrega[]) => Promise<void>;
   onAdicionar: (nome: string) => Promise<ResultadoRpc>;
   onAlternarAtivo: (b: BairroDeEntrega) => void;
+  onRemover: (b: BairroDeEntrega) => Promise<ResultadoRpc>;
 }
 
 /**
@@ -94,6 +106,7 @@ const BairrosEntrega = ({
   onGravarOrdem,
   onAdicionar,
   onAlternarAtivo,
+  onRemover,
 }: Props) => {
   const [novo, setNovo] = useState('');
   const [aviso, setAviso] = useState<string | null>(null);
@@ -113,6 +126,17 @@ const BairrosEntrega = ({
     setSalvando(true);
     await onGravarOrdem(arrayMove(bairros, de, para));
     setSalvando(false);
+  };
+
+  const remover = async (b: BairroDeEntrega) => {
+    if (
+      !window.confirm(
+        `Remover ${b.nome} da lista? As entregas que usam esse bairro ficam com o nome e vão para o fim da rota. Se só quer parar de usar por um tempo, use o olho.`
+      )
+    )
+      return;
+    const r = await onRemover(b);
+    setAviso(r.mensagem ?? null);
   };
 
   const adicionar = async () => {
@@ -169,6 +193,7 @@ const BairrosEntrega = ({
                   bairro={bairro}
                   posicao={i + 1}
                   onAlternarAtivo={onAlternarAtivo}
+                  onRemover={remover}
                 />
               ))}
             </div>
@@ -177,7 +202,7 @@ const BairrosEntrega = ({
 
         <p className="text-xs text-blue-300/40">
           O olho fechado desliga o bairro: ele deixa de casar na importação, mas a entrega que já
-          usava ele continua valendo.
+          usava ele continua valendo. A lixeira tira o bairro da lista de vez.
         </p>
       </CardContent>
     </Card>

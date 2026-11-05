@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, MapPin, Phone, PackageX, Trash2 } from 'lucide-react';
+import { AlertTriangle, MapPin, Pencil, Phone, PackageX, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ interface Props {
   jaNaRota: Set<string>;
   onMontarRota: (ids: string[]) => Promise<ResultadoRpc>;
   onExcluir: (ids: string[]) => Promise<ResultadoRpc>;
+  onEditarBairro?: (entrega: { entregaId: string; cliente: string; bairroAtual: string | null }) => void;
 }
 
 /**
@@ -30,7 +31,7 @@ interface Props {
  * norte pro sul. A tela não reordena nada — só separa a dívida num bloco
  * próprio, porque é o que se perde hoje e precisa doer na vista.
  */
-const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcluir }: Props) => {
+const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcluir, onEditarBairro }: Props) => {
   const [escolhidas, setEscolhidas] = useState<Set<string>>(new Set());
   const [montando, setMontando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -162,6 +163,26 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
             <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
             <span>{entrega.entregar_em || entrega.endereco || 'Sem endereço no cadastro'}</span>
           </p>
+
+          {onEditarBairro && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-blue-300/70">
+              <span>Bairro: {entrega.bairro ?? 'sem bairro'}</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  // O cartão é um <label>: sem isso o clique também marcaria a entrega.
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEditarBairro({ entregaId: entrega.id, cliente: entrega.cliente_nome, bairroAtual: entrega.bairro });
+                }}
+                aria-label="Editar bairro"
+                title="Editar bairro"
+                className="rounded p-1 text-blue-300/50 hover:bg-blue-600/10 hover:text-blue-300"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            </p>
+          )}
 
           {entrega.ultimo_motivo && (
             <p className="mt-1 text-xs text-[#ff8a7a]">

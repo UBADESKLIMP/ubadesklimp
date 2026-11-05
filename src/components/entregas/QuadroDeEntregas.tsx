@@ -12,7 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { CheckCircle2, GripVertical, XCircle } from 'lucide-react';
+import { CheckCircle2, GripVertical, Pencil, XCircle } from 'lucide-react';
 import { emReais, type EntregaDaFila, type ParadaDaRota, type ResultadoRpc } from '@/hooks/useEntregas';
 import { nomeCurto } from '@/lib/nomeCurto';
 
@@ -32,6 +32,8 @@ interface CartaoDoQuadro {
   coluna: Coluna;
   /** id que cada regra precisa: entrega (fila) ou parada (rota e resolvidas). */
   alvo: string;
+  entregaId: string;
+  bairro: string | null;
   titulo: string;
   linha2: string;
   valor: number | null;
@@ -45,6 +47,8 @@ interface Props {
   onParaRota: (entregaId: string) => Promise<ResultadoRpc>;
   onParaFila: (paradaId: string) => Promise<ResultadoRpc>;
   onReverter: (paradaId: string) => Promise<ResultadoRpc>;
+  /** Abre a edição do bairro da entrega (só fila e a caminho). */
+  onEditarBairro?: (entrega: { entregaId: string; cliente: string; bairroAtual: string | null }) => void;
 }
 
 // As cores vêm das variáveis do painel (adm-*), então o quadro acompanha qualquer
@@ -54,7 +58,15 @@ const VIDRO_CARTAO = 'rounded-xl border border-adm-line bg-adm-surface shadow-sm
 /** Celular e tablet (dedo): o arrasto só começa pela alça, para o dedo que rola a tela não carregar um cartão. */
 const usaToque = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
-const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro; fantasma?: boolean }) => {
+const CartaoArrastavel = ({
+  cartao,
+  fantasma = false,
+  onEditarBairro,
+}: {
+  cartao: CartaoDoQuadro;
+  fantasma?: boolean;
+  onEditarBairro?: Props['onEditarBairro'];
+}) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cartao.id, data: cartao });
   const [toque] = useState(usaToque);
   const pegada = fantasma ? {} : { ...listeners, ...attributes };
@@ -90,7 +102,22 @@ const CartaoArrastavel = ({ cartao, fantasma = false }: { cartao: CartaoDoQuadro
         {cartao.resultado === 'entregue' && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2F9E44]" />}
         {cartao.resultado === 'voltou' && <XCircle className="h-4 w-4 shrink-0 text-[#C0392B]" />}
       </div>
-      <p className="mt-0.5 truncate text-xs text-adm-muted">{cartao.linha2}</p>
+      <div className="mt-0.5 flex items-center gap-1">
+        <p className="min-w-0 flex-1 truncate text-xs text-adm-muted">{cartao.linha2}</p>
+        {onEditarBairro && !fantasma && cartao.coluna !== 'feitas' && (
+          <button
+            type="button"
+            aria-label="Editar bairro"
+            title="Editar bairro"
+            // Sem isso o toque no lápis começaria um arrasto do cartão.
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onEditarBairro({ entregaId: cartao.entregaId, cliente: cartao.titulo, bairroAtual: cartao.bairro })}
+            className="shrink-0 rounded p-1 text-adm-faint hover:bg-adm-accent-soft hover:text-adm-accent"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
       <div className={`mt-2 flex items-center justify-between text-xs ${toque && !fantasma ? 'pr-10' : ''}`}>
         <span className="font-mono tabular-nums text-adm-muted">{cartao.hora ?? ''}</span>
         <span className="font-mono tabular-nums text-adm-ink">{emReais(cartao.valor)}</span>
@@ -105,12 +132,14 @@ const ColunaDoQuadro = ({
   dica,
   cartoes,
   destacar,
+  onEditarBairro,
 }: {
   id: Coluna;
   titulo: string;
   dica: string;
   cartoes: CartaoDoQuadro[];
   destacar: boolean;
+  onEditarBairro?: Props['onEditarBairro'];
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
@@ -132,14 +161,14 @@ const ColunaDoQuadro = ({
         {cartoes.length === 0 ? (
           <p className="m-auto px-3 py-6 text-center text-xs text-adm-faint">{dica}</p>
         ) : (
-          cartoes.map((c) => <CartaoArrastavel key={c.id} cartao={c} />)
+          cartoes.map((c) => <CartaoArrastavel key={c.id} cartao={c} onEditarBairro={onEditarBairro} />)
         )}
       </div>
     </div>
   );
 };
 
-const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }: Props) => {
+const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter, onEditarBairro }: Props) => {
   const [arrastando, setArrastando] = useState<CartaoDoQuadro | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -154,6 +183,8 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
     id: `fila:${e.id}`,
     coluna: 'fila',
     alvo: e.id,
+    entregaId: e.id,
+    bairro: e.bairro,
     titulo: e.cliente_nome,
     linha2: [e.documento_tipo, e.documento_numero].filter(Boolean).join(' ') + (e.bairro ? ` · ${e.bairro}` : ''),
     valor: e.valor,
@@ -164,6 +195,8 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
       id: `rota:${p.parada_id}`,
       coluna: 'rota',
       alvo: p.parada_id,
+      entregaId: p.entrega_id,
+      bairro: p.bairro,
       titulo: p.cliente_nome,
       linha2: [p.documento, p.bairro].filter(Boolean).join(' · '),
       valor: p.valor,
@@ -174,6 +207,8 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
       id: `feitas:${p.parada_id}`,
       coluna: 'feitas',
       alvo: p.parada_id,
+      entregaId: p.entrega_id,
+      bairro: p.bairro,
       titulo: p.cliente_nome,
       linha2: [p.documento, p.bairro].filter(Boolean).join(' · '),
       valor: p.valor,
@@ -221,8 +256,8 @@ const QuadroDeEntregas = ({ fila, paradas, onParaRota, onParaFila, onReverter }:
     <div className={ocupado ? 'pointer-events-none opacity-70 transition-opacity' : 'transition-opacity'}>
       <DndContext sensors={sensors} onDragStart={aoComecar} onDragEnd={aoSoltar} onDragCancel={() => setArrastando(null)}>
         <div className="grid gap-4 md:grid-cols-3">
-          <ColunaDoQuadro id="fila" titulo="Na fila" dica="Nada esperando. Importe pedidos na aba Importar." cartoes={daFila} destacar={destinoValido('fila')} />
-          <ColunaDoQuadro id="rota" titulo="A caminho" dica="Arraste uma entrega da fila para cá." cartoes={daRota} destacar={destinoValido('rota')} />
+          <ColunaDoQuadro id="fila" titulo="Na fila" dica="Nada esperando. Importe pedidos na aba Importar." cartoes={daFila} destacar={destinoValido('fila')} onEditarBairro={onEditarBairro} />
+          <ColunaDoQuadro id="rota" titulo="A caminho" dica="Arraste uma entrega da fila para cá." cartoes={daRota} destacar={destinoValido('rota')} onEditarBairro={onEditarBairro} />
           <ColunaDoQuadro id="feitas" titulo="Resolvidas hoje" dica="O que o motorista marcar aparece aqui." cartoes={resolvidas} destacar={false} />
         </div>
         {/* No body: um pai com vidro desfocado (backdrop-filter) vira o referencial do

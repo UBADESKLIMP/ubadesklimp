@@ -415,6 +415,21 @@ export const useRotaDoDia = (empresaId: string | null, data: string) => {
   };
 };
 
+/** Corrige o bairro de uma entrega: da lista (bairroId) ou um nome digitado (texto). */
+export const definirBairroDaEntrega = async (
+  entregaId: string,
+  bairroId: string | null,
+  texto: string | null
+): Promise<ResultadoRpc> => {
+  const { data, error } = await supabase.rpc('entrega_definir_bairro', {
+    p_entrega_id: entregaId,
+    p_bairro_id: bairroId ?? undefined,
+    p_bairro_texto: texto ?? undefined,
+  });
+  if (error) return { ok: false, mensagem: MENSAGEM_DE_REDE };
+  return data as unknown as ResultadoRpc;
+};
+
 export interface BairroDeEntrega {
   id: string;
   nome: string;
@@ -485,7 +500,17 @@ export const useBairrosDeEntrega = (empresaId: string | null) => {
     await carregar();
   };
 
-  return { bairros, carregando, recarregar: carregar, gravarOrdem, adicionarBairro, alternarAtivo };
+  // Tira o bairro da lista. As entregas que o usavam ficam com o nome dele (o
+  // banco copia para o texto) e vão para o fim da rota até novo cadastro.
+  const removerBairro = async (bairro: BairroDeEntrega): Promise<ResultadoRpc> => {
+    const { data, error } = await supabase.rpc('entrega_bairro_remover', { p_bairro_id: bairro.id });
+    if (error) return { ok: false, mensagem: MENSAGEM_DE_REDE };
+    const r = data as unknown as ResultadoRpc;
+    if (r?.ok) await carregar();
+    return r;
+  };
+
+  return { bairros, carregando, recarregar: carregar, gravarOrdem, adicionarBairro, alternarAtivo, removerBairro };
 };
 
 export interface ParadaDoEntregador {

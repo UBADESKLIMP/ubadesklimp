@@ -55,7 +55,7 @@ export const numeroBR = (s: string | undefined | null): number | null => {
 
 const ehDinheiro = (s: string) => /^R\$\s*[\d.]*\d,\d{2}$/.test(s.trim());
 
-const UNIDADES = /^(UN|FD|GL|CX|PCT|PC|KG|LT|FR|PT|RL|DP|BD|SC|PAR|JG|KIT|MT|CT|FARDO|DZ|BL)\s+(.+)$/i;
+const UNIDADES = /^(UN|FD|GL|CX|PCT|PC|PR|KG|LT|FR|PT|RL|DP|BD|SC|PAR|JG|KIT|MT|CT|FARDO|DZ|BL)\s+(.+)$/i;
 
 const dataISO = (br: string): string | null => {
   const m = br.match(/(\d{2})\/(\d{2})\/(\d{4})/);

@@ -32,6 +32,7 @@ interface Props {
   onMover: (nova: ParadaDaRota[]) => Promise<ResultadoRpc>;
   onTirar: (paradaId: string) => Promise<ResultadoRpc>;
   onReverter: (paradaId: string) => Promise<ResultadoRpc>;
+  onEditarBairro?: (entrega: { entregaId: string; cliente: string; bairroAtual: string | null }) => void;
   onRecarregar: () => void;
   onIrParaFila: () => void;
 }
@@ -49,6 +50,7 @@ const RotaDoDiaPainel = ({
   onMover,
   onTirar,
   onReverter,
+  onEditarBairro,
   onRecarregar,
   onIrParaFila,
 }: Props) => {
@@ -227,6 +229,11 @@ const RotaDoDiaPainel = ({
                       posicao={i + 1}
                       podeArrastar
                       onTirar={() => tirar(parada)}
+                      onEditarBairro={
+                        onEditarBairro
+                          ? () => onEditarBairro({ entregaId: parada.entrega_id, cliente: parada.cliente_nome, bairroAtual: parada.bairro })
+                          : undefined
+                      }
                     />
                   ))}
                 </div>

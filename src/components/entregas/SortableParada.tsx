@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, MapPin, Phone, MessageCircle, X } from 'lucide-react';
+import { GripVertical, MapPin, Pencil, Phone, MessageCircle, X } from 'lucide-react';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { SeloEntrega } from './SeloEntrega';
 import { MOTIVO_LABEL, emReais, type ItemEntrega, type ParadaDaRota } from '@/hooks/useEntregas';
@@ -26,12 +26,15 @@ const SortableParada = ({
   posicao,
   podeArrastar,
   onTirar,
+  onEditarBairro,
 }: {
   parada: ParadaDaRota;
   posicao: number;
   podeArrastar: boolean;
   /** Só existe para parada ainda em rota: tira da rota de hoje e volta para a fila. */
   onTirar?: () => void;
+  /** Corrige o bairro desta entrega (só enquanto ainda está em rota). */
+  onEditarBairro?: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: parada.parada_id,
@@ -79,6 +82,17 @@ const SortableParada = ({
             <span className="font-mono tabular-nums">{parada.documento}</span>
             <span className="font-mono tabular-nums">{emReais(parada.valor)}</span>
             {parada.bairro && <span>{parada.bairro}</span>}
+            {onEditarBairro && (
+              <button
+                type="button"
+                onClick={onEditarBairro}
+                aria-label="Editar bairro"
+                title="Editar bairro"
+                className="rounded p-1 text-blue-300/50 hover:bg-blue-600/10 hover:text-blue-300"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
           </div>
 
           <p className="mt-1.5 inline-flex items-start gap-1 text-sm text-adm-ink">

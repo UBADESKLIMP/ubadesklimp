@@ -7,6 +7,7 @@ import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import {
+  definirBairroDaEntrega,
   hojeEmSaoPaulo,
   useBairrosDeEntrega,
   useFilaDeEntregas,
@@ -19,6 +20,7 @@ import ImportarEntregas from './ImportarEntregas';
 import BairrosEntrega from './BairrosEntrega';
 import HistoricoEntregas from './HistoricoEntregas';
 import QuadroDeEntregas from './QuadroDeEntregas';
+import EditarBairroDialog, { type EntregaEmEdicao } from './EditarBairroDialog';
 
 type Aba = 'quadro' | 'rota' | 'fila' | 'historico' | 'importar' | 'bairros';
 
@@ -86,6 +88,8 @@ const EntregasManager = () => {
     }
   };
 
+  const [editandoBairro, setEditandoBairro] = useState<EntregaEmEdicao | null>(null);
+
   const fila = useFilaDeEntregas(empresaAtiva);
   const rota = useRotaDoDia(empresaAtiva, hoje);
   const bairros = useBairrosDeEntrega(empresaAtiva);
@@ -125,6 +129,12 @@ const EntregasManager = () => {
       />
     );
   }
+
+  const salvarBairro = async (entregaId: string, bairroId: string | null, texto: string | null) => {
+    const r = await definirBairroDaEntrega(entregaId, bairroId, texto);
+    if (r.ok) await Promise.all([fila.recarregar(), rota.recarregar()]);
+    return r;
+  };
 
   const montarRota = async (ids: string[]) => {
     const r = await rota.montarRota(ids);
@@ -183,6 +193,7 @@ const EntregasManager = () => {
               return r;
             }}
             onReverter={rota.reverterParada}
+            onEditarBairro={setEditandoBairro}
           />
         </TabsContent>
 
@@ -194,6 +205,7 @@ const EntregasManager = () => {
             onInverter={rota.inverterRota}
             onMover={rota.moverParadas}
             onReverter={rota.reverterParada}
+            onEditarBairro={setEditandoBairro}
             onTirar={async (paradaId) => {
               const r = await rota.tirarDaRota(paradaId);
               if (r.ok) await fila.recarregar();
@@ -212,6 +224,7 @@ const EntregasManager = () => {
             jaNaRota={jaNaRota}
             onMontarRota={montarRota}
             onExcluir={fila.excluir}
+            onEditarBairro={setEditandoBairro}
           />
         </TabsContent>
 
@@ -237,9 +250,22 @@ const EntregasManager = () => {
             onGravarOrdem={bairros.gravarOrdem}
             onAdicionar={bairros.adicionarBairro}
             onAlternarAtivo={bairros.alternarAtivo}
+            onRemover={async (b) => {
+              const r = await bairros.removerBairro(b);
+              // As entregas que usavam o bairro mudaram: a tela acompanha.
+              if (r.ok) await Promise.all([fila.recarregar(), rota.recarregar()]);
+              return r;
+            }}
           />
         </TabsContent>
       </Tabs>
+
+      <EditarBairroDialog
+        entrega={editandoBairro}
+        bairros={bairros.bairros}
+        onSalvar={salvarBairro}
+        onFechar={() => setEditandoBairro(null)}
+      />
     </div>
   );
 };
