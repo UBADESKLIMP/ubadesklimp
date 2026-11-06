@@ -375,7 +375,7 @@ const PontoManager = () => {
         <TabsList className="bg-[#12121a] border border-blue-500/20 flex-wrap h-auto">
           <TabsTrigger value="agora">Agora na loja</TabsTrigger>
           <TabsTrigger value="dia">Batidas do dia</TabsTrigger>
-          <TabsTrigger value="espelho">Espelho do mês</TabsTrigger>
+          <TabsTrigger value="espelho">Cartão de ponto</TabsTrigger>
           <TabsTrigger value="recusadas">
             Recusadas
             {recusasHoje > 0 && (

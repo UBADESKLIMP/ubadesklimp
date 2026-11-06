@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import {
   usePontoEspelho, hhmm, saldoHhmm, diaDaSemana, diaDoMes,
-  mesPorExtenso, PROBLEMA_LABEL, mesPassado,
+  mesPorExtenso, PROBLEMA_LABEL, mesAtual,
   type DiaDoEspelho, type PessoaDoEspelho,
 } from '@/hooks/usePontoEspelho';
 
@@ -18,7 +18,7 @@ interface Props {
 }
 
 /**
- * Espelho de ponto do mês — o documento que vai para a contabilidade.
+ * Cartão de ponto do mês — o documento que vai para a contabilidade.
  *
  * O relatório do sistema antigo é uma parede de 26 linhas iguais: para achar o
  * dia furado é preciso ler todas. Aqui a grade inteira é monoespaçada, então as
@@ -27,7 +27,8 @@ interface Props {
  * é exatamente o que precisa de ação.
  */
 const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
-  const [mes, setMes] = useState(mesPassado());
+  // Abre no mês em andamento. Para o fechamento, é só escolher o mês anterior.
+  const [mes, setMes] = useState(mesAtual());
   const [pessoa, setPessoa] = useState<string>('todos');
   const { espelho, carregando, erro } = usePontoEspelho(
     empresaId, mes, pessoa === 'todos' ? null : pessoa
@@ -221,7 +222,7 @@ const LinhaDoDia = ({ dia, onArrumar }: { dia: DiaDoEspelho; onArrumar: () => vo
   const furo = dia.grau === 'furo';
   const aviso = dia.grau === 'aviso';
   const atrasado = (dia.atraso_min ?? 0) > 0;
-  const vazio = !dia.entrada && !dia.previsto;
+  const vazio = !dia.entrada && (!dia.previsto || dia.futuro);
 
   // Dia certo não precisa de atenção: recua. Quem fica em branco é o problema.
   const tom = furo ? 'text-white' : vazio ? 'text-blue-300/20' : 'text-blue-300/55';
@@ -238,7 +239,7 @@ const LinhaDoDia = ({ dia, onArrumar }: { dia: DiaDoEspelho; onArrumar: () => vo
         {diaDoMes(dia.data)}
       </td>
       <td className={cn('text-right', atrasado ? 'text-[#f0b429]' : tom)}>
-        {dia.entrada ?? (dia.previsto ? '——' : '')}
+        {dia.entrada ?? (dia.previsto && !dia.futuro ? '——' : '')}
       </td>
       <td className={cn('text-right', tom)}>{dia.saida_almoco ?? ''}</td>
       <td className={cn('text-right', tom)}>
@@ -296,7 +297,7 @@ export const FolhaImpressa = ({
   <div className="folha text-black" style={{ fontSize: '9.5pt', lineHeight: 1.35 }}>
     <div className="flex justify-between items-baseline border-b border-black pb-1 mb-2">
       <strong>{empresa}</strong>
-      <span>Espelho de ponto — {mesPorExtenso(mes)}</span>
+      <span>Cartão de ponto — {mesPorExtenso(mes)}</span>
     </div>
 
     <div className="mb-2">

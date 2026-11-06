@@ -9,6 +9,8 @@ export type GrauDoDia = 'furo' | 'aviso' | null;
 export interface DiaDoEspelho {
   data: string;
   previsto: boolean;
+  /** O dia ainda não chegou: não conta como falta nem aparece como buraco. */
+  futuro?: boolean;
   fora_da_escala: boolean;
   /** Qual escala valeu neste dia — no sábado é o turno da pessoa. */
   escala_nome: string | null;
@@ -93,13 +95,9 @@ export const PROBLEMA_LABEL: Record<Exclude<ProblemaDoDia, null>, string> = {
   sem_almoco: 'Sem almoço',
 };
 
-/** O mês anterior, que é o que se fecha e manda pra contabilidade. */
-export const mesPassado = () => {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-};
+/** O mês de hoje (no fuso de Ubatuba), que é o que abre ao entrar no cartão de ponto. */
+export const mesAtual = () =>
+  new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date()).slice(0, 7);
 
 export const usePontoEspelho = (
   empresaId: string | null,
