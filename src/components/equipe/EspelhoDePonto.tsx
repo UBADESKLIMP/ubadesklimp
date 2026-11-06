@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Printer } from 'lucide-react';
+import { ChevronDown, ChevronsDownUp, ChevronsUpDown, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,6 +43,16 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
   }, [espelho, pessoa]);
 
   const totalAvisos = espelho?.pessoas.reduce((s, p) => s + p.totais.avisos, 0) ?? 0;
+
+  // Cada pessoa vem fechada (só o resumo). Quem abre guarda a escolha; se a lista
+  // tem uma pessoa só (filtro por nome), ela já vem aberta.
+  const [abertos, setAbertos] = useState<Record<string, boolean>>({});
+  const pessoas = espelho?.pessoas ?? [];
+  const estaAberto = (id: string) => abertos[id] ?? pessoas.length === 1;
+  const alternar = (id: string) => setAbertos((a) => ({ ...a, [id]: !estaAberto(id) }));
+  const abrirOuFecharTodos = (abrir: boolean) =>
+    setAbertos(Object.fromEntries(pessoas.map((p) => [p.funcionario_id, abrir])));
+  const todosAbertos = pessoas.length > 0 && pessoas.every((p) => estaAberto(p.funcionario_id));
 
   return (
     <div>
@@ -94,6 +104,17 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
           <Printer className="h-4 w-4 mr-2" />
           Imprimir
         </Button>
+
+        {pessoas.length > 1 && (
+          <Button
+            variant="outline"
+            className="h-11 border-blue-500/20 text-blue-200 hover:bg-blue-500/10 hover:text-white"
+            onClick={() => abrirOuFecharTodos(!todosAbertos)}
+          >
+            {todosAbertos ? <ChevronsDownUp className="h-4 w-4 mr-2" /> : <ChevronsUpDown className="h-4 w-4 mr-2" />}
+            {todosAbertos ? 'Fechar todos' : 'Abrir todos'}
+          </Button>
+        )}
       </div>
 
       {carregando && <Loader2 className="h-5 w-5 animate-spin text-blue-400" />}
@@ -113,9 +134,17 @@ const EspelhoDePonto = ({ empresaId, onArrumar }: Props) => {
       )}
 
       {/* --------------------------------------------------------- na tela */}
-      {espelho?.pessoas.map((p) => (
-        <CartaoDaPessoa key={p.funcionario_id} pessoa={p} onArrumar={onArrumar} />
-      ))}
+      <div className="space-y-2.5">
+        {pessoas.map((p) => (
+          <CartaoDaPessoa
+            key={p.funcionario_id}
+            pessoa={p}
+            aberto={estaAberto(p.funcionario_id)}
+            onAlternar={() => alternar(p.funcionario_id)}
+            onArrumar={onArrumar}
+          />
+        ))}
+      </div>
 
       {/* ---------------------------------------------------- para o papel */}
       {espelho &&
@@ -155,24 +184,55 @@ const Carimbo = ({ texto, grau }: { texto: string; grau: 'furo' | 'aviso' }) => 
 
 export const CartaoDaPessoa = ({
   pessoa,
+  aberto,
+  onAlternar,
   onArrumar,
 }: {
   pessoa: PessoaDoEspelho;
+  aberto: boolean;
+  onAlternar: () => void;
   onArrumar: Props['onArrumar'];
 }) => (
-  <section className="mb-8">
-    <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-blue-500/20 pb-2 mb-1">
-      <h3 className="text-white">
-        {pessoa.nome}
+  <section className="rounded-xl border border-blue-500/20 bg-[#12121a]">
+    {/* Fechado, a pessoa é uma linha só com o que importa; o clique abre os horários. */}
+    <button
+      type="button"
+      onClick={onAlternar}
+      aria-expanded={aberto}
+      className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-left"
+    >
+      <ChevronDown
+        className={cn('h-5 w-5 shrink-0 text-blue-300/60 transition-transform', aberto ? 'rotate-180' : '-rotate-90')}
+      />
+      <span className="min-w-0 flex-1 text-white">
+        <span className="font-semibold">{pessoa.nome}</span>
         {pessoa.cargo && <span className="text-blue-300/60 font-normal"> — {pessoa.cargo}</span>}
-        {pessoa.matricula && (
-          <span className="text-blue-300/40 font-mono text-sm ml-2">#{pessoa.matricula}</span>
+        {pessoa.matricula && <span className="text-blue-300/40 font-mono text-sm ml-2">#{pessoa.matricula}</span>}
+      </span>
+
+      {pessoa.totais.furos > 0 && (
+        <span className="rounded-sm border border-[#C0392B]/50 bg-[#C0392B]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#ff8a7a]">
+          {pessoa.totais.furos} {pessoa.totais.furos === 1 ? 'dia para arrumar' : 'dias para arrumar'}
+        </span>
+      )}
+      <span className="font-mono text-sm tabular-nums text-blue-300/70">
+        {hhmm(pessoa.totais.trabalhado_min)}
+      </span>
+      <span
+        className={cn(
+          'w-16 text-right font-mono text-sm tabular-nums',
+          pessoa.totais.saldo_min < 0 ? 'text-[#ff8a7a]' : 'text-[#4ade80]'
         )}
-      </h3>
-      <p className="text-xs text-blue-300/50 font-mono">
-        jornada {pessoa.jornada ?? '—'} · {hhmm(pessoa.jornada_min)} por dia
-      </p>
-    </header>
+      >
+        {saldoHhmm(pessoa.totais.saldo_min)}
+      </span>
+    </button>
+
+    {aberto && (
+    <div className="border-t border-blue-500/15 px-4 pb-3 pt-2">
+    <p className="mb-1 text-xs text-blue-300/50 font-mono">
+      jornada {pessoa.jornada ?? '—'} · {hhmm(pessoa.jornada_min)} por dia
+    </p>
 
     <table className="w-full text-sm font-mono tabular-nums">
       <thead>
@@ -215,6 +275,8 @@ export const CartaoDaPessoa = ({
         </tr>
       </tfoot>
     </table>
+    </div>
+    )}
   </section>
 );
 

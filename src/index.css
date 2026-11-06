@@ -548,6 +548,20 @@ body.admin-glass-dark { color-scheme: dark; }
 body.admin-glass .bg-background { background-color: var(--adm-bg); }
 body.admin-glass-dark [data-state='active'].data-\[state\=active\]\:bg-background { background-color: rgba(255, 255, 255, 0.16); }
 body.admin-glass-light [data-state='active'].data-\[state\=active\]\:bg-background { background-color: rgba(255, 255, 255, 0.9); }
+/* Janelas, listas de opções, menus e balões flutuam SOBRE o conteúdo: com vidro
+   translúcido o texto de trás aparece e não dá para ler. Esses ficam sólidos. */
+body.admin-glass-dark { --adm-solido: #0f1d30; }
+body.admin-glass-light { --adm-solido: #f7faff; }
+body.admin-glass [role='listbox'],
+body.admin-glass [role='menu'],
+body.admin-glass [role='dialog'],
+body.admin-glass [role='alertdialog'],
+body.admin-glass [data-radix-popper-content-wrapper] > *,
+body.admin-glass [data-radix-toast-viewport] > li,
+body.admin-glass [data-sonner-toast] {
+  background-color: var(--adm-solido) !important;
+  background-image: none !important;
+}
 /* A raiz do painel deixa o fundo aparecer. */
 body.admin-glass .min-h-screen.bg-adm-bg { background-color: transparent; }
 /* Cartões: translúcidos, com um brilho suave no topo (efeito espelho). */
