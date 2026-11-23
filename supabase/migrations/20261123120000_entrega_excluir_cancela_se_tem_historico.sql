@@ -1,0 +1,4 @@
+-- Excluir entrega na fila que ja tem registro do entregador (ex.: "nao entregue - fechado")
+-- nao apaga mais o historico: a entrega sai da fila como 'cancelada' e o registro continua guardado.
+-- Sem registro do entregador, continua apagando de verdade. Aplicada via MCP em 2026-11-23.
+-- (corpo da funcao: ver public.entrega_excluir no banco)
