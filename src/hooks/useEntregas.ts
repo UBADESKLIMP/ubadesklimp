@@ -110,6 +110,27 @@ export interface ResultadoImportacao extends ResultadoRpc {
 export const hojeEmSaoPaulo = () =>
   new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 
+/**
+ * "Hoje" que acompanha o relógio. Aba deixada aberta de um dia pro outro não
+ * pode montar a rota no dia velho: o banco devolve pra fila tudo que está numa
+ * rota de dia passado.
+ */
+export const useHojeEmSaoPaulo = () => {
+  const [hoje, setHoje] = useState(hojeEmSaoPaulo);
+  useEffect(() => {
+    const conferir = () => setHoje(hojeEmSaoPaulo());
+    const timer = window.setInterval(conferir, 60_000);
+    document.addEventListener('visibilitychange', conferir);
+    window.addEventListener('focus', conferir);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', conferir);
+      window.removeEventListener('focus', conferir);
+    };
+  }, []);
+  return hoje;
+};
+
 /** Valor nulo vira traço, não "R$ 0,00" — é dado que falta, não pedido de graça. */
 export const emReais = (valor: number | null | undefined) =>
   valor == null

@@ -1,0 +1,1 @@
+-- entrega_montar_rota recusa data de dia passado com aviso (antes a entrega voltava pra fila calada). Aplicada via MCP em 2026-11-25.

@@ -8,7 +8,7 @@ import { useEquipeAccess } from '@/hooks/useEquipeAccess';
 import { useStaffAccess } from '@/hooks/useStaffAccess';
 import {
   definirBairroDaEntrega,
-  hojeEmSaoPaulo,
+  useHojeEmSaoPaulo,
   useBairrosDeEntrega,
   useFilaDeEntregas,
   useRotaDoDia,
@@ -69,7 +69,7 @@ const EntregasManager = () => {
   const podeEntregas =
     equipeAccess.isGestorOuAdmin || staffAccess.isAdmin || staffAccess.permissions.has('entregas');
   const empresaAtiva = equipeAccess.empresaIds[0] ?? null;
-  const [hoje] = useState(hojeEmSaoPaulo);
+  const hoje = useHojeEmSaoPaulo();
   // A aba escolhida sobrevive ao F5 (só neste navegador).
   const [aba, setAbaEstado] = useState<Aba>(() => {
     try {

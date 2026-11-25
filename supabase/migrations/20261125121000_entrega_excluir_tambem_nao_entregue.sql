@@ -1,0 +1,1 @@
+-- entrega_excluir tambem aceita 'nao_entregue' (cancela se tem historico, apaga se nao tem). Aplicada via MCP em 2026-11-25.

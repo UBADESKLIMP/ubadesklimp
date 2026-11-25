@@ -83,11 +83,9 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
   };
 
   // Exclui o que está na fila, mesmo se já passou por uma rota de outro dia. Fica de
-  // fora o que está na rota de hoje e o que o entregador já registrou (voltou).
+  // fora só o que está na rota de hoje. Com registro do entregador, vira cancelada.
   // O banco confere de novo; aqui só evita o clique que não teria efeito.
-  const idsDaDivida = new Set(divida.map((e) => e.id));
-  const podeExcluir =
-    escolhidas.size > 0 && [...escolhidas].every((id) => !jaNaRota.has(id) && !idsDaDivida.has(id));
+  const podeExcluir = escolhidas.size > 0 && [...escolhidas].every((id) => !jaNaRota.has(id));
 
   const excluir = async () => {
     const quantas = escolhidas.size;
@@ -257,7 +255,7 @@ const FilaDeEntregas = ({ fila, carregando, erro, jaNaRota, onMontarRota, onExcl
             title={
               podeExcluir
                 ? 'Excluir as entregas marcadas'
-                : 'Não dá para excluir entrega que está na rota de hoje ou que já voltou'
+                : 'Não dá para excluir entrega que está na rota de hoje'
             }
             className="h-12 shrink-0 border-[#C0392B]/60 bg-[#12121a] text-[#C0392B] hover:bg-[#C0392B]/10"
           >
