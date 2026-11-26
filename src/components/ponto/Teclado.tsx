@@ -20,16 +20,18 @@ interface Props {
   plano?: boolean;
 }
 
+// Sem color-mix(): o Chrome antigo (Windows 7, até a versão 109) não entende e
+// o fundo escuro some. Camada translúcida sobre #0b1020 dá o mesmo resultado.
 // O painel tem o próprio fundo escuro com degradê da cor do tom, então o
 // teclado fica igual em qualquer tela (clara ou escura) onde for usado.
 export const FUNDO = {
-  ponto: 'radial-gradient(120% 75% at 50% 0%, color-mix(in srgb, hsl(var(--primary)) 62%, #0b1020), #0b1020 72%)',
-  loja: 'radial-gradient(120% 75% at 50% 0%, color-mix(in srgb, #B8860B 62%, #0b1020), #0b1020 72%)',
+  ponto: 'radial-gradient(120% 75% at 50% 0%, hsl(var(--primary) / 0.62), rgba(11, 16, 32, 0) 72%), #0b1020',
+  loja: 'radial-gradient(120% 75% at 50% 0%, rgba(184, 134, 11, 0.62), rgba(11, 16, 32, 0) 72%), #0b1020',
 };
 
 /** O degradê da tela inteira (quiosque e entregador): mais claro no alto, escuro embaixo. */
 export const FUNDO_TELA =
-  'radial-gradient(90% 70% at 30% 0%, color-mix(in srgb, hsl(var(--primary)) 70%, #0b1020), #0b1020 78%)';
+  'radial-gradient(90% 70% at 30% 0%, hsl(var(--primary) / 0.7), rgba(11, 16, 32, 0) 78%), #0b1020';
 
 /**
  * Teclado do balcão e do celular do entregador. Teclas grandes porque se usa
