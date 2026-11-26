@@ -16,7 +16,7 @@ export const usePontoInstalavel = () => {
 
     const cor = document.createElement('meta');
     cor.name = 'theme-color';
-    cor.content = '#1573D6';
+    cor.content = '#0B1020';
     document.head.appendChild(cor);
 
     // O Chrome em modo app mostra na barra de tarefas o ícone da página: troca o

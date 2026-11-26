@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
+import AjustaNaTela from '@/components/ponto/AjustaNaTela';
 import Aviso from '@/components/ponto/Aviso';
 import Bastidor from '@/components/ponto/Bastidor';
 import AbrirLoja from '@/components/ponto/AbrirLoja';
@@ -371,7 +372,7 @@ const Ponto = () => {
   return (
     <div
       className={cn(
-        'min-h-[100dvh] flex flex-col',
+        'h-[100dvh] overflow-hidden flex flex-col',
         emPonto ? 'text-white' : 'bg-[#F5F6F3] text-[#141B1E]'
       )}
       style={emPonto ? { background: FUNDO_TELA } : undefined}
@@ -429,104 +430,106 @@ const Ponto = () => {
       </header>
 
       {/* ---------------------------------------------- bater ponto: o centro */}
-      {tela === 'ponto' && (
-        <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-4 lg:gap-6 lg:grid lg:grid-cols-[1.35fr_1fr] lg:gap-6 lg:px-14 lg:pb-10">
-          <RelogioQuiosque local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
+      <AjustaNaTela>
+        {tela === 'ponto' && (
+          <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-4 lg:gap-6 lg:grid lg:grid-cols-[1.35fr_1fr] lg:gap-6 lg:px-14 lg:pb-10">
+            <RelogioQuiosque local={demo ? undefined : painel ? doPainel.contexto?.local : contexto?.local} />
 
-          <div className="w-full lg:flex lg:flex-col lg:items-center lg:justify-center">
-            <p className="mb-4 text-center text-base font-medium text-white/85 lg:mb-6 lg:text-lg">
-              {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
-            </p>
+            <div className="w-full lg:flex lg:flex-col lg:items-center lg:justify-center">
+              <p className="mb-4 text-center text-base font-medium text-white/85 lg:mb-6 lg:text-lg">
+                {painel ? 'Digite o PIN de quem está batendo' : 'Digite seu PIN para bater o ponto'}
+              </p>
+              <Teclado
+                valor={pin}
+                onChange={setPin}
+                onConfirmar={baterPonto}
+                confirmando={enviando}
+                plano
+              />
+            </div>
+          </main>
+        )}
+
+        {tela === 'abrir-loja' && (
+          <AbrirLoja
+            abrirLoja={abrirLojaPorPin}
+            marcarPresentes={marcarPresentesPorPin}
+            onFim={mostrarAviso}
+            onVoltar={voltarAoInicio}
+          />
+        )}
+
+        {tela === 'faltante' && (
+          <ReportarFaltante
+            buscarProduto={buscarProduto}
+            reportarFaltantes={reportarFaltantesPorPin}
+            onFim={mostrarAviso}
+            onVoltar={voltarAoInicio}
+          />
+        )}
+
+        {tela === 'entrada-duvida' && duvida && (
+          <EntradaEsquecida
+            nome={duvida.nome}
+            escalaEntrada={duvida.escalaEntrada}
+            agora={duvida.agora}
+            onChegando={confirmarChegando}
+            onAlmoco={confirmarAlmoco}
+            onVoltar={voltarAoInicio}
+          />
+        )}
+
+        {tela === 'chinelo' && (
+          <PedirChinelo anotar={anotarChineloPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
+        )}
+
+        {tela === 'checar' && (
+          <MeuPontoQuiosque meuPonto={meuPontoPorPin} contestar={contestarPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
+        )}
+
+        {tela === 'bastidor' && ficha && (
+          <Bastidor
+            ficha={ficha}
+            salvarAtalhos={(a) => salvarAtalhos(pinBastidor, a)}
+            onModoFacil={() => {
+              setPinBastidor('');
+              setFicha(null);
+              voltarAoModoFacil();
+              voltarAoInicio();
+            }}
+            onAbrirPainel={() => {
+              window.location.href = '/admin';
+            }}
+          />
+        )}
+
+        {tela === 'manutencao' && (
+          <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
+            <div className="text-center">
+              <p className="text-xl font-heading">Sair do modo quiosque</p>
+              <p className="text-sm text-white/75 mt-1.5 max-w-xs">
+                PIN de manutenção. Vale só neste computador e dentro da loja.
+              </p>
+            </div>
+
             <Teclado
               valor={pin}
               onChange={setPin}
-              onConfirmar={baterPonto}
+              onConfirmar={confirmarManutencao}
               confirmando={enviando}
               plano
             />
-          </div>
-        </main>
-      )}
 
-      {tela === 'abrir-loja' && (
-        <AbrirLoja
-          abrirLoja={abrirLojaPorPin}
-          marcarPresentes={marcarPresentesPorPin}
-          onFim={mostrarAviso}
-          onVoltar={voltarAoInicio}
-        />
-      )}
-
-      {tela === 'faltante' && (
-        <ReportarFaltante
-          buscarProduto={buscarProduto}
-          reportarFaltantes={reportarFaltantesPorPin}
-          onFim={mostrarAviso}
-          onVoltar={voltarAoInicio}
-        />
-      )}
-
-      {tela === 'entrada-duvida' && duvida && (
-        <EntradaEsquecida
-          nome={duvida.nome}
-          escalaEntrada={duvida.escalaEntrada}
-          agora={duvida.agora}
-          onChegando={confirmarChegando}
-          onAlmoco={confirmarAlmoco}
-          onVoltar={voltarAoInicio}
-        />
-      )}
-
-      {tela === 'chinelo' && (
-        <PedirChinelo anotar={anotarChineloPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
-      )}
-
-      {tela === 'checar' && (
-        <MeuPontoQuiosque meuPonto={meuPontoPorPin} contestar={contestarPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
-      )}
-
-      {tela === 'bastidor' && ficha && (
-        <Bastidor
-          ficha={ficha}
-          salvarAtalhos={(a) => salvarAtalhos(pinBastidor, a)}
-          onModoFacil={() => {
-            setPinBastidor('');
-            setFicha(null);
-            voltarAoModoFacil();
-            voltarAoInicio();
-          }}
-          onAbrirPainel={() => {
-            window.location.href = '/admin';
-          }}
-        />
-      )}
-
-      {tela === 'manutencao' && (
-        <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
-          <div className="text-center">
-            <p className="text-xl font-heading">Sair do modo quiosque</p>
-            <p className="text-sm text-white/75 mt-1.5 max-w-xs">
-              PIN de manutenção. Vale só neste computador e dentro da loja.
-            </p>
-          </div>
-
-          <Teclado
-            valor={pin}
-            onChange={setPin}
-            onConfirmar={confirmarManutencao}
-            confirmando={enviando}
-            plano
-          />
-
-          <button
-            type="button"
-            onClick={voltarAoInicio}
-            className="text-sm text-white/75 hover:text-white py-2 px-4"
-          >
-            Cancelar
-          </button>
-        </main>
-      )}
+            <button
+              type="button"
+              onClick={voltarAoInicio}
+              className="text-sm text-white/75 hover:text-white py-2 px-4"
+            >
+              Cancelar
+            </button>
+          </main>
+        )}
+      </AjustaNaTela>
 
       {/* ------------------------------------- resto: rodapé, fora do caminho */}
       <footer className={cn('px-5 pb-5 pt-2', tela === 'bastidor' && 'hidden')}>

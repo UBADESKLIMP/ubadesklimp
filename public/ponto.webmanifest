@@ -6,8 +6,8 @@
   "scope": "/ponto",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#1573D6",
-  "theme_color": "#1573D6",
+  "background_color": "#0B1020",
+  "theme_color": "#0B1020",
   "icons": [
     {
       "src": "/ponto-icone-16.png",
