@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { ArrowLeft, Layers, Moon, Palette, Sun, UserRound } from 'lucide-react';
 import { useMinhaConta } from '@/hooks/useMinhaConta';
+import { lerTokenEstacao } from '@/hooks/usePontoQuiosque';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +29,9 @@ const AdminShell = ({ items, activeSection, onSelectSection, badges, children }:
   const { theme, setTheme } = useAdminTheme();
   const atual = ADMIN_THEMES.find((t) => t.valor === theme)?.rotulo ?? 'Tema';
   const conta = useMinhaConta();
+  // No PC do quiosque o site da loja é trancado (cai no Ponto): o botão "Voltar
+  // para o Site" levaria a janela do Painel para a tela de ponto.
+  const ePcDoPonto = Boolean(lerTokenEstacao());
 
   return (
     <div className="min-h-screen bg-adm-bg text-adm-ink flex">
@@ -75,14 +79,16 @@ const AdminShell = ({ items, activeSection, onSelectSection, badges, children }:
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = '/')}
-            className="flex items-center space-x-2 border-adm-line bg-adm-surface text-adm-ink hover:bg-adm-bg"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Voltar para o Site</span>
-          </Button>
+          {!ePcDoPonto && (
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = '/')}
+              className="flex items-center space-x-2 border-adm-line bg-adm-surface text-adm-ink hover:bg-adm-bg"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar para o Site</span>
+            </Button>
+          )}
         </div>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 pb-24 md:pb-6">
