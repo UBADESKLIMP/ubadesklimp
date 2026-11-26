@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft, ClipboardCheck, Footprints } from 'lucide-react';
+import { Wifi, WifiOff, Clock, DoorOpen, PackagePlus, Unlock, Loader2, ArrowLeft, ClipboardCheck, Footprints } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -610,15 +610,6 @@ const Ponto = () => {
                 <PackagePlus className="h-4 w-4" />
                 Reportar faltante
               </button>
-            )}
-            {!demo && !painel && (
-              <a
-                href="/auth?next=/admin"
-                className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                Painel
-              </a>
             )}
           </div>
         )}
