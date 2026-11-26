@@ -26,6 +26,7 @@ export const usePontoInstalavel = () => {
     const icone = document.createElement('link');
     icone.rel = 'icon';
     icone.type = 'image/png';
+    icone.setAttribute('sizes', '512x512');
     icone.href = '/ponto-icone-512.png';
     document.head.appendChild(icone);
 

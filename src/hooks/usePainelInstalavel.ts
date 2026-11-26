@@ -28,6 +28,7 @@ export const usePainelInstalavel = (ativo = true) => {
     const icone = document.createElement('link');
     icone.rel = 'icon';
     icone.type = 'image/png';
+    icone.setAttribute('sizes', '512x512');
     icone.href = '/painel-icone-512.png';
     document.head.appendChild(icone);
 
