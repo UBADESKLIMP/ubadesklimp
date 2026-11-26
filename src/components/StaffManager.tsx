@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import EquipeFuncionarioFields from '@/components/equipe/EquipeFuncionarioFields';
-import { Plus, Trash2, Shield, Pencil } from 'lucide-react';
+import { Plus, UserX, UserCheck, Shield, Pencil, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -59,19 +59,29 @@ const emptyForm = (): StaffFormState => ({
 });
 
 const StaffManager = () => {
-  const { staffMembers, loading, createStaffMember, updatePermissions, updatePerfil, changePassword, deleteStaffMember } =
+  const { staffMembers, loading, createStaffMember, updatePermissions, updatePerfil, changePassword, desligarStaffMember, reativarStaffMember } =
     useStaffMembers();
-  const adminCount = staffMembers.filter((m) => m.is_admin).length;
+  // Desligados ficam numa seção escondida; o resto da tela só vê quem está ativo.
+  const ativos = useMemo(() => staffMembers.filter((m) => !m.desligado_em), [staffMembers]);
+  const desligados = useMemo(
+    () =>
+      staffMembers
+        .filter((m) => m.desligado_em)
+        .sort((a, b) => (b.desligado_em ?? '').localeCompare(a.desligado_em ?? '')),
+    [staffMembers]
+  );
+  const [mostrarDesligados, setMostrarDesligados] = useState(false);
+  const adminCount = ativos.filter((m) => m.is_admin).length;
 
   // As sugeridas mais as que já estão em uso: digitou uma vez, vira opção.
   const funcoes = useMemo(
-    () => funcoesConhecidas(staffMembers.map((m) => m.cargo)),
-    [staffMembers]
+    () => funcoesConhecidas(ativos.map((m) => m.cargo)),
+    [ativos]
   );
 
   // Administradores em cima: são poucos, mudam pouco e é quem se procura
   // primeiro quando algo está errado. Dentro de cada grupo, ordem alfabética.
-  const membrosOrdenados = [...staffMembers].sort((a, b) => {
+  const membrosOrdenados = [...ativos].sort((a, b) => {
     if (a.is_admin !== b.is_admin) return a.is_admin ? -1 : 1;
     return a.display_name.localeCompare(b.display_name, 'pt-BR');
   });
@@ -86,6 +96,9 @@ const StaffManager = () => {
   const [editNewPassword, setEditNewPassword] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  // Algo foi digitado/mudado no painel de edição aberto? Usado pelo lápis: se nada
+  // mudou ele fecha o painel; se mudou, pergunta antes de descartar.
+  const [editSujo, setEditSujo] = useState(false);
 
   // O bloco de Equipe entrega aqui o próprio salvamento, pra existir um botão
   // "Salvar" só na tela em vez de dois que gravam metades diferentes.
@@ -129,7 +142,19 @@ const StaffManager = () => {
     setEditDisplayName(member.display_name);
     setEditCargo(member.cargo ?? '');
     setEditNewPassword('');
+    setEditSujo(false);
     salvarEquipeRef.current = null;
+  };
+
+  // O lápis abre e fecha. Fechando sem mudança nenhuma não pergunta nada.
+  const alternarEdicao = (member: StaffMember) => {
+    if (editingUserId !== member.user_id) {
+      startEditing(member);
+      return;
+    }
+    if (editSujo && !window.confirm('Fechar sem salvar? As alterações feitas serão perdidas.')) return;
+    setEditingUserId(null);
+    setEditSujo(false);
   };
 
   const saveEditing = async () => {
@@ -150,6 +175,7 @@ const StaffManager = () => {
 
       toast({ title: 'Funcionário salvo' });
       setEditingUserId(null);
+      setEditSujo(false);
     } catch {
       // erro já mostrado via toast dentro dos hooks
     } finally {
@@ -170,9 +196,33 @@ const StaffManager = () => {
     }
   };
 
-  const handleDelete = async (member: StaffMember) => {
-    if (!window.confirm(`Excluir o funcionário "${member.display_name}"? Essa ação não pode ser desfeita.`)) return;
-    await deleteStaffMember(member.user_id);
+  const handleDesligar = async (member: StaffMember) => {
+    if (
+      !window.confirm(
+        `Desligar "${member.display_name}"? A pessoa perde o acesso e some das listas. O histórico de ponto fica guardado e dá para reativar depois.`
+      )
+    )
+      return;
+    try {
+      if (editingUserId === member.user_id) setEditingUserId(null);
+      await desligarStaffMember(member.user_id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    }
+  };
+
+  const handleReativar = async (member: StaffMember) => {
+    if (
+      !window.confirm(
+        `Reativar "${member.display_name}"? Depois defina um PIN novo no lápis, porque o antigo deixou de valer.`
+      )
+    )
+      return;
+    try {
+      await reativarStaffMember(member.user_id);
+    } catch {
+      // erro já mostrado via toast dentro do hook
+    }
   };
 
   return (
@@ -302,7 +352,7 @@ const StaffManager = () => {
       <CardContent>
         {loading ? (
           <AdminLoadingState rows={3} tone="light" />
-        ) : staffMembers.length === 0 ? (
+        ) : ativos.length === 0 ? (
           <AdminEmptyState icon={Shield} title="Nenhum funcionário cadastrado ainda." tone="light" />
         ) : (
           <div className="space-y-3">
@@ -345,23 +395,28 @@ const StaffManager = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => startEditing(member)}>
+                    <Button variant="outline" size="icon" onClick={() => alternarEdicao(member)}
+                      title={editingUserId === member.user_id ? 'Fechar edição' : 'Editar'}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(member)}
+                      onClick={() => handleDesligar(member)}
                       disabled={member.is_admin && adminCount <= 1}
-                      title={member.is_admin && adminCount <= 1 ? 'Não é possível excluir o último administrador' : undefined}
+                      title={member.is_admin && adminCount <= 1 ? 'Não é possível desligar o último administrador' : 'Desligar'}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <UserX className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>
 
                 {editingUserId === member.user_id && (
-                  <div className="border-t pt-3 space-y-3">
+                  <div
+                    className="border-t pt-3 space-y-3"
+                    onInputCapture={() => setEditSujo(true)}
+                    onChangeCapture={() => setEditSujo(true)}
+                  >
                     <div className="space-y-2">
                       <Label htmlFor={`edit-display-name-${member.user_id}`}>Nome de exibição</Label>
                       <Input
@@ -473,7 +528,14 @@ const StaffManager = () => {
                       <Button size="sm" onClick={saveEditing} disabled={isSavingProfile}>
                         {isSavingProfile ? 'Salvando...' : 'Salvar'}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingUserId(null)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingUserId(null);
+                          setEditSujo(false);
+                        }}
+                      >
                         Cancelar
                       </Button>
                     </div>
@@ -482,6 +544,43 @@ const StaffManager = () => {
               </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {desligados.length > 0 && (
+          <div className="mt-6 border-t pt-4">
+            <button
+              type="button"
+              onClick={() => setMostrarDesligados((v) => !v)}
+              className="flex w-full items-center justify-between text-sm text-muted-foreground hover:text-foreground"
+              aria-expanded={mostrarDesligados}
+            >
+              <span>Desligados ({desligados.length})</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${mostrarDesligados ? 'rotate-180' : ''}`} />
+            </button>
+            {mostrarDesligados && (
+              <div className="mt-3 space-y-2">
+                {desligados.map((member) => (
+                  <div key={member.user_id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium">
+                        {member.display_name}
+                        {member.cargo && (
+                          <span className="ml-2 text-sm font-normal text-muted-foreground">{member.cargo}</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Desligado em {new Date(member.desligado_em as string).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleReativar(member)}>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Reativar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -11,6 +11,8 @@ export interface StaffMember {
   /** O que a pessoa faz na loja. Etiqueta, não permissão — ver funcoesDaEquipe.ts. */
   cargo: string | null;
   created_at: string;
+  /** Preenchido = foi desligado: sem acesso, histórico guardado. */
+  desligado_em: string | null;
   permissions: StaffPermission[];
 }
 
@@ -24,7 +26,7 @@ export const useStaffMembers = () => {
       const [membersResult, permissionsResult] = await Promise.all([
         supabase
           .from('staff_members')
-          .select('user_id,is_admin,display_name,cargo,created_at')
+          .select('user_id,is_admin,display_name,cargo,created_at,desligado_em')
           .order('created_at', { ascending: true }),
         supabase.from('staff_permissions').select('user_id,permission'),
       ]);
@@ -158,20 +160,34 @@ export const useStaffMembers = () => {
     toast({ title: 'Senha alterada' });
   };
 
-  const deleteStaffMember = async (userId: string) => {
-    const { data, error } = await supabase.functions.invoke('excluir-funcionario', {
-      body: { userId },
+  /**
+   * Desligar não apaga: a conta é bloqueada e o histórico de ponto fica guardado
+   * (excluir de vez é impossível, o ponto aponta para a pessoa).
+   */
+  const mudarSituacao = async (userId: string, acao: 'desligar' | 'reativar') => {
+    const { error } = await supabase.functions.invoke('desligar-funcionario', {
+      body: { userId, acao },
     });
 
     if (error) {
-      const message = await extractFunctionErrorMessage(error, 'Não foi possível excluir o funcionário.');
-      toast({ title: 'Erro ao excluir funcionário', description: message, variant: 'destructive' });
+      const message = await extractFunctionErrorMessage(
+        error,
+        acao === 'desligar' ? 'Não foi possível desligar o funcionário.' : 'Não foi possível reativar o funcionário.'
+      );
+      toast({
+        title: acao === 'desligar' ? 'Erro ao desligar funcionário' : 'Erro ao reativar funcionário',
+        description: message,
+        variant: 'destructive',
+      });
       throw error;
     }
 
-    toast({ title: 'Funcionário excluído' });
+    toast({ title: acao === 'desligar' ? 'Funcionário desligado' : 'Funcionário reativado' });
     await fetchStaffMembers();
   };
+
+  const desligarStaffMember = (userId: string) => mudarSituacao(userId, 'desligar');
+  const reativarStaffMember = (userId: string) => mudarSituacao(userId, 'reativar');
 
   useEffect(() => {
     fetchStaffMembers();
@@ -184,7 +200,8 @@ export const useStaffMembers = () => {
     updatePermissions,
     updatePerfil,
     changePassword,
-    deleteStaffMember,
+    desligarStaffMember,
+    reativarStaffMember,
     refetch: fetchStaffMembers,
   };
 };

@@ -65,6 +65,7 @@ export const useEquipeColaboradores = (empresaIds: string[]) => {
       .from('staff_members')
       .select('user_id, display_name, empresa_id, escala_id, almoco_previsto, duracao_almoco_min, termo_assinado_em')
       .in('empresa_id', empresaIds)
+      .is('desligado_em', null)
       .order('display_name');
     setColaboradores((data ?? []) as EquipeColaborador[]);
     setLoading(false);

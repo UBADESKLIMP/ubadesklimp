@@ -2866,6 +2866,7 @@ export type Database = {
           cargo: string | null
           cpf: string | null
           created_at: string
+          desligado_em: string | null
           display_name: string
           duracao_almoco_min: number
           empresa_id: string | null
@@ -2890,6 +2891,7 @@ export type Database = {
           cargo?: string | null
           cpf?: string | null
           created_at?: string
+          desligado_em?: string | null
           display_name: string
           duracao_almoco_min?: number
           empresa_id?: string | null
@@ -2914,6 +2916,7 @@ export type Database = {
           cargo?: string | null
           cpf?: string | null
           created_at?: string
+          desligado_em?: string | null
           display_name?: string
           duracao_almoco_min?: number
           empresa_id?: string | null
