@@ -52,7 +52,30 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Cor da barra de título da janela do app (Ubadesk Painel): acompanha o fundo
+// do visual escolhido, em vez de ficar sempre no azul da marca.
+const COR_DA_BARRA: Record<AdminTheme, string> = {
+  light: '#F5F6F3',
+  dark: '#0E1315',
+  'glass-dark': '#06121F',
+  'glass-light': '#E4EDF7',
+};
+
+export const corDaBarraSalva = () => COR_DA_BARRA[atual];
+
+const pintarBarra = (theme: AdminTheme) => {
+  let metas = Array.from(document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
+  if (metas.length === 0) {
+    const m = document.createElement('meta');
+    m.name = 'theme-color';
+    document.head.appendChild(m);
+    metas = [m];
+  }
+  metas.forEach((m) => m.setAttribute('content', COR_DA_BARRA[theme]));
+};
+
 const aplicar = (theme: AdminTheme) => {
+  pintarBarra(theme);
   const body = document.body;
   const escuro = theme === 'dark' || theme === 'glass-dark';
   body.classList.remove(...CLASSES);

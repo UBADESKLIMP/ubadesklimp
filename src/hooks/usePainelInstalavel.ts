@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { corDaBarraSalva } from '@/hooks/useAdminTheme';
 
 /**
  * Deixa o Painel instalável como aplicativo ("Ubadesk Painel"): ao abrir, cai
@@ -18,7 +19,7 @@ export const usePainelInstalavel = (ativo = true) => {
 
     const cor = document.createElement('meta');
     cor.name = 'theme-color';
-    cor.content = '#1573D6';
+    cor.content = corDaBarraSalva();
     document.head.appendChild(cor);
 
     // O Chrome em modo app mostra na barra de tarefas o ícone da página: troca o

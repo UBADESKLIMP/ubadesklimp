@@ -5,8 +5,8 @@
   "start_url": "/auth?next=/admin",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F5F6F3",
-  "theme_color": "#1573D6",
+  "background_color": "#06121F",
+  "theme_color": "#06121F",
   "icons": [
     {
       "src": "/painel-icone-16.png",
