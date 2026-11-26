@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogOut, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMinhaConta } from '@/hooks/useMinhaConta';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AdminNavItem, AdminSection, getMobileNavSplit } from './adminNav';
@@ -15,6 +16,7 @@ interface AdminMobileNavProps {
 const AdminMobileNav = ({ items, activeSection, onSelect, badges }: AdminMobileNavProps) => {
   const [moreOpen, setMoreOpen] = useState(false);
   const { signOut } = useAuth();
+  const conta = useMinhaConta();
   const { bar, overflow } = getMobileNavSplit(items);
   const overflowHasActive = overflow.some((item) => item.key === activeSection);
   const overflowTemAviso = overflow.some((item) => (badges?.[item.key] ?? 0) > 0);
@@ -102,7 +104,10 @@ const AdminMobileNav = ({ items, activeSection, onSelect, badges }: AdminMobileN
               className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-4 text-xs min-h-[64px] bg-adm-bg text-adm-muted"
             >
               <LogOut className="h-6 w-6" />
-              <span className="text-center leading-tight">Sair da conta</span>
+              <span className="text-center leading-tight">
+                Sair da conta
+                {conta.nome && <span className="block truncate max-w-full text-[10px] text-adm-faint">{conta.nome}</span>}
+              </span>
             </button>
           </div>
         </SheetContent>

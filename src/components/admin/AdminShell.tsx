@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { ArrowLeft, Layers, Moon, Palette, Sun } from 'lucide-react';
+import { ArrowLeft, Layers, Moon, Palette, Sun, UserRound } from 'lucide-react';
+import { useMinhaConta } from '@/hooks/useMinhaConta';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,6 +27,7 @@ interface AdminShellProps {
 const AdminShell = ({ items, activeSection, onSelectSection, badges, children }: AdminShellProps) => {
   const { theme, setTheme } = useAdminTheme();
   const atual = ADMIN_THEMES.find((t) => t.valor === theme)?.rotulo ?? 'Tema';
+  const conta = useMinhaConta();
 
   return (
     <div className="min-h-screen bg-adm-bg text-adm-ink flex">
@@ -33,6 +35,20 @@ const AdminShell = ({ items, activeSection, onSelectSection, badges, children }:
 
       <div className="flex-1 flex flex-col min-w-0">
         <div className="admin-glass-bar flex items-center justify-end gap-2 px-4 md:px-8 py-3 border-b border-adm-line bg-adm-surface">
+          {conta.nome && (
+            <div
+              className="mr-auto flex items-center gap-2 min-w-0 text-sm text-adm-ink"
+              title={conta.email || conta.nome}
+            >
+              <span className="h-8 w-8 shrink-0 rounded-full bg-adm-accent-soft text-adm-accent flex items-center justify-center">
+                <UserRound className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 leading-tight">
+                <span className="block text-[10px] uppercase tracking-wide text-adm-faint">Conta logada</span>
+                <span className="block truncate font-semibold">{conta.nome}</span>
+              </span>
+            </div>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

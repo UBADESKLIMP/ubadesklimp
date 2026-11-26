@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMinhaConta } from '@/hooks/useMinhaConta';
 import { cn } from '@/lib/utils';
 import { AdminNavGroup, AdminNavItem, AdminSection, ADMIN_NAV_GROUP_LABELS } from './adminNav';
 
@@ -16,6 +17,7 @@ const GROUP_ORDER: (AdminNavGroup | undefined)[] = [undefined, 'catalogo', 'oper
 const AdminSidebar = ({ items, activeSection, onSelect, badges }: AdminSidebarProps) => {
   const [expanded, setExpanded] = useState(false);
   const { signOut } = useAuth();
+  const conta = useMinhaConta();
 
   const groups = GROUP_ORDER
     .map((group) => ({ group, items: items.filter((item) => item.group === group) }))
@@ -124,7 +126,7 @@ const AdminSidebar = ({ items, activeSection, onSelect, badges }: AdminSidebarPr
         <button
           type="button"
           onClick={signOut}
-          title="Sair da conta"
+          title={conta.nome ? `Sair da conta de ${conta.nome}` : 'Sair da conta'}
           className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-adm-muted hover:bg-adm-bg hover:text-adm-ink transition-colors"
         >
           <LogOut className="h-[18px] w-[18px] shrink-0" />
