@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="96" fill="#1573D6"/>
-  <rect x="122" y="122" width="125" height="125" rx="20" fill="#F5F6F3"/>
-  <rect x="265" y="122" width="125" height="125" rx="20" fill="#F5F6F3"/>
-  <rect x="122" y="265" width="125" height="125" rx="20" fill="#F5F6F3"/>
-  <rect x="265" y="265" width="125" height="125" rx="20" fill="#F5F6F3"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#54AAFF"/><stop offset="1" stop-color="#0A54C4"/></linearGradient></defs>
+  <g fill="url(#g)">
+    <rect x="15" y="15" width="226" height="482" rx="66"/>
+    <rect x="271" y="15" width="226" height="259" rx="66"/>
+    <rect x="271" y="302" width="226" height="195" rx="66"/>
+  </g>
 </svg>

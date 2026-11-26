@@ -26,7 +26,7 @@ export const usePontoInstalavel = () => {
     const icone = document.createElement('link');
     icone.rel = 'icon';
     icone.type = 'image/png';
-    icone.href = '/ponto-icone-192.png';
+    icone.href = '/ponto-icone-512.png';
     document.head.appendChild(icone);
 
     if ('serviceWorker' in navigator) {
