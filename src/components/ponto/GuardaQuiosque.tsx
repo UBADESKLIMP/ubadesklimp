@@ -15,7 +15,11 @@ const GuardaQuiosque = ({ children }: { children: React.ReactNode }) => {
 
   const eQuiosque = Boolean(lerTokenEstacao()) && quiosqueTravado() && !quiosqueLiberado();
   // /ponto/q/<token> é a tela do QR: também é ponto, não é "o resto do admin".
-  if (eQuiosque && !pathname.startsWith('/ponto')) {
+  // O login e o painel ficam liberados: pedem usuário e senha de qualquer jeito, e
+  // a equipe precisa entrar no painel pelo computador da frente quando quiser.
+  // O resto do site (a loja) continua indo para o ponto.
+  const liberado = ['/ponto', '/auth', '/admin'].some((r) => pathname.startsWith(r));
+  if (eQuiosque && !liberado) {
     return <Navigate to="/ponto" replace />;
   }
 
