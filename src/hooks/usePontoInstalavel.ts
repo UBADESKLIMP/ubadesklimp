@@ -25,7 +25,7 @@ export const usePontoInstalavel = () => {
     antigos.forEach((el) => el.remove());
     // Vários tamanhos já reduzidos: o Chrome escolhe o certo para a barra de
     // tarefas em vez de encolher um PNG grande na marra (que fica borrado).
-    const icones = [32, 48, 64, 128, 256].map((t) => {
+    const icones = [16, 32, 48, 64, 128, 256].map((t) => {
       const el = document.createElement('link');
       el.rel = 'icon';
       el.type = 'image/png';
