@@ -25,12 +25,17 @@ export const usePainelInstalavel = (ativo = true) => {
     // favicon da loja pelo do app, senão Painel e Ponto ficam iguais lá embaixo.
     const antigos = Array.from(document.head.querySelectorAll('link[rel~="icon"]'));
     antigos.forEach((el) => el.remove());
-    const icone = document.createElement('link');
-    icone.rel = 'icon';
-    icone.type = 'image/png';
-    icone.setAttribute('sizes', '512x512');
-    icone.href = '/painel-icone-512.png';
-    document.head.appendChild(icone);
+    // Vários tamanhos já reduzidos: o Chrome escolhe o certo para a barra de
+    // tarefas em vez de encolher um PNG grande na marra (que fica borrado).
+    const icones = [32, 48, 64, 128, 256].map((t) => {
+      const el = document.createElement('link');
+      el.rel = 'icon';
+      el.type = 'image/png';
+      el.setAttribute('sizes', `${t}x${t}`);
+      el.href = `/painel-icone-${t}.png`;
+      document.head.appendChild(el);
+      return el;
+    });
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/painel-sw.js', { scope: '/' }).catch(() => {
@@ -41,7 +46,7 @@ export const usePainelInstalavel = (ativo = true) => {
     return () => {
       link.remove();
       cor.remove();
-      icone.remove();
+      icones.forEach((el) => el.remove());
       antigos.forEach((el) => document.head.appendChild(el));
     };
   }, [ativo]);
