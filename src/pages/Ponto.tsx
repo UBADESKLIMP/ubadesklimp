@@ -366,7 +366,7 @@ const Ponto = () => {
   const mostraChinelo = !demo && !painel;
   const secundaria = tela !== 'ponto';
   // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
-  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo' || tela === 'entrada-duvida';
+  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo' || tela === 'entrada-duvida' || tela === 'manutencao';
 
   return (
     <div
@@ -505,7 +505,7 @@ const Ponto = () => {
         <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
           <div className="text-center">
             <p className="text-xl font-heading">Sair do modo quiosque</p>
-            <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
+            <p className="text-sm text-white/75 mt-1.5 max-w-xs">
               PIN de manutenção. Vale só neste computador e dentro da loja.
             </p>
           </div>
@@ -515,13 +515,13 @@ const Ponto = () => {
             onChange={setPin}
             onConfirmar={confirmarManutencao}
             confirmando={enviando}
-            tom="loja"
+            plano
           />
 
           <button
             type="button"
             onClick={voltarAoInicio}
-            className="text-sm text-[#55605F] hover:text-[#141B1E] py-2 px-4"
+            className="text-sm text-white/75 hover:text-white py-2 px-4"
           >
             Cancelar
           </button>
