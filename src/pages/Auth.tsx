@@ -11,6 +11,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { loginSchema, signUpSchema } from '@/lib/validations';
 import { z } from 'zod';
+import { usePainelInstalavel } from '@/hooks/usePainelInstalavel';
 
 const Auth = () => {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
@@ -28,6 +29,8 @@ const Auth = () => {
   // interno: um "next" apontando pra fora viraria redirecionamento aberto.
   const proximo = params.get('next');
   const destino = proximo && proximo.startsWith('/') && !proximo.startsWith('//') ? proximo : '/';
+  // Login que leva ao painel pode ser instalado como o aplicativo "Ubadesk Painel".
+  usePainelInstalavel(destino.startsWith('/admin'));
 
   // Redirect if already authenticated
   if (user && !authLoading) {

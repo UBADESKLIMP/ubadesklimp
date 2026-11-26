@@ -38,6 +38,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { AdminSection, getVisibleNavItems } from '@/components/admin/adminNav';
 import { syncProductFragrances } from '@/lib/productFragrances';
+import { usePainelInstalavel } from '@/hooks/usePainelInstalavel';
 
 const SECOES: AdminSection[] = [
   'home', 'financeiro', 'orders', 'products', 'automotive', 'highlights', 'categories',
@@ -47,6 +48,7 @@ const SECOES: AdminSection[] = [
 const Admin = () => {
   // O visual escolhido vale já na tela de carregamento, não só depois do menu montar.
   useAdminTheme();
+  usePainelInstalavel();
   const { products, loading, createProduct, updateProduct, deleteProduct, updateDisplayOrder, refetch } = useProducts({ includeNonPublic: true });
   const { categories: limpezaCategories } = useCategories('limpeza');
   const staffAccess = useStaffAccess();
