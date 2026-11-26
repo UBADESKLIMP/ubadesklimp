@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4AC8FF" />
+      <stop offset="50%" stop-color="#1DA3FF" />
+      <stop offset="100%" stop-color="#0A7AE6" />
+    </linearGradient>
+
+    <linearGradient id="borderGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#003A82" stop-opacity="0.25" />
+    </linearGradient>
+
+    <linearGradient id="uNavy" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#163578" />
+      <stop offset="55%" stop-color="#0E2250" />
+      <stop offset="100%" stop-color="#091636" />
+    </linearGradient>
+
+    <linearGradient id="uHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D6EDB" />
+      <stop offset="100%" stop-color="#174194" />
+    </linearGradient>
+
+    <filter id="uShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#041538" flood-opacity="0.38" />
+    </filter>
+
+    <clipPath id="squircleClip">
+      <rect x="12" y="12" width="488" height="488" rx="112" ry="112" />
+    </clipPath>
+  </defs>
+
+  
+  <rect x="12" y="12" width="488" height="488" rx="112" ry="112" fill="url(#bgGrad)" />
+
+  
+  <g clip-path="url(#squircleClip)" fill="none" stroke="#094BA6" stroke-opacity="0.24" stroke-width="15" stroke-linecap="round">
+    <path d="M -25 90 C 35 15, 110 -15, 180 75" />
+    <path d="M -30 150 C 40 30, 140 10, 220 130" />
+    <path d="M -40 205 C 50 70, 160 55, 255 185" />
+    <path d="M -40 265 C 65 115, 185 105, 290 245" />
+
+    <path d="M 300 -30 C 355 40, 440 50, 535 -5" />
+    <path d="M 240 -30 C 310 75, 420 95, 540 30" />
+    <path d="M 190 -30 C 280 115, 415 140, 545 75" />
+    <path d="M 140 -30 C 250 155, 410 185, 550 125" />
+
+    <path d="M -30 370 C 90 320, 210 355, 295 530" />
+    <path d="M -30 420 C 80 375, 185 405, 250 535" />
+    <path d="M -30 470 C 65 430, 150 455, 200 540" />
+
+    <path d="M 260 535 C 315 415, 415 390, 540 445" />
+    <path d="M 305 540 C 355 445, 435 425, 545 480" />
+    <path d="M 355 545 C 395 480, 455 465, 545 515" />
+  </g>
+
+  
+  <path d="M 12 124 C 12 62, 62 12, 124 12 L 388 12 C 450 12, 500 62, 500 124 L 500 188 C 360 152, 152 215, 12 172 Z" fill="#FFFFFF" fill-opacity="0.10" clip-path="url(#squircleClip)" />
+  <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="none" stroke="url(#borderGlow)" stroke-width="6" />
+
+  
+  <g transform="translate(8, 4)" filter="url(#uShadow)">
+    <path d="M 122 104 C 128 80, 152 70, 180 74 C 208 78, 224 98, 218 130 L 192 276 C 186 312, 198 334, 224 334 C 252 334, 268 310, 276 266 L 304 110 C 310 78, 336 62, 366 68 C 394 74, 408 98, 400 134 L 368 292 C 348 388, 290 430, 206 430 C 118 430, 76 376, 94 276 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="34" stroke-linejoin="round" stroke-linecap="round" />
+
+    <path d="M 122 104 C 128 80, 152 70, 180 74 C 208 78, 224 98, 218 130 L 192 276 C 186 312, 198 334, 224 334 C 252 334, 268 310, 276 266 L 304 110 C 310 78, 336 62, 366 68 C 394 74, 408 98, 400 134 L 368 292 C 348 388, 290 430, 206 430 C 118 430, 76 376, 94 276 Z" fill="url(#uNavy)" />
+
+    <path d="M 358 80 C 380 84, 390 102, 384 130 L 354 286 C 338 366, 288 412, 216 414 C 204 414, 194 413, 184 410 C 262 400, 306 356, 322 278 L 350 126 C 355 100, 344 84, 330 81 C 340 78, 350 78, 358 80 Z" fill="url(#uHighlight)" opacity="0.92" />
+
+    <path d="M 176 88 C 194 90, 204 104, 200 126 L 174 272 C 168 308, 176 336, 196 348 C 164 340, 152 312, 158 270 L 182 128 C 186 108, 178 94, 166 88 Z" fill="url(#uHighlight)" opacity="0.55" />
+  </g>
+</svg>
