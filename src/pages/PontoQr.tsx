@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { QrCode, Wifi, WifiOff, Clock, Smartphone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import Teclado from '@/components/ponto/Teclado';
+import Teclado, { FUNDO_TELA } from '@/components/ponto/Teclado';
 import Aviso from '@/components/ponto/Aviso';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
 import { usePontoQr, type StatusDispositivo } from '@/hooks/usePontoQr';
@@ -117,18 +117,18 @@ const PontoQr = () => {
 
   if (carregando) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F6F3]">
-        <Clock className="h-8 w-8 animate-pulse text-[#55605F]" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: FUNDO_TELA }}>
+        <Clock className="h-8 w-8 animate-pulse text-white/60" />
       </div>
     );
   }
 
   if (!contexto?.ok) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F3] text-[#141B1E] p-6 gap-4 text-center">
-        <QrCode className="h-12 w-12 text-[#55605F]" />
+      <div className="min-h-screen flex flex-col items-center justify-center text-white p-6 gap-4 text-center" style={{ background: FUNDO_TELA }}>
+        <QrCode className="h-12 w-12 text-white/60" />
         <h1 className="text-2xl font-heading">Este QR não vale mais</h1>
-        <p className="text-[#55605F] max-w-xs">
+        <p className="text-white/75 max-w-xs">
           O código foi trocado. Peça o novo para o gestor e cole no lugar deste.
         </p>
       </div>
@@ -136,18 +136,18 @@ const PontoQr = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F6F3] text-[#141B1E] flex flex-col">
+    <div className="min-h-screen text-white flex flex-col" style={{ background: FUNDO_TELA }}>
       {aviso && <Aviso {...aviso} onFim={voltar} />}
 
       <header className="flex items-center justify-between px-5 py-3.5">
-        <span className="text-xs text-[#8A9290] flex items-center gap-1.5">
+        <span className="text-xs text-white/60 flex items-center gap-1.5">
           <QrCode className="h-3.5 w-3.5" />
           {contexto.local}
         </span>
         <span
           className={cn(
             'flex items-center gap-1.5 text-xs',
-            contexto.rede_ok ? 'text-[#2F9E44]' : 'text-[#C0392B]'
+            contexto.rede_ok ? 'text-emerald-300' : 'text-red-300'
           )}
         >
           {contexto.rede_ok ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
@@ -156,19 +156,19 @@ const PontoQr = () => {
       </header>
 
       {!contexto.rede_ok && (
-        <p className="bg-[#C0392B]/10 text-[#C0392B] text-sm px-5 py-3 text-center">
+        <p className="bg-red-500/20 text-red-200 text-sm px-5 py-3 text-center">
           Conecte no Wi-Fi da loja para bater o ponto.
         </p>
       )}
 
       {liberar ? (
         <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6 text-center">
-          <div className="h-12 w-12 rounded-full bg-[#B8860B]/10 flex items-center justify-center">
-            <Smartphone className="h-6 w-6 text-[#B8860B]" />
+          <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
+            <Smartphone className="h-6 w-6 text-amber-300" />
           </div>
           <div>
             <p className="text-xl font-heading">{liberar.nome}</p>
-            <p className="text-sm text-[#55605F] mt-1.5 max-w-xs">
+            <p className="text-sm text-white/75 mt-1.5 max-w-xs">
               {liberar.status === 'revogado'
                 ? 'Este celular foi bloqueado. Fale com o gestor antes de tentar de novo.'
                 : liberar.status === 'pendente'
@@ -183,14 +183,14 @@ const PontoQr = () => {
                 value={apelido}
                 onChange={(e) => setApelido(e.target.value)}
                 placeholder="Apelido do aparelho (ex.: meu Moto G)"
-                className="h-12 max-w-xs bg-white border-[#DCDFD8]"
+                className="h-12 max-w-xs bg-white/10 border-white/25 text-white placeholder:text-white/50"
               />
               <Teclado
                 valor={pin}
                 onChange={setPin}
                 onConfirmar={pedirLiberacao}
                 confirmando={enviando}
-                tom="loja"
+                plano
               />
             </>
           )}
@@ -198,15 +198,15 @@ const PontoQr = () => {
           <button
             type="button"
             onClick={voltar}
-            className="text-sm text-[#55605F] hover:text-[#141B1E] py-2 px-4"
+            className="text-sm text-white/75 hover:text-white py-2 px-4"
           >
             Voltar
           </button>
         </main>
       ) : (
         <main className="flex-1 flex flex-col items-center justify-center p-6 gap-7">
-          <p className="text-sm text-[#55605F]">Digite seu PIN para bater o ponto</p>
-          <Teclado valor={pin} onChange={setPin} onConfirmar={confirmar} confirmando={enviando} />
+          <p className="text-sm text-white/75">Digite seu PIN para bater o ponto</p>
+          <Teclado valor={pin} onChange={setPin} onConfirmar={confirmar} confirmando={enviando} plano />
         </main>
       )}
     </div>
