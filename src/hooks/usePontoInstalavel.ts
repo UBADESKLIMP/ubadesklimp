@@ -19,6 +19,16 @@ export const usePontoInstalavel = () => {
     cor.content = '#1573D6';
     document.head.appendChild(cor);
 
+    // O Chrome em modo app mostra na barra de tarefas o ícone da página: troca o
+    // favicon da loja pelo do app, senão Painel e Ponto ficam iguais lá embaixo.
+    const antigos = Array.from(document.head.querySelectorAll('link[rel~="icon"]'));
+    antigos.forEach((el) => el.remove());
+    const icone = document.createElement('link');
+    icone.rel = 'icon';
+    icone.type = 'image/png';
+    icone.href = '/ponto-icone-192.png';
+    document.head.appendChild(icone);
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/ponto-sw.js', { scope: '/ponto' }).catch(() => {
         // Sem HTTPS ou com o registro bloqueado: a tela funciona igual, só não
@@ -29,6 +39,8 @@ export const usePontoInstalavel = () => {
     return () => {
       link.remove();
       cor.remove();
+      icone.remove();
+      antigos.forEach((el) => document.head.appendChild(el));
     };
   }, []);
 };
