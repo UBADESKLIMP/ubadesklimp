@@ -214,7 +214,7 @@ export const usePontoInfra = (empresaId: string | null) => {
     const [est, red, tent, soltos] = await Promise.all([
       supabase
         .from('ponto_estacoes')
-        .select('id, nome, ultimo_heartbeat, ultimo_ip, revogada_em, ponto_locais(nome, empresa_id)')
+        .select('id, nome, ultimo_heartbeat, ultimo_ip, revogada_em, oculta_em, ponto_locais(nome, empresa_id)')
         .order('created_at'),
       supabase
         .from('ponto_redes')
@@ -245,13 +245,14 @@ export const usePontoInfra = (empresaId: string | null) => {
       ultimo_heartbeat: string | null;
       ultimo_ip: string | null;
       revogada_em: string | null;
+      oculta_em: string | null;
       ponto_locais: { nome: string; empresa_id: string } | null;
     };
 
     setEstacoes(
       ((est.data ?? []) as LinhaEstacao[])
         // ponto_estacoes não tem empresa_id: ela vem pelo local.
-        .filter((e) => e.ponto_locais?.empresa_id === empresaId)
+        .filter((e) => e.ponto_locais?.empresa_id === empresaId && !e.oculta_em)
         .map((e) => ({
           id: e.id,
           nome: e.nome,
@@ -300,6 +301,15 @@ export const usePontoInfra = (empresaId: string | null) => {
     return !error;
   };
 
+  /** Só vale para computador já revogado; o servidor decide se apaga ou só esconde (se tem batidas). */
+  const excluirEstacao = async (id: string): Promise<{ ok: boolean; mensagem: string }> => {
+    const { data, error } = await supabase.rpc('ponto_excluir_estacao', { p_id: id });
+    if (error) return { ok: false, mensagem: 'Não consegui excluir agora. Tente de novo.' };
+    const r = data as unknown as { ok: boolean; mensagem: string };
+    if (r?.ok) await carregar();
+    return { ok: Boolean(r?.ok), mensagem: r?.mensagem ?? '' };
+  };
+
   const alternarRede = async (id: string, ativo: boolean) => {
     const { error } = await supabase.from('ponto_redes').update({ ativo }).eq('id', id);
     if (!error) await carregar();
@@ -344,6 +354,7 @@ export const usePontoInfra = (empresaId: string | null) => {
     loading,
     recarregar: carregar,
     revogarEstacao,
+    excluirEstacao,
     alternarRede,
     liberarRedeAtual,
     prepararEstacao,

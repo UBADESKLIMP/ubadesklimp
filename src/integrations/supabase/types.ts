@@ -1847,6 +1847,7 @@ export type Database = {
           local_id: string
           nome: string
           registrado_por: string | null
+          oculta_em: string | null
           revogada_em: string | null
           ultimo_heartbeat: string | null
           ultimo_ip: unknown
@@ -1859,6 +1860,7 @@ export type Database = {
           local_id: string
           nome: string
           registrado_por?: string | null
+          oculta_em?: string | null
           revogada_em?: string | null
           ultimo_heartbeat?: string | null
           ultimo_ip?: unknown
@@ -1871,6 +1873,7 @@ export type Database = {
           local_id?: string
           nome?: string
           registrado_por?: string | null
+          oculta_em?: string | null
           revogada_em?: string | null
           ultimo_heartbeat?: string | null
           ultimo_ip?: unknown
@@ -3687,6 +3690,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ponto_excluir_estacao: { Args: { p_id: string }; Returns: Json }
       ponto_sou_admin: { Args: never; Returns: boolean }
       ponto_status_dispositivo: {
         Args: { p_device_id: string; p_funcionario_id: string }

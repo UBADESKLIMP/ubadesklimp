@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEquipeAccess } from '@/hooks/useEquipeAccess';
+import { useToast } from '@/hooks/use-toast';
 import PontoQrLocais from './PontoQrLocais';
 import LancarMarcacaoDialog from './LancarMarcacaoDialog';
 import EspelhoDePonto from './EspelhoDePonto';
@@ -82,6 +83,7 @@ const quandoDe = (iso: string) =>
   });
 
 const PontoManager = () => {
+  const { toast } = useToast();
   const equipeAccess = useEquipeAccess();
   const [dia, setDia] = useState(hojeISO());
 
@@ -103,6 +105,7 @@ const PontoManager = () => {
     semEmpresa,
     loading: loadingInfra,
     revogarEstacao,
+    excluirEstacao,
     alternarRede,
     liberarRedeAtual,
     prepararEstacao,
@@ -617,6 +620,26 @@ const PontoManager = () => {
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase bg-[#6B7280] text-white">
                           revogada
                         </span>
+                      ) : null}
+                      {e.revogada_em ? (
+                        equipeAccess.isEquipeAdmin && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-9 border-[#C0392B]/40 text-[#ff8a7a] hover:bg-[#C0392B]/10 hover:text-white"
+                            onClick={async () => {
+                              if (!window.confirm(`Excluir "${e.nome}" da lista?`)) return;
+                              const r = await excluirEstacao(e.id);
+                              toast({
+                                title: r.ok ? 'Pronto' : 'Não deu',
+                                description: r.mensagem,
+                                variant: r.ok ? undefined : 'destructive',
+                              });
+                            }}
+                          >
+                            Excluir
+                          </Button>
+                        )
                       ) : (
                         equipeAccess.isEquipeAdmin && (
                           <Button
