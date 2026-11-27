@@ -320,6 +320,54 @@ export type Database = {
           },
         ]
       }
+      orcamentos: {
+        Row: {
+          cliente_nome: string
+          cliente_telefone: string | null
+          confirmado_em: string | null
+          created_at: string
+          criado_por: string | null
+          empresa_id: string
+          id: string
+          itens: Json
+          observacao: string | null
+          origem: string | null
+          situacao: string
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_nome: string
+          cliente_telefone?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          empresa_id: string
+          id?: string
+          itens?: Json
+          observacao?: string | null
+          origem?: string | null
+          situacao?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_nome?: string
+          cliente_telefone?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string
+          id?: string
+          itens?: Json
+          observacao?: string | null
+          origem?: string | null
+          situacao?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       entregas: {
         Row: {
           bairro_id: string | null
@@ -3138,6 +3186,16 @@ export type Database = {
       }
     }
     Functions: {
+      orcamento_buscar_itens: {
+        Args: { p_busca?: string; p_empresa_id: string; p_limite?: number }
+        Returns: {
+          descricao: string
+          unidade: string | null
+          vendas: number
+          ultima: string
+          ultimo_preco: number | null
+        }[]
+      }
       entrega_bairro_remover: { Args: { p_bairro_id: string }; Returns: Json }
       entrega_definir_bairro: {
         Args: { p_bairro_id?: string; p_bairro_texto?: string; p_entrega_id: string }

@@ -12,6 +12,7 @@ import {
   Receipt,
   Route,
   Footprints,
+  FileText,
   Users,
   Clock,
   ClipboardCheck as ClipboardCheckIcon,
@@ -33,6 +34,7 @@ export type AdminSection =
   | 'quotes'
   | 'chinelos'
   | 'entregas'
+  | 'orcamentos'
   | 'staff'
   | 'equipe'
   | 'ponto'
@@ -83,6 +85,15 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     key: 'entregas',
     label: 'Entregas',
     icon: Route,
+    equipeAcesso: 'gestor_ou_admin',
+    permission: 'entregas',
+    group: 'operacao',
+  },
+  // Orçamento de cliente (lista do WhatsApp -> OR): mesma guarda das Entregas.
+  {
+    key: 'orcamentos',
+    label: 'Orçamentos',
+    icon: FileText,
     equipeAcesso: 'gestor_ou_admin',
     permission: 'entregas',
     group: 'operacao',

@@ -1,0 +1,4 @@
+-- Aplicada no Supabase em 27/11/2026 (migration orcamentos_de_cliente).
+-- Tabela public.orcamentos (RLS: is_entregas_gestor + empresa visivel) e funcao orcamento_buscar_itens(empresa, busca, limite):
+-- itens que a loja vendeu (entregas.itens), mais vendido/recente primeiro, com ultimo valor unitario se houver.
+-- Corpo completo: ver pg_get_functiondef de public.orcamento_buscar_itens.
