@@ -1,0 +1,5 @@
+﻿-- Aplicada no Supabase em 27/11/2026 (migration chinelo_pedido_do_cliente_por_qr).
+-- chinelo_pedidos: status ganha 'a_confirmar'; colunas origem ('funcionario'|'cliente'), ip, confirmado_por, confirmado_em.
+-- Funcoes: chinelo_pedido_publico (anon; honeypot p_site, 5/h por IP, teto de 40 a confirmar, bloqueia repetido em 10 min),
+-- ponto_chinelos_a_confirmar_qtd (token da estacao), ponto_chinelos_a_confirmar_por_pin e ponto_decidir_chinelo_por_pin (PIN + estacao).
+-- Corpo completo: pg_get_functiondef de cada funcao.
