@@ -1,0 +1,3 @@
+﻿-- Aplicada no Supabase em 27/11/2026 (migration ponto_desligados_fora_de_agora_na_loja_e_do_pin).
+-- ponto_agora_na_loja: ignora desligado_em (Larissa aparecia como "nao chegou").
+-- ponto_quem_tem_o_pin: ignora desligado_em (desligado nao bate ponto pelo PIN).
