@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { numeroBR } from '@/lib/pedidoErp';
 
 export interface ItemOrcamento {
+  /** Código de referência do ERP: é o que se digita na grade da OR (vem da lista importada). */
+  codigo?: string;
   descricao: string;
   unidade: string;
   quantidade: number;
@@ -36,8 +38,11 @@ interface Sugestao {
   descricao: string;
   unidade: string | null;
   vendas: number;
-  ultima: string;
+  ultima: string | null;
   ultimo_preco: number | null;
+  /** Só vem quando a lista do ERP está importada. */
+  codigo?: string;
+  saldo?: number | null;
 }
 
 export const dinheiro = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -77,24 +82,53 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [buscando, setBuscando] = useState(false);
   const pedido = useRef(0);
+  // A lista do ERP (código + preço + saldo) foi importada? Se sim, a busca usa ela.
+  const [temListaErp, setTemListaErp] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('erp_produtos')
+      .select('codpro', { count: 'exact', head: true })
+      .eq('empresa_id', empresaId)
+      .then(({ count }) => setTemListaErp((count ?? 0) > 0));
+  }, [empresaId]);
 
   // Busca com pausa: cada letra não dispara uma consulta.
   useEffect(() => {
-    if (somenteLeitura) return;
+    if (somenteLeitura || temListaErp === null) return;
     const meu = ++pedido.current;
     const t = setTimeout(async () => {
       setBuscando(true);
-      const { data, error } = await supabase.rpc('orcamento_buscar_itens', {
-        p_empresa_id: empresaId,
-        p_busca: semAcento(busca),
-        p_limite: 12,
-      });
+      let lista: Sugestao[] = [];
+      if (temListaErp) {
+        const { data } = await supabase.rpc('erp_produto_buscar', {
+          p_empresa_id: empresaId,
+          p_busca: semAcento(busca),
+          p_limite: 12,
+        });
+        lista = (data ?? []).map((p) => ({
+          descricao: p.descr,
+          unidade: p.unidade,
+          vendas: p.vendas,
+          ultima: p.ultima,
+          ultimo_preco: p.vrvenda,
+          codigo: p.codref || p.codpro,
+          saldo: p.saldo,
+        }));
+      } else {
+        const { data } = await supabase.rpc('orcamento_buscar_itens', {
+          p_empresa_id: empresaId,
+          p_busca: semAcento(busca),
+          p_limite: 12,
+        });
+        lista = data ?? [];
+      }
       if (meu !== pedido.current) return;
       setBuscando(false);
-      setSugestoes(error ? [] : (data ?? []));
+      setSugestoes(lista);
     }, 250);
     return () => clearTimeout(t);
-  }, [busca, empresaId, somenteLeitura]);
+  }, [busca, empresaId, somenteLeitura, temListaErp]);
 
   const adicionar = (s: Sugestao | null) => {
     const descricao = (s?.descricao ?? busca).trim().toUpperCase();
@@ -102,6 +136,7 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
     setItens((atual) => [
       ...atual,
       {
+        codigo: s?.codigo,
         descricao,
         unidade: s?.unidade ?? 'UN',
         quantidade: 1,
@@ -174,6 +209,21 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
     onSalvou();
   };
 
+  // Uma linha por item com código: "codigo<TAB>quantidade", para conferir/digitar na grade da OR do ERP.
+  const copiarParaErp = async () => {
+    const linhas = itens.filter((i) => i.codigo).map((i) => `${i.codigo}\t${i.quantidade}`);
+    if (linhas.length === 0) {
+      toast({ title: 'Nenhum item com código do ERP', description: 'Importe a lista do ERP primeiro.', variant: 'destructive' });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(linhas.join('\n'));
+      toast({ title: `${linhas.length} itens copiados`, description: 'Código e quantidade, um por linha.' });
+    } catch {
+      toast({ title: 'Não consegui copiar', variant: 'destructive' });
+    }
+  };
+
   const reabrir = async () => {
     if (!orcamento) return;
     setSalvando(true);
@@ -240,8 +290,10 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
               >
                 <span className="min-w-0 text-sm text-adm-ink">{s.descricao}</span>
                 <span className="shrink-0 text-xs text-adm-muted">
-                  {s.vendas}x · última {dataCurta(s.ultima)}
+                  {s.codigo && <span className="mr-2 font-mono">{s.codigo}</span>}
+                  {s.vendas > 0 && s.ultima ? `${s.vendas}x · última ${dataCurta(s.ultima)}` : 'sem venda recente'}
                   {s.ultimo_preco != null && ` · ${dinheiro(s.ultimo_preco)}`}
+                  {s.saldo != null && ` · saldo ${s.saldo}`}
                 </span>
               </button>
             ))}
@@ -269,6 +321,7 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
             className={`rounded-xl border px-3 py-3 ${it.conferir ? 'border-amber-400 bg-amber-50/60 dark:bg-amber-500/10' : 'border-adm-line bg-adm-surface'}`}
           >
             <div className="flex flex-wrap items-center gap-2">
+              {it.codigo && <span className="w-28 shrink-0 font-mono text-xs text-adm-muted">{it.codigo}</span>}
               <Input value={it.descricao} onChange={(e) => mudar(i, { descricao: e.target.value.toUpperCase() })} disabled={somenteLeitura} className={`${CAMPO} min-w-[220px] flex-1`} />
               <Input
                 type="number"
@@ -341,6 +394,9 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
       </div>
 
       <div className="flex flex-wrap justify-end gap-2">
+        <Button onClick={copiarParaErp} variant="outline" className="h-11 border-adm-line bg-adm-surface text-adm-ink">
+          Copiar códigos para o ERP
+        </Button>
         {somenteLeitura ? (
           <Button onClick={reabrir} disabled={salvando} variant="outline" className="h-11 border-adm-line bg-adm-surface text-adm-ink">
             Reabrir como rascunho

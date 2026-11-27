@@ -1,0 +1,6 @@
+﻿-- Aplicada no Supabase em 27/11/2026 (migration erp_produtos_lista_de_preco).
+-- Tabela public.erp_produtos (empresa_id, codpro, codref, cod_barras, descr, vrvenda, unidade, saldo, grupo): lista do ERP
+-- importada do CSV do relatorio de Produtos. SEM custo. RLS: so gestor de entregas le; ninguem grava direto.
+-- erp_produtos_importar(empresa, linhas jsonb, primeiro bool): SECURITY DEFINER, gestor; primeiro=true apaga a lista antiga.
+-- erp_produto_buscar(empresa, busca, limite): codigo + preco + saldo, o que vendeu recente primeiro (cruza com entregas.itens).
+-- Corpo completo: ver pg_get_functiondef das duas funcoes.

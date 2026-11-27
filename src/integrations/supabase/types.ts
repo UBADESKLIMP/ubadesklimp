@@ -320,6 +320,23 @@ export type Database = {
           },
         ]
       }
+      erp_produtos: {
+        Row: {
+          atualizado_em: string
+          cod_barras: string | null
+          codpro: string
+          codref: string | null
+          descr: string
+          empresa_id: string
+          grupo: string | null
+          saldo: number | null
+          unidade: string | null
+          vrvenda: number | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       orcamentos: {
         Row: {
           cliente_nome: string
@@ -3186,6 +3203,23 @@ export type Database = {
       }
     }
     Functions: {
+      erp_produtos_importar: {
+        Args: { p_empresa_id: string; p_linhas: Json; p_primeiro?: boolean }
+        Returns: number
+      }
+      erp_produto_buscar: {
+        Args: { p_busca?: string; p_empresa_id: string; p_limite?: number }
+        Returns: {
+          codpro: string
+          codref: string | null
+          descr: string
+          unidade: string | null
+          vrvenda: number | null
+          saldo: number | null
+          vendas: number
+          ultima: string | null
+        }[]
+      }
       orcamento_buscar_itens: {
         Args: { p_busca?: string; p_empresa_id: string; p_limite?: number }
         Returns: {

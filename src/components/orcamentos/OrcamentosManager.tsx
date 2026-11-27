@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, FileText, Plus } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AlertTriangle, FileText, Plus, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { useToast } from '@/hooks/use-toast';
+import { lerArquivoErp } from '@/lib/listaErp';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
@@ -68,6 +71,60 @@ const OrcamentosManager = () => {
     carregar();
   }, [carregar]);
 
+  // Lista de produtos do ERP (código + preço + saldo), importada do CSV do relatório de Produtos.
+  const { toast } = useToast();
+  const arquivoRef = useRef<HTMLInputElement>(null);
+  const [infoErp, setInfoErp] = useState<{ total: number; atualizado: string | null } | null>(null);
+  const [importando, setImportando] = useState<string | null>(null);
+
+  const carregarInfoErp = useCallback(async () => {
+    if (!empresaId) return;
+    const { data, count } = await supabase
+      .from('erp_produtos')
+      .select('atualizado_em', { count: 'exact' })
+      .eq('empresa_id', empresaId)
+      .order('atualizado_em', { ascending: false })
+      .limit(1);
+    setInfoErp({ total: count ?? 0, atualizado: data?.[0]?.atualizado_em ?? null });
+  }, [empresaId]);
+
+  useEffect(() => {
+    carregarInfoErp();
+  }, [carregarInfoErp]);
+
+  const importarLista = async (arquivo: File) => {
+    if (!empresaId) return;
+    try {
+      setImportando('Lendo o arquivo...');
+      const linhas = await lerArquivoErp(arquivo);
+      if (linhas.length < 100) {
+        toast({
+          title: 'Esse arquivo não parece a lista de produtos do ERP',
+          description: 'Use o CSV de Estoque → Relatórios → Produtos (Exporta para Excel).',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const TAMANHO = 400;
+      for (let i = 0; i < linhas.length; i += TAMANHO) {
+        setImportando(`Enviando ${Math.min(i + TAMANHO, linhas.length)} de ${linhas.length}...`);
+        const { error } = await supabase.rpc('erp_produtos_importar', {
+          p_empresa_id: empresaId,
+          p_linhas: linhas.slice(i, i + TAMANHO) as unknown as Json,
+          p_primeiro: i === 0,
+        });
+        if (error) throw new Error(error.message);
+      }
+      toast({ title: 'Lista do ERP importada', description: `${linhas.length} produtos com código, preço e saldo.` });
+      await carregarInfoErp();
+    } catch (e) {
+      toast({ title: 'A importação parou', description: e instanceof Error ? e.message : 'Tente de novo.', variant: 'destructive' });
+    } finally {
+      setImportando(null);
+      if (arquivoRef.current) arquivoRef.current.value = '';
+    }
+  };
+
   if (equipeAccess.loading) return <AdminLoadingState />;
 
   if (!empresaId) {
@@ -111,6 +168,34 @@ const OrcamentosManager = () => {
           </Button>
         }
       />
+
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-adm-line bg-adm-surface px-4 py-3">
+        <Upload className="h-4 w-4 shrink-0 text-adm-accent" />
+        <p className="min-w-0 flex-1 text-xs text-adm-muted">
+          {infoErp && infoErp.total > 0
+            ? `Lista do ERP: ${infoErp.total} produtos (código, preço e saldo), atualizada em ${infoErp.atualizado ? dataHora(infoErp.atualizado) : '—'}.`
+            : 'Lista do ERP ainda não importada. Sem ela a busca mostra só o que já saiu em pedidos, sem preço.'}
+          {' '}Para atualizar: no ERP, Estoque → Relatórios → Produtos → Exporta para Excel, e escolha o CSV aqui.
+        </p>
+        <input
+          ref={arquivoRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) importarLista(f);
+          }}
+        />
+        <Button
+          onClick={() => arquivoRef.current?.click()}
+          disabled={importando !== null}
+          variant="outline"
+          className="h-11 shrink-0 border-adm-line bg-adm-surface text-adm-ink hover:bg-adm-accent-soft"
+        >
+          {importando ?? 'Importar lista do ERP'}
+        </Button>
+      </div>
 
       <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)} className="mb-4">
         <TabsList className="h-auto flex-wrap bg-adm-surface">
