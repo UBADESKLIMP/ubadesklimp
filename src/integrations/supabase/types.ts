@@ -70,6 +70,10 @@ export type Database = {
       chinelo_pedidos: {
         Row: {
           anotado_por: string | null
+          confirmado_em: string | null
+          confirmado_por: string | null
+          ip: unknown
+          origem: string
           cliente_nome: string
           cliente_telefone: string
           cor: string
@@ -83,6 +87,10 @@ export type Database = {
         }
         Insert: {
           anotado_por?: string | null
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          ip?: unknown
+          origem?: string
           cliente_nome: string
           cliente_telefone: string
           cor: string
@@ -96,6 +104,10 @@ export type Database = {
         }
         Update: {
           anotado_por?: string | null
+          confirmado_em?: string | null
+          confirmado_por?: string | null
+          ip?: unknown
+          origem?: string
           cliente_nome?: string
           cliente_telefone?: string
           cor?: string
@@ -3691,6 +3703,26 @@ export type Database = {
         Returns: boolean
       }
       ponto_excluir_estacao: { Args: { p_id: string }; Returns: Json }
+      ponto_chinelos_a_confirmar_qtd: { Args: { p_estacao_token: string }; Returns: Json }
+      ponto_chinelos_a_confirmar_por_pin: {
+        Args: { p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
+      ponto_decidir_chinelo_por_pin: {
+        Args: { p_aceitar: boolean; p_estacao_token: string; p_id: string; p_pin: string }
+        Returns: Json
+      }
+      chinelo_pedido_publico: {
+        Args: {
+          p_cor: string
+          p_nome: string
+          p_numero: string
+          p_observacao?: string
+          p_site?: string
+          p_telefone: string
+        }
+        Returns: Json
+      }
       ponto_sou_admin: { Args: never; Returns: boolean }
       ponto_status_dispositivo: {
         Args: { p_device_id: string; p_funcionario_id: string }

@@ -158,6 +158,22 @@ export interface ResultadoChinelo {
   ja_existia?: boolean;
 }
 
+export interface PedidoDeClienteAConfirmar {
+  id: string;
+  nome: string;
+  telefone: string;
+  numero: string;
+  cor: string;
+  observacao: string | null;
+  criado_em: string;
+}
+
+export interface ResultadoChinelosAConfirmar {
+  ok: boolean;
+  mensagem?: string;
+  pedidos?: PedidoDeClienteAConfirmar[];
+}
+
 export interface BatidaDoDia {
   id: string;
   tipo: MarcacaoTipo;
@@ -477,6 +493,36 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoChinelo;
   };
 
+  /** Quantos pedidos de chinelo feitos pelo cliente (QR) esperam um funcionário aceitar. */
+  const chinelosAConfirmarQtd = async (): Promise<number> => {
+    if (!token) return 0;
+    const { data, error } = await supabase.rpc('ponto_chinelos_a_confirmar_qtd', { p_estacao_token: token });
+    if (error) return 0;
+    return Number((data as unknown as { qtd?: number })?.qtd ?? 0);
+  };
+
+  const chinelosAConfirmarPorPin = async (pin: string): Promise<ResultadoChinelosAConfirmar> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_chinelos_a_confirmar_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos consultar agora. Tente de novo.' };
+    return data as unknown as ResultadoChinelosAConfirmar;
+  };
+
+  const decidirChineloPorPin = async (pin: string, id: string, aceitar: boolean) => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_decidir_chinelo_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+      p_id: id,
+      p_aceitar: aceitar,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos salvar agora. Tente de novo.' };
+    return data as unknown as { ok: boolean; mensagem?: string };
+  };
+
   /** "Checar ponto": as batidas de hoje de quem digitou o PIN. */
   const minhasMarcacoesPorPin = async (pin: string): Promise<ResultadoMinhasMarcacoes> => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -600,6 +646,9 @@ export const usePontoQuiosque = () => {
     baterPontoPorPin,
     saidaAlmocoSemEntradaPorPin,
     abrirLojaPorPin,
+    chinelosAConfirmarQtd,
+    chinelosAConfirmarPorPin,
+    decidirChineloPorPin,
     marcarPresentesPorPin,
     minhasMarcacoesPorPin,
     meuPontoPorPin,

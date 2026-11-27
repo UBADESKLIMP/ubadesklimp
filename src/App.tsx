@@ -9,6 +9,7 @@ import { CartProvider } from "./contexts/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Ponto from "./pages/Ponto";
 import PontoQr from "./pages/PontoQr";
+import PedidoChinelo from "./pages/PedidoChinelo";
 import Entregas from "./pages/Entregas";
 import GuardaQuiosque from "./components/ponto/GuardaQuiosque";
 import Index from "./pages/Index";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/automotivo" element={<Automotivo />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/chinelo" element={<PedidoChinelo />} />
               <Route path="/ponto" element={<Ponto />} />
               <Route path="/ponto/q/:token" element={<PontoQr />} />
               {/* Fora do /admin de propósito: o entregador não tem conta de

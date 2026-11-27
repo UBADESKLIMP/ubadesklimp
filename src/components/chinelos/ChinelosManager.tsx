@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Footprints, MessageCircle, PackageCheck, Printer, Trash2, Truck, XCircle } from 'lucide-react';
+import { Check, CheckCircle2, Footprints, MessageCircle, PackageCheck, Printer, QrCode, Trash2, Truck, XCircle } from 'lucide-react';
+import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,16 +11,18 @@ import AdminLoadingState from '@/components/admin/AdminLoadingState';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { htmlDoRelatorio, somarParaEncomenda, type PedidoDeChineloLinha } from '@/lib/relatorioChinelos';
 
-type Status = 'pendente' | 'encomendado' | 'chegou' | 'entregue' | 'cancelado';
+type Status = 'a_confirmar' | 'pendente' | 'encomendado' | 'chegou' | 'entregue' | 'cancelado';
 
 interface Pedido extends PedidoDeChineloLinha {
   status: Status;
   anotado_por: string | null;
+  origem: 'funcionario' | 'cliente';
 }
 
-type Aba = 'pendente' | 'encomendado' | 'chegou' | 'historico';
+type Aba = 'a_confirmar' | 'pendente' | 'encomendado' | 'chegou' | 'historico';
 
 const ABAS: { valor: Aba; rotulo: string; status: Status[] }[] = [
+  { valor: 'a_confirmar', rotulo: 'A confirmar', status: ['a_confirmar'] },
   { valor: 'pendente', rotulo: 'Para encomendar', status: ['pendente'] },
   { valor: 'encomendado', rotulo: 'Encomendados', status: ['encomendado'] },
   { valor: 'chegou', rotulo: 'Chegaram', status: ['chegou'] },
@@ -38,6 +41,7 @@ const dataHora = (iso: string) =>
   }).format(new Date(iso));
 
 const SEGUNDOS_ENTRE_RECARGAS = 20;
+const LINK_PEDIDO_CLIENTE = 'https://ubadesklimp.com/chinelo';
 
 /**
  * Pedidos de chinelo Havaianas anotados no quiosque. O escritório imprime o
@@ -50,11 +54,35 @@ const ChinelosManager = () => {
   const [erro, setErro] = useState<string | null>(null);
   const [aba, setAba] = useState<Aba>('pendente');
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [qrAberto, setQrAberto] = useState(false);
+  const [qrImagem, setQrImagem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!qrAberto || qrImagem) return;
+    QRCode.toDataURL(LINK_PEDIDO_CLIENTE, { width: 640, margin: 2, errorCorrectionLevel: 'M' })
+      .then(setQrImagem)
+      .catch(() => setErro('Não foi possível gerar o QR.'));
+  }, [qrAberto, qrImagem]);
+
+  const imprimirQr = () => {
+    if (!qrImagem) return;
+    const janela = window.open('', '_blank');
+    if (!janela) {
+      setErro('O navegador bloqueou a janela. Libere pop-ups para este site e tente de novo.');
+      return;
+    }
+    janela.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>QR pedido de chinelo</title>
+<style>body{font-family:Arial,sans-serif;text-align:center;margin:0;padding:40px}h1{font-size:44px;margin:0 0 8px}p{font-size:22px;margin:6px 0;color:#333}img{width:420px;height:420px;margin:24px auto;display:block}</style></head>
+<body><h1>Quer um chinelo que não temos?</h1><p>Aponte a câmera do celular e faça seu pedido.</p><img src="${qrImagem}" alt="QR code"/><p><b>Ubadesklimp</b> · avisamos quando chegar</p></body></html>`);
+    janela.document.close();
+    janela.focus();
+    setTimeout(() => janela.print(), 400);
+  };
 
   const carregar = useCallback(async () => {
     const { data, error } = await supabase
       .from('chinelo_pedidos')
-      .select('id, cliente_nome, cliente_telefone, numero, cor, observacao, status, anotado_por, created_at')
+      .select('id, cliente_nome, cliente_telefone, numero, cor, observacao, status, anotado_por, origem, created_at')
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) {
@@ -142,7 +170,9 @@ const ChinelosManager = () => {
 
   const resumo = useMemo(() => somarParaEncomenda(daAba), [daAba]);
   const tituloDoRelatorio =
-    aba === 'pendente'
+    aba === 'a_confirmar'
+      ? 'Chinelos Havaianas — pedidos de clientes a confirmar'
+      : aba === 'pendente'
       ? 'Pedido de chinelos Havaianas — para encomendar'
       : aba === 'encomendado'
         ? 'Chinelos Havaianas — já encomendados'
@@ -157,6 +187,15 @@ const ChinelosManager = () => {
         title="Chinelos"
         description="O que os clientes pediram e a loja não tinha: número e cor. Anotado no quiosque, encomendado por aqui."
         action={
+          <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setQrAberto((v) => !v)}
+            className="border-adm-line bg-adm-surface text-adm-ink hover:bg-adm-accent-soft"
+          >
+            <QrCode className="mr-2 h-4 w-4" />
+            QR para o cliente pedir
+          </Button>
           <Button
             onClick={() => imprimir(daAba, tituloDoRelatorio)}
             disabled={daAba.length === 0}
@@ -165,8 +204,37 @@ const ChinelosManager = () => {
             <Printer className="mr-2 h-4 w-4" />
             Imprimir relatório
           </Button>
+          </div>
         }
       />
+
+      {qrAberto && (
+        <Card className={`${CARD} mb-4`}>
+          <CardContent className="flex flex-wrap items-center gap-6 pt-6">
+            {qrImagem ? (
+              <img src={qrImagem} alt="QR code do pedido de chinelo" className="h-40 w-40 rounded-lg bg-white p-1" />
+            ) : (
+              <div className="h-40 w-40 rounded-lg bg-adm-bg" />
+            )}
+            <div className="min-w-[14rem] flex-1 space-y-2">
+              <p className="text-sm font-semibold">Cliente escaneia e pede sozinho</p>
+              <p className="text-sm text-adm-muted">
+                O pedido chega no quiosque como "a confirmar": um funcionário aceita ou recusa lá mesmo. Também aparece
+                aqui, na aba A confirmar.
+              </p>
+              <p className="break-all font-mono text-xs text-adm-faint">{LINK_PEDIDO_CLIENTE}</p>
+              <Button
+                onClick={imprimirQr}
+                disabled={!qrImagem}
+                className="bg-adm-accent text-adm-on-accent hover:bg-adm-accent-strong"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir QR para o balcão
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)}>
         <TabsList className="h-auto flex-wrap bg-adm-surface border border-adm-line">
@@ -239,7 +307,7 @@ const ChinelosManager = () => {
                     <div className="min-w-[10rem] flex-1">
                       <p className="font-semibold">{p.cliente_nome}</p>
                       <p className="text-sm text-adm-muted">
-                        {p.cliente_telefone} · anotado {dataHora(p.created_at)}
+                        {p.cliente_telefone} · {p.origem === 'cliente' ? 'pedido pelo cliente' : 'anotado'} {dataHora(p.created_at)}
                       </p>
                       {p.observacao && <p className="mt-0.5 text-xs text-adm-faint">{p.observacao}</p>}
                     </div>
@@ -252,6 +320,18 @@ const ChinelosManager = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      {p.status === 'a_confirmar' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={ocupado !== null}
+                          onClick={() => mudarStatus([p.id], 'pendente')}
+                          className="border-adm-line bg-adm-surface text-adm-ink hover:bg-adm-accent-soft"
+                        >
+                          <Check className="mr-1.5 h-4 w-4" />
+                          Confirmar
+                        </Button>
+                      )}
                       {p.status === 'pendente' && (
                         <Button
                           size="sm"
@@ -307,17 +387,17 @@ const ChinelosManager = () => {
                           {p.status === 'entregue' ? 'Entregue' : 'Cancelado'}
                         </span>
                       )}
-                      {(p.status === 'pendente' || p.status === 'encomendado') && (
+                      {(p.status === 'a_confirmar' || p.status === 'pendente' || p.status === 'encomendado') && (
                         <Button
                           size="sm"
                           variant="ghost"
                           disabled={ocupado !== null}
                           onClick={() => mudarStatus([p.id], 'cancelado')}
                           className="text-adm-muted hover:text-adm-alert"
-                          title="O cliente desistiu"
+                          title={p.status === 'a_confirmar' ? 'Recusar este pedido' : 'O cliente desistiu'}
                         >
                           <XCircle className="mr-1.5 h-4 w-4" />
-                          Cancelar
+                          {p.status === 'a_confirmar' ? 'Recusar' : 'Cancelar'}
                         </Button>
                       )}
                       <Button

@@ -12,6 +12,7 @@ import AbrirLoja from '@/components/ponto/AbrirLoja';
 import MeuPontoQuiosque from '@/components/ponto/MeuPontoQuiosque';
 import EntradaEsquecida from '@/components/ponto/EntradaEsquecida';
 import PedirChinelo from '@/components/ponto/PedirChinelo';
+import ConfirmarChinelos from '@/components/ponto/ConfirmarChinelos';
 import ReportarFaltante from '@/components/ponto/ReportarFaltante';
 import { usePontoInstalavel } from '@/hooks/usePontoInstalavel';
 import {
@@ -64,7 +65,7 @@ interface AvisoAtual {
   codigo?: string;
 }
 
-type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'checar' | 'chinelo' | 'entrada-duvida' | 'manutencao' | 'bastidor';
+type Tela = 'ponto' | 'abrir-loja' | 'faltante' | 'checar' | 'chinelo' | 'chinelos-confirmar' | 'entrada-duvida' | 'manutencao' | 'bastidor';
 
 const Ponto = () => {
   usePontoInstalavel();
@@ -81,6 +82,9 @@ const Ponto = () => {
     meuPontoPorPin,
     contestarPorPin,
     anotarChineloPorPin,
+    chinelosAConfirmarQtd,
+    chinelosAConfirmarPorPin,
+    decidirChineloPorPin,
     buscarProduto,
     reportarFaltantesPorPin,
     abrirBastidor,
@@ -111,6 +115,9 @@ const Ponto = () => {
   const [ficha, setFicha] = useState<FichaDaEstacao | null>(null);
   const [pinBastidor, setPinBastidor] = useState('');
 
+  // Pedidos de chinelo que o cliente fez pelo QR e esperam um funcionário aceitar.
+  const [chinelosPendentes, setChinelosPendentes] = useState(0);
+
   const voltarAoInicio = useCallback(() => {
     setTela('ponto');
     setPin('');
@@ -119,6 +126,23 @@ const Ponto = () => {
   }, []);
 
   const mostrarAviso = useCallback((a: AvisoAtual) => setAviso(a), []);
+
+  // Na tela inicial, confere de tempos em tempos se chegou pedido de chinelo de cliente.
+  useEffect(() => {
+    if (demo || painel || !token || tela !== 'ponto') return;
+    let vivo = true;
+    const conferir = async () => {
+      const n = await chinelosAConfirmarQtd();
+      if (vivo) setChinelosPendentes(n);
+    };
+    conferir();
+    const t = setInterval(conferir, 30000);
+    return () => {
+      vivo = false;
+      clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo, painel, token, tela]);
 
   // Esc volta pro ponto de qualquer canto do quiosque. Quem está no balcão
   // desiste no teclado, não procurando o botão de voltar.
@@ -366,8 +390,9 @@ const Ponto = () => {
   // Anotar pedido de chinelo grava de verdade e precisa da estação, como o faltante.
   const mostraChinelo = !demo && !painel;
   const secundaria = tela !== 'ponto';
+
   // Tela principal do quiosque: o fundo é o degradê inteiro, sem cartão em volta.
-  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo' || tela === 'entrada-duvida' || tela === 'manutencao';
+  const emPonto = tela === 'ponto' || tela === 'abrir-loja' || tela === 'faltante' || tela === 'checar' || tela === 'chinelo' || tela === 'chinelos-confirmar' || tela === 'entrada-duvida' || tela === 'manutencao';
 
   return (
     <div
@@ -483,6 +508,10 @@ const Ponto = () => {
           <PedirChinelo anotar={anotarChineloPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
         )}
 
+        {tela === 'chinelos-confirmar' && (
+          <ConfirmarChinelos listar={chinelosAConfirmarPorPin} decidir={decidirChineloPorPin} onFim={mostrarAviso} />
+        )}
+
         {tela === 'checar' && (
           <MeuPontoQuiosque meuPonto={meuPontoPorPin} contestar={contestarPorPin} onFim={mostrarAviso} onVoltar={voltarAoInicio} />
         )}
@@ -586,6 +615,22 @@ const Ponto = () => {
               >
                 <ClipboardCheck className="h-4 w-4" />
                 Meu ponto
+              </button>
+            )}
+            {mostraChinelo && chinelosPendentes > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPin('');
+                  setTela('chinelos-confirmar');
+                }}
+                className="relative flex items-center gap-2 rounded-xl bg-[#C0392B] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#d4483a]"
+              >
+                <Footprints className="h-4 w-4" />
+                Chinelo para confirmar
+                <span className="ml-1 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#C0392B]">
+                  {chinelosPendentes}
+                </span>
               </button>
             )}
             {mostraChinelo && (
