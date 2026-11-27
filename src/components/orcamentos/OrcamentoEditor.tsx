@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Check, Plus, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, ImagePlus, Plus, Search, Trash2 } from 'lucide-react';
+import { imagemParaBase64 } from '@/lib/imagemParaEnvio';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -149,6 +150,69 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
     setBusca('');
   };
 
+  // Pedido por foto/print do WhatsApp ou texto colado: a IA lê, casa com a lista do ERP e preenche a OR.
+  const [fotos, setFotos] = useState<File[]>([]);
+  const [textoPedido, setTextoPedido] = useState('');
+  const [lendo, setLendo] = useState(false);
+  const fotosRef = useRef<HTMLInputElement>(null);
+
+  interface ItemLido {
+    pedido: string;
+    quantidade: number;
+    unidade_pedida: string | null;
+    produto: { codigo: string; descr: string; unidade: string | null; vrvenda: number | null; saldo: number | null } | null;
+    confianca: 'alta' | 'media' | 'baixa';
+    nota: string;
+  }
+
+  const lerPedido = async () => {
+    setLendo(true);
+    try {
+      const imagens = await Promise.all(fotos.map((f) => imagemParaBase64(f)));
+      const { data, error } = await supabase.functions.invoke('ler-pedido-foto', {
+        body: { empresaId, texto: textoPedido, imagens },
+      });
+      if (error) {
+        let msg = 'Não consegui ler o pedido. Tente de novo.';
+        try {
+          const j = await (error as { context?: Response }).context?.json();
+          if (j?.error) msg = j.error;
+        } catch {
+          /* mantém a mensagem padrão */
+        }
+        toast({ title: msg, variant: 'destructive' });
+        return;
+      }
+      const lidos: ItemLido[] = data?.itens ?? [];
+      const novos: ItemOrcamento[] = lidos.map((l) => {
+        const p = l.produto;
+        const conferir = !p || l.confianca !== 'alta';
+        return {
+          codigo: p?.codigo,
+          descricao: (p ? p.descr : l.pedido).toUpperCase(),
+          unidade: (p?.unidade ?? l.unidade_pedida ?? 'UN').toUpperCase(),
+          quantidade: l.quantidade,
+          valor_unitario: p?.vrvenda != null ? Math.round(p.vrvenda * 100) / 100 : null,
+          conferir,
+          nota: conferir ? [`Cliente pediu: ${l.pedido}`, l.nota].filter(Boolean).join(' · ') : '',
+        };
+      });
+      setItens((atual) => [...atual, ...novos]);
+      setFotos([]);
+      setTextoPedido('');
+      if (fotosRef.current) fotosRef.current.value = '';
+      const duvidas = novos.filter((n) => n.conferir).length;
+      toast({
+        title: `${novos.length} itens lidos do pedido`,
+        description: duvidas > 0 ? `${duvidas} ficaram em dúvida: confira antes de confirmar.` : 'Todos com boa certeza. Confira mesmo assim.',
+      });
+    } catch {
+      toast({ title: 'Não consegui ler o pedido', description: 'Confira a foto e tente de novo.', variant: 'destructive' });
+    } finally {
+      setLendo(false);
+    }
+  };
+
   const mudar = (i: number, parte: Partial<ItemOrcamento>) =>
     setItens((atual) => atual.map((it, k) => (k === i ? { ...it, ...parte } : it)));
 
@@ -266,6 +330,44 @@ const OrcamentoEditor = ({ empresaId, orcamento, onVoltar, onSalvou }: Props) =>
           <Input value={observacao} onChange={(e) => setObservacao(e.target.value)} disabled={somenteLeitura} className={CAMPO} placeholder="Ex.: lista do PDF de 25/11, entregar na sexta" />
         </div>
       </div>
+
+      {!somenteLeitura && (
+        <div className="space-y-3 rounded-xl border border-adm-line bg-adm-surface p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-adm-ink">
+            <ImagePlus className="h-4 w-4 text-adm-accent" /> Pedido do cliente (foto, print ou texto do WhatsApp)
+          </div>
+          <Textarea
+            value={textoPedido}
+            onChange={(e) => setTextoPedido(e.target.value)}
+            rows={3}
+            placeholder="Cole aqui o texto do pedido, e/ou escolha a foto ou print abaixo"
+            className={`${CAMPO} text-sm`}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fotosRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => setFotos(Array.from(e.target.files ?? []))}
+            />
+            <Button onClick={() => fotosRef.current?.click()} variant="outline" className="h-11 border-adm-line bg-adm-surface text-adm-ink">
+              {fotos.length > 0 ? `${fotos.length} foto(s) escolhida(s)` : 'Escolher foto ou print'}
+            </Button>
+            <Button
+              onClick={lerPedido}
+              disabled={lendo || temListaErp === false || (fotos.length === 0 && textoPedido.trim() === '')}
+              className="h-11 bg-adm-accent text-white hover:bg-adm-accent/90"
+            >
+              {lendo ? 'Lendo o pedido...' : 'Ler pedido e montar a OR'}
+            </Button>
+            {temListaErp === false && (
+              <span className="text-xs text-amber-600">Importe a lista do ERP antes (botão na tela de Orçamentos).</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {!somenteLeitura && (
         <div className="relative">

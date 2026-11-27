@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.upload-image-from-url]
 verify_jwt = false
+
+[functions.ler-pedido-foto]
+verify_jwt = false
