@@ -294,7 +294,7 @@ const MeuPontoQuiosque = ({ meuPonto, contestar, onFim, onVoltar }: Props) => {
                   <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-300" />
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-medium">{TIPO_LABEL[b.tipo] ?? b.tipo}</p>
-                    {b.origem === 'abertura_coletiva' && <p className="text-xs text-white/65">marcada na abertura da loja</p>}
+                    {b.origem === 'abertura_coletiva' && <p className="text-xs text-white/65">marcada {b.tipo === 'saida' ? 'no fechamento' : 'na abertura'} da loja</p>}
                   </div>
                   <span className="font-mono text-2xl font-semibold tabular-nums">{b.hora}</span>
                 </div>

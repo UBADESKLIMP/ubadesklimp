@@ -17,6 +17,8 @@ interface AvisoAtual {
 }
 
 interface Props {
+  /** Depois das 18h a mesma tela fecha a loja: as funções recebidas gravam saída. */
+  fechando?: boolean;
   abrirLoja: (pin: string) => Promise<ResultadoAbertura>;
   marcarPresentes: (pin: string, funcionarios: string[]) => Promise<ResultadoPresentes>;
   onFim: (a: AvisoAtual) => void;
@@ -28,7 +30,9 @@ interface Props {
  * PIN que não tem a permissão é recusado no banco, então a tela não precisa
  * expor quem são as pessoas autorizadas.
  */
-const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
+const AbrirLoja = ({ fechando = false, abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
+  const palavra = fechando ? 'saída' : 'entrada';
+  const [saidaPropria, setSaidaPropria] = useState(false);
   const [pin, setPin] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [responsavel, setResponsavel] = useState<string | null>(null);
@@ -47,12 +51,13 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
 
     if (!r.ok) {
       setPin('');
-      onFim({ ok: false, mensagem: r.mensagem ?? 'Não foi possível abrir a loja.' });
+      onFim({ ok: false, mensagem: r.mensagem ?? `Não foi possível ${fechando ? 'fechar' : 'abrir'} a loja.` });
       return;
     }
 
     setResponsavel(r.nome ?? 'Responsável');
-    setHora((r.hora_abertura ?? '').slice(0, 5));
+    setHora(((fechando ? r.hora : r.hora_abertura) ?? '').slice(0, 5));
+    setSaidaPropria(Boolean(r.saida_propria));
     setPendentes(r.pendentes ?? []);
     setMarcados(new Set());
   };
@@ -76,15 +81,15 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
       return;
     }
 
-    const qtd = r.entradas_registradas ?? 0;
+    const qtd = (fechando ? r.saidas_registradas : r.entradas_registradas) ?? 0;
     onFim({
       ok: true,
       destaque: String(qtd),
-      detalhe: qtd === 1 ? 'entrada registrada' : 'entradas registradas',
+      detalhe: qtd === 1 ? `${palavra} registrada` : `${palavra}s registradas`,
       mensagem:
         qtd === 0
           ? 'Ninguém novo foi marcado. Quem já tinha batido continua como estava.'
-          : `Às ${(r.hora ?? hora).slice(0, 5)}. As entradas ficam abertas por 2 dias para cada um contestar; depois valem sozinhas.`,
+          : `Às ${(r.hora ?? hora).slice(0, 5)}. As ${palavra}s ficam abertas por 2 dias para cada um contestar; depois valem sozinhas.`,
     });
   };
 
@@ -95,10 +100,10 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
           <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
             <DoorOpen className="h-6 w-6 text-amber-300" />
           </div>
-          <p className="text-xl font-heading">Abrir a loja</p>
+          <p className="text-xl font-heading">{fechando ? 'Fechar' : 'Abrir'} a loja</p>
           <p className="text-sm text-white/75 mt-1.5 max-w-xs">
-            Digite o PIN de quem está abrindo. A entrada de quem estava na porta sai no nome dessa
-            pessoa.
+            Digite o PIN de quem está {fechando ? 'fechando' : 'abrindo'}. A {palavra} de quem{' '}
+            {fechando ? 'está saindo junto' : 'estava na porta'} sai no nome dessa pessoa.
           </p>
         </div>
 
@@ -117,17 +122,21 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
     <main className="flex-1 flex flex-col px-5 pb-4 gap-4 min-h-0">
       <div className="text-center">
         <p className="text-sm text-white/75">
-          Loja aberta às <span className="font-mono text-white font-semibold">{hora}</span> por{' '}
-          {responsavel}
+          {fechando ? 'Fechando a loja' : 'Loja aberta'} às{' '}
+          <span className="font-mono text-white font-semibold">{hora}</span> por {responsavel}
+          {saidaPropria && ' (sua saída já foi registrada)'}
         </p>
-        <p className="text-base text-white mt-1">Quem já estava na porta?</p>
-        <p className="text-xs text-white/55 mt-0.5">A lista fecha em 10 minutos.</p>
+        <p className="text-base text-white mt-1">
+          {fechando ? 'Quem está saindo agora?' : 'Quem já estava na porta?'}
+        </p>
+        {!fechando && <p className="text-xs text-white/55 mt-0.5">A lista fecha em 10 minutos.</p>}
       </div>
 
       <div className="flex-1 overflow-y-auto grid gap-2.5 sm:grid-cols-2 content-start">
         {pendentes.length === 0 && (
           <p className="text-white/75 p-4 text-center sm:col-span-2">
-            Todo mundo já bateu entrada hoje. Nada a marcar.
+            {fechando ? 'Ninguém mais com saída em aberto.' : 'Todo mundo já bateu entrada hoje.'} Nada a
+            marcar.
           </p>
         )}
         {pendentes.map((p) => {
@@ -165,7 +174,7 @@ const AbrirLoja = ({ abrirLoja, marcarPresentes, onFim, onVoltar }: Props) => {
         className="h-16 rounded-2xl bg-white text-[#0b1020] text-lg font-medium flex items-center justify-center gap-3 disabled:bg-white/10 disabled:text-white/35 active:scale-[0.99] transition"
       >
         {enviando && <Loader2 className="h-5 w-5 animate-spin" />}
-        Registrar entrada de {marcados.size}
+        Registrar {palavra} de {marcados.size}
       </button>
     </main>
   );

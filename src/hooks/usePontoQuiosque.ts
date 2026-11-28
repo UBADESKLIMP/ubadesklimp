@@ -133,6 +133,9 @@ export interface ResultadoAbertura {
   mensagem?: string;
   origem?: 'estacao' | 'celular';
   hora_abertura?: string;
+  /** Fechamento: a hora e se a saída de quem fechou foi gravada. */
+  hora?: string;
+  saida_propria?: boolean;
   pendentes?: PendenteDaAbertura[];
 }
 
@@ -141,6 +144,7 @@ export interface ResultadoPresentes {
   motivo?: string;
   mensagem?: string;
   entradas_registradas?: number;
+  saidas_registradas?: number;
   hora?: string;
 }
 
@@ -437,6 +441,28 @@ export const usePontoQuiosque = () => {
     return data as unknown as ResultadoAbertura;
   };
 
+  /** Fechamento coletivo (a partir das 18h): o mesmo fluxo da abertura, para a saída. */
+  const fecharLojaPorPin = async (pin: string): Promise<ResultadoAbertura> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_fechar_loja_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos fechar a loja agora. Tente de novo.' };
+    return data as unknown as ResultadoAbertura;
+  };
+
+  const marcarSaidasPorPin = async (pin: string, funcionarios: string[]): Promise<ResultadoPresentes> => {
+    if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
+    const { data, error } = await supabase.rpc('ponto_marcar_saidas_por_pin', {
+      p_pin: pin,
+      p_estacao_token: token,
+      p_funcionarios: funcionarios,
+    });
+    if (error) return { ok: false, mensagem: 'Não conseguimos marcar agora. Tente de novo.' };
+    return data as unknown as ResultadoPresentes;
+  };
+
   /** "Estou saindo para o almoço, esqueci a entrada": grava a saída e abre o pedido da entrada. */
   const saidaAlmocoSemEntradaPorPin = async (pin: string, horaChegada: string): Promise<ResultadoBatida> => {
     if (!token) return { ok: false, mensagem: 'Este computador não está registrado.' };
@@ -646,6 +672,8 @@ export const usePontoQuiosque = () => {
     baterPontoPorPin,
     saidaAlmocoSemEntradaPorPin,
     abrirLojaPorPin,
+    fecharLojaPorPin,
+    marcarSaidasPorPin,
     chinelosAConfirmarQtd,
     chinelosAConfirmarPorPin,
     decidirChineloPorPin,

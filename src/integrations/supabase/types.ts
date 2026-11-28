@@ -3675,6 +3675,18 @@ export type Database = {
         }
         Returns: Json
       }
+      ponto_fechar_loja_por_pin: {
+        Args: { p_estacao_token: string; p_pin: string }
+        Returns: Json
+      }
+      ponto_marcar_saidas_por_pin: {
+        Args: {
+          p_estacao_token: string
+          p_funcionarios: string[]
+          p_pin: string
+        }
+        Returns: Json
+      }
       ponto_modelo_vigente: {
         Args: { p_data?: string; p_funcionario_id: string }
         Returns: Database["public"]["Enums"]["ponto_modelo_intervalo"]

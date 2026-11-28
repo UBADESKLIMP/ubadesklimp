@@ -27,6 +27,9 @@ import {
 /** Volta sozinho pra tela inicial depois disso sem ninguém tocar (PRD 4.6). */
 const SEGUNDOS_ATE_LIMPAR = 30;
 
+/** A partir desta hora o botão "Abrir loja" vira "Fechar loja" (o banco confere a mesma hora). */
+const HORA_DE_FECHAR = 18;
+
 /**
  * O horário é o herói do quiosque: enorme, em branco sobre o degradê da tela
  * (que é escuro por desenho, então o branco vale em qualquer tema).
@@ -79,6 +82,8 @@ const Ponto = () => {
     saidaAlmocoSemEntradaPorPin,
     abrirLojaPorPin,
     marcarPresentesPorPin,
+    fecharLojaPorPin,
+    marcarSaidasPorPin,
     meuPontoPorPin,
     contestarPorPin,
     anotarChineloPorPin,
@@ -117,6 +122,13 @@ const Ponto = () => {
 
   // Pedidos de chinelo que o cliente fez pelo QR e esperam um funcionário aceitar.
   const [chinelosPendentes, setChinelosPendentes] = useState(0);
+
+  // O quiosque fica aberto o dia inteiro: confere a hora para o botão virar sozinho.
+  const [fechando, setFechando] = useState(() => new Date().getHours() >= HORA_DE_FECHAR);
+  useEffect(() => {
+    const t = setInterval(() => setFechando(new Date().getHours() >= HORA_DE_FECHAR), 15000);
+    return () => clearInterval(t);
+  }, []);
 
   const voltarAoInicio = useCallback(() => {
     setTela('ponto');
@@ -477,8 +489,11 @@ const Ponto = () => {
 
         {tela === 'abrir-loja' && (
           <AbrirLoja
-            abrirLoja={abrirLojaPorPin}
-            marcarPresentes={marcarPresentesPorPin}
+            // Virou 18h com a tela aberta: recomeça no PIN em vez de misturar entrada e saída.
+            key={fechando ? 'fechar' : 'abrir'}
+            fechando={fechando}
+            abrirLoja={fechando ? fecharLojaPorPin : abrirLojaPorPin}
+            marcarPresentes={fechando ? marcarSaidasPorPin : marcarPresentesPorPin}
             onFim={mostrarAviso}
             onVoltar={voltarAoInicio}
           />
@@ -601,7 +616,7 @@ const Ponto = () => {
                 className={cn('flex items-center gap-2 text-sm rounded-xl px-4 py-3 transition', emPonto ? 'text-white/85 hover:bg-white/10' : 'text-[#55605F] hover:text-[#141B1E] hover:bg-white')}
               >
                 <DoorOpen className="h-4 w-4" />
-                Abrir loja
+                {fechando ? 'Fechar loja' : 'Abrir loja'}
               </button>
             )}
             {mostraChecar && (
